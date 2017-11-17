@@ -288,7 +288,23 @@ removeIdentityCasts' expr@(Cast t1 t2 expr')
     -- if is identity cast, remove it
     | t1 == t2 = expr'
     | otherwise = expr
+removeIdentityCasts' expr@(IntersectionCasts cs expr')
+    | all isEmptyCast cs' = expr'
+    | otherwise = IntersectionCasts cs' expr'
+    where cs' = map removeIdentityCastsI' cs
 removeIdentityCasts' e = e
+
+-- remove identity casts in all intersection casts
+removeIdentityCastsI :: CastI -> CastI
+removeIdentityCastsI = mapCast removeIdentityCastsI'
+
+-- remove identity casts in intersection casts
+removeIdentityCastsI' :: CastI -> CastI
+removeIdentityCastsI' c@(SingleCast _ t1 t2 c')
+    -- if is identity cast, remove it
+    | t1 == t2 = c'
+    | otherwise = c
+removeIdentityCastsI' c = c
 
 -- convert intersection cast to simple cast
 convertToSimpleCast :: CastI -> Expression -> Expression

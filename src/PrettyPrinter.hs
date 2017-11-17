@@ -83,8 +83,8 @@ prettyType BoolType = text "Bool"
 prettyType DynType = text "Dyn"
 
 -- Intersection type: Type /\ Type
-prettyType (IntersectionType t1 t2) = hsep
-    [printParensType t1, text "/\\", printParensType t2]
+prettyType (IntersectionType ts) = hcat $
+    punctuate (space <> text "/\\" <> space) $ map printParensType ts
 
 printParensExpression :: Expression -> Doc
 printParensExpression expr = if needsParensExpression expr

@@ -21,7 +21,7 @@ data Type
     -- Dynamic type: Dyn
     | DynType
     -- Intersection type: Type /\ Type
-    | IntersectionType Type Type
+    | IntersectionType [Type]
     deriving (Show, Eq)
 
 type Var = String
@@ -49,8 +49,8 @@ mapType f t@BoolType = f t
 mapType f t@DynType = f t
 
 -- Product type
-mapType f t@(IntersectionType t1 t2) =
-    f (IntersectionType (mapType f t1) (mapType f t2))
+mapType f t@(IntersectionType ts) =
+    f (IntersectionType $ map (mapType f) ts)
 
 -- CHECKS
 
@@ -129,8 +129,8 @@ substituteType s@(old, new) t@BoolType = t
 substituteType s@(old, new) t@DynType = t
 
 -- Intersection type
-substituteType s@(old, new) t@(IntersectionType t1 t2) =
-    IntersectionType (substituteType s t1) (substituteType s t2)
+substituteType s@(old, new) t@(IntersectionType ts) =
+    IntersectionType $ map (substituteType s) ts
 
 -- HELPER FUNCTIONS
 
@@ -147,7 +147,25 @@ getInstancesType (ArrowType t1 t2) =
     let t1' = getInstancesType t1
         t2' = getInstancesType t2
     in [ArrowType x y | x <- t1', y <- t2']
-getInstancesType (IntersectionType t1 t2) =
-    let t1' = getInstancesType t1
-        t2' = getInstancesType t2
-    in t1' ++ t2'
+getInstancesType (IntersectionType ts) =
+    concat $ map getInstancesType ts
+
+-- join instances of intersection types
+joinInstances :: [Type] -> Type
+joinInstances ts
+    -- only base types, therefore join them
+    | not $ any isArrowType ts =
+        let types = nub ts
+            result
+                | length types == 1 = head types
+                | otherwise = IntersectionType $ types
+        in result
+    -- only arrow types, therefore join under arrow
+    | all isArrowType ts =
+        let (ts1, ts2) = unzip $ [(t1, t2) | (ArrowType t1 t2) <- ts]
+        in ArrowType (joinInstances ts1) (joinInstances ts2)
+    | any isArrowType ts =
+        let ftypes = filter isArrowType ts
+            btypes = filter (not . isArrowType) ts
+            (ts1, ts2) = unzip $ [(t1, t2) | (ArrowType t1 t2) <- ftypes]
+        in IntersectionType $ btypes ++ [ArrowType (joinInstances ts1) (joinInstances ts2)]

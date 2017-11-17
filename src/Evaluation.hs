@@ -11,8 +11,8 @@ import Types
 import Data.Maybe
 import Control.Monad.State
 
-evaluationStyle = evaluate
-evaluateCastStyle = evaluateCasts
+evaluationStyle = id
+evaluateCastStyle = id
 
 -- evaluate using call-by-value strategy
 evaluate :: Expression -> Expression
@@ -154,11 +154,13 @@ evaluate e@(IntersectionCasts cs expr)
                 -- otherwise return intersection of casts
                 | not $ null cs' = IntersectionCasts cs' expr
         in evaluationStyle result
+
 -- blames are values
 evaluate e@Blame{} = e
 
 -- evaluate casts in intersections
 evaluateCasts :: CastI -> CastI
+
 -- evaluate single casts
 evaluateCasts c@(SingleCast cl t1 t2 c1)
     -- push blames to top level
@@ -191,9 +193,12 @@ evaluateCasts c@(SingleCast cl t1 t2 c1)
     | otherwise = StuckCast cl
     -- Project types and expression from inner casts
     where (SingleCast cl' t1' t2' c') = c1
+
 -- blame cast evaluates to itself
 evaluateCasts c@BlameCast{} = c
+
 -- empty cast evaluates to itself
 evaluateCasts c@EmptyCast{} = c
+
 -- stuck cast evaluates to itself
 evaluateCasts c@StuckCast{} = c
