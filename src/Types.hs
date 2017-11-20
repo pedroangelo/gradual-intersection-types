@@ -148,7 +148,7 @@ getInstancesType (ArrowType t1 t2) =
         t2' = getInstancesType t2
     in [ArrowType x y | x <- t1', y <- t2']
 getInstancesType (IntersectionType ts) =
-    concat $ map getInstancesType ts
+    concatMap getInstancesType ts
 
 -- join instances of intersection types
 joinInstances :: [Type] -> Type
@@ -158,14 +158,14 @@ joinInstances ts
         let types = nub ts
             result
                 | length types == 1 = head types
-                | otherwise = IntersectionType $ types
+                | otherwise = IntersectionType types
         in result
     -- only arrow types, therefore join under arrow
     | all isArrowType ts =
-        let (ts1, ts2) = unzip $ [(t1, t2) | (ArrowType t1 t2) <- ts]
+        let (ts1, ts2) = unzip [(t1, t2) | (ArrowType t1 t2) <- ts]
         in ArrowType (joinInstances ts1) (joinInstances ts2)
     | any isArrowType ts =
         let ftypes = filter isArrowType ts
             btypes = filter (not . isArrowType) ts
-            (ts1, ts2) = unzip $ [(t1, t2) | (ArrowType t1 t2) <- ftypes]
+            (ts1, ts2) = unzip [(t1, t2) | (ArrowType t1 t2) <- ftypes]
         in IntersectionType $ btypes ++ [ArrowType (joinInstances ts1) (joinInstances ts2)]

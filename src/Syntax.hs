@@ -4,6 +4,7 @@ module Syntax where
 import Types
 
 -- Imports
+import Data.List
 import Control.Monad.State
 
 -- Expressions in λ-calculus and extensions
@@ -32,8 +33,8 @@ data Expression
 data CastI
     = SingleCast CastLabel Type Type CastI
     | BlameCast CastLabel Type Message
-    | EmptyCast CastLabel
-    | StuckCast CastLabel
+    | EmptyCast CastLabel Type
+    | StuckCast CastLabel Type
     deriving (Show, Eq)
 
 type CastLabel = Int
@@ -174,23 +175,38 @@ isValueCast _ = False
 -- check if intersection of casts is a value
 isValueIntersectionCasts :: Expression -> Bool
 isValueIntersectionCasts (IntersectionCasts cs e) =
-    (all isValueCastI cs && isValue e) ||
-    (all (\x -> isValueCastI x || isEmptyCast x || isBlameCast x) cs && not (all isEmptyCast cs) && not (all isBlameCast cs) && isValue e)
+    all isCastValue cs &&
+    (not (all isEmptyCast cs) && not (any isStuckCast cs) && not (all isBlameCast cs)) &&
+    isValue e
 isValueIntersectionCasts _ = False
 
--- check if cast in intersection of casts is a value
-isValueCastI :: CastI -> Bool
-isValueCastI (SingleCast _ t1 t2 c) =
-    (isGroundType t1 && isDynType t2 && isValueCastI c) ||
-    (isArrowType t1 && isArrowType t2 && t1 /= t2 && isValueCastI c) ||
+-- check if casts in intersection of casts is a value in the cast semantics
+isCastValue :: CastI -> Bool
+isCastValue c =
+    isCastValue1 c ||
+    isCastValue2 c
+
+-- check if casts in intersection of casts is a value in the cast semantics
+isCastValue1 :: CastI -> Bool
+isCastValue1 (SingleCast _ t1 t2 c) =
+    (isGroundType t1 && isDynType t2 && isCastValue1 c) ||
+    (isArrowType t1 && isArrowType t2 && t1 /= t2 && isCastValue1 c) ||
     (isGroundType t1 && isDynType t2 && isEmptyCast c) ||
     (isArrowType t1 && isArrowType t2 && t1 /= t2 && isEmptyCast c)
-isValueCastI _ = False
+isCastValue1 _ = False
+
+-- check if casts in intersection of casts is a value in the cast semantics
+isCastValue2 :: CastI -> Bool
+isCastValue2 c =
+    isBlameCast c ||
+    isEmptyCast c ||
+    isStuckCast c
+
 
 -- check if single cast is compatible with arrow type
 isArrowCompatible :: CastI -> Bool
 isArrowCompatible (SingleCast _ t1 t2 c) = isArrowType t1 && isArrowType t2 && isArrowCompatible c
-isArrowCompatible (EmptyCast _) = True
+isArrowCompatible EmptyCast{} = True
 isArrowCompatible _ = False
 
 -- PROJECTIONS
@@ -207,8 +223,8 @@ getCastTypes (Cast t1 t2 _) = (t1, t2)
 getCastLabel :: CastI -> CastLabel
 getCastLabel (SingleCast cl _ _ _) = cl
 getCastLabel (BlameCast cl _ _) = cl
-getCastLabel (EmptyCast cl) = cl
-getCastLabel (StuckCast cl) = cl
+getCastLabel (EmptyCast cl _) = cl
+getCastLabel (StuckCast cl _) = cl
 
 -- SUBSTITUTIONS
 type ExpressionSubstitution = (String, Expression)
@@ -310,11 +326,11 @@ removeIdentityCastsI' c = c
 convertToSimpleCast :: CastI -> Expression -> Expression
 convertToSimpleCast (SingleCast _ t1 t2 c) expr = Cast t1 t2 $ convertToSimpleCast c expr
 convertToSimpleCast (BlameCast _ t msg) expr = Blame t msg
-convertToSimpleCast (EmptyCast _) expr = expr
+convertToSimpleCast (EmptyCast _ _) expr = expr
 
 -- convert casts to IntersectionCasts
 convertToIntersectionCasts :: Expression -> Expression
-convertToIntersectionCasts (Cast t1 t2 expr) = IntersectionCasts [SingleCast 0 t1 t2 $ EmptyCast 0] expr
+convertToIntersectionCasts (Cast t1 t2 expr) = IntersectionCasts [SingleCast 0 t1 t2 $ EmptyCast 0 t1] expr
 
 -- merge casts recursively until sub expression is not a cast
 mergeCasts :: Expression -> Expression
@@ -346,13 +362,13 @@ isSameCastLabel c1 c2
 joinCastI :: CastI -> CastI -> CastI
 joinCastI (SingleCast cl t1 t2 c) cast = SingleCast cl t1 t2 $ joinCastI c cast
 joinCastI (BlameCast cl t msg) cast = BlameCast cl t msg
-joinCastI (EmptyCast cl) cast = assignCastLabel cl cast
-joinCastI (StuckCast cl) cast = StuckCast cl
+joinCastI (EmptyCast cl t) cast = assignCastLabel cl cast
+joinCastI (StuckCast cl t) cast = StuckCast cl t
 
 -- remove first cast from intersection cast
 separateIntersectionCast :: CastI -> (CastI, CastI)
-separateIntersectionCast (SingleCast cl t1 t2 c) = (SingleCast cl t1 t2 $ EmptyCast cl, c)
-separateIntersectionCast (EmptyCast cl) = (EmptyCast cl, EmptyCast cl)
+separateIntersectionCast (SingleCast cl t1 t2 c) = (SingleCast cl t1 t2 $ EmptyCast cl t1, c)
+separateIntersectionCast (EmptyCast cl t) = (EmptyCast cl t, EmptyCast cl t)
 
 -- separate first casts while removing incompatible casts
 getArrowCompatibleCasts :: Expression -> Expression
@@ -372,11 +388,11 @@ getArrowCompatibleCasts (IntersectionCasts cs expr) =
 -- group the components of arrow types in the cast
 getCompatibleArrowType :: CastI -> (CastI, CastI)
 -- Separate the cast T11 -> T12 => T21 -> T22,
-getCompatibleArrowType (SingleCast cl (ArrowType t11 t12) (ArrowType t21 t22) (EmptyCast _)) =
+getCompatibleArrowType (SingleCast cl (ArrowType t11 t12) (ArrowType t21 t22) (EmptyCast _ _)) =
     -- in two casts: T21 => T11 and T12 => T22
-    (SingleCast cl t21 t11 $ EmptyCast cl, SingleCast cl t12 t22 $ EmptyCast cl)
+    (SingleCast cl t21 t11 $ EmptyCast cl t21, SingleCast cl t12 t22 $ EmptyCast cl t12)
 -- If cast is an empty cast, just return two empty casts
-getCompatibleArrowType (EmptyCast cl) = (EmptyCast cl, EmptyCast cl)
+getCompatibleArrowType (EmptyCast cl t) = (EmptyCast cl t, EmptyCast cl t)
 
 -- simulate casts on arrow data type
 simulateCastsArrow :: Expression -> Expression -> Expression
@@ -395,8 +411,8 @@ cleanCastLabel = assignCastLabel 0
 assignCastLabel :: CastLabel -> CastI -> CastI
 assignCastLabel cl (SingleCast _ t1 t2 cs) = SingleCast cl t1 t2 $ assignCastLabel cl cs
 assignCastLabel cl (BlameCast _ t msg) = BlameCast cl t msg
-assignCastLabel cl (EmptyCast _) = EmptyCast cl
-assignCastLabel cl (StuckCast _) = StuckCast cl
+assignCastLabel cl (EmptyCast _ t) = EmptyCast cl t
+assignCastLabel cl (StuckCast _ t) = StuckCast cl t
 
 -- get int from expression
 getExpectedInt :: Expression -> Expression
@@ -413,5 +429,5 @@ getExpectedInt (IntersectionCasts cs e)
 addCasts :: [Type] -> [Type] -> Expression -> Expression
 addCasts t1 t2 e
     | length t1 == 1 && length t2 == 1 = Cast (head t1) (head t2) e
-    | length t1 == length t2 = IntersectionCasts (map (\x -> SingleCast 0 (fst x) (snd x) $ EmptyCast 0) $ zip t1 t2) e
-    | length t1 == 1 || length t2 == 1 = IntersectionCasts [SingleCast 0 x y $ EmptyCast 0 | x <- t1, y <- t2] e
+    | length t1 == length t2 = IntersectionCasts (map (\x -> SingleCast 0 (fst x) (snd x) $ EmptyCast 0 (fst x)) $ zip t1 t2) e
+    | length t1 == 1 || length t2 == 1 = IntersectionCasts [SingleCast 0 x y $ EmptyCast 0 x | x <- t1, y <- t2] e

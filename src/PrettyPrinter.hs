@@ -58,10 +58,10 @@ prettyCasts (BlameCast cl typ msg) = hsep
     [text "Blame:", text msg, int cl]
 
 -- Empty Cast
-prettyCasts (EmptyCast cl) = hsep [text "(/)", int cl]
+prettyCasts (EmptyCast cl t) = hsep [text "(/)", int cl]
 
 -- Stuck
-prettyCasts (StuckCast cl) = hsep [text "_|_", int cl]
+prettyCasts (StuckCast cl t) = hsep [text "_|_", int cl]
 
 -- pretty print type
 prettyType :: Type -> Doc

@@ -11,8 +11,8 @@ import Types
 import Data.Maybe
 import Control.Monad.State
 
-evaluationStyle = id
-evaluateCastStyle = id
+evaluationStyle = evaluate
+evaluateCastStyle = evaluateCasts
 
 -- evaluate using call-by-value strategy
 evaluate :: Expression -> Expression
@@ -164,33 +164,35 @@ evaluateCasts :: CastI -> CastI
 -- evaluate single casts
 evaluateCasts c@(SingleCast cl t1 t2 c1)
     -- push blames to top level
-    | isBlameCast c1 = c1
+    | isBlameCast c1 =
+        let (BlameCast _ _ msg) = c1
+        in BlameCast cl t2 msg
     -- push stuck to top level
-    | isStuckCast c1 = c1
+    | isStuckCast c1 = StuckCast cl t2
     -- values don't reduce
-    | isValueCastI c || isEmptyCast c = c
+    | isCastValue c = c
     -- evaluate inside cast
-    | not (isValueCastI c1) && not (isEmptyCast c1) =
+    | not (isCastValue c1) =
         let c1' = evaluateCasts c1
         in evaluateCastStyle $ SingleCast cl t1 t2 c1'
     -- ID-BASE - remove casts to same types
-    | (isValueCastI c1 || isEmptyCast c1) && t1 == t2 = evaluateCastStyle c1
+    | (isCastValue1 c1 || isEmptyCast c1) && t1 == t2 = evaluateCastStyle c1
     -- SUCCEED - cast is sucessful
-    | (isValueCastI c1 || isEmptyCast c1) && isSingleCast c1 && t1 == DynType && t2' == DynType && isGroundType t2 && t1' == t2 =
+    | (isCastValue1 c1 || isEmptyCast c1) && isSingleCast c1 && t1 == DynType && t2' == DynType && isGroundType t2 && t1' == t2 =
             evaluateCastStyle c'
     -- FAIL - cast fails
-    | (isValueCastI c1 || isEmptyCast c1) && isSingleCast c1 && t1 == DynType && t2' == DynType &&
+    | (isCastValue1 c1 || isEmptyCast c1) && isSingleCast c1 && t1 == DynType && t2' == DynType &&
         isGroundType t2 && isGroundType t1' && not (sameGround t1' t2) =
             BlameCast cl t2 $ "cannot cast from " ++ show t1' ++ " to " ++ show t2
     -- GROUND - cast types through their ground types
-    | (isValueCastI c1 || isEmptyCast c1) && not (isGroundType t1) && t2 == DynType =
+    | (isCastValue1 c1 || isEmptyCast c1) && not (isGroundType t1) && t2 == DynType =
         let g = getGroundType t1
         in evaluateCastStyle $ SingleCast cl g DynType $ SingleCast cl t1 g c1
     -- EXPAND - cast types through their ground types
-    | (isValueCastI c1 || isEmptyCast c1) && not (isGroundType t2) && t1 == DynType =
+    | (isCastValue1 c1 || isEmptyCast c1) && not (isGroundType t2) && t1 == DynType =
         let g = getGroundType t2
         in evaluateCastStyle $ SingleCast cl g t2 $ SingleCast cl DynType g c1
-    | otherwise = StuckCast cl
+    | isCastValue1 c1 || isEmptyCast c1 = StuckCast cl t2
     -- Project types and expression from inner casts
     where (SingleCast cl' t1' t2' c') = c1
 
