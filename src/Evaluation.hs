@@ -110,7 +110,7 @@ evaluate e@(Cast t1 t2 expr)
     | isValue expr && isCast expr && t1 == DynType && t2' == DynType &&
         isGroundType t2 && isGroundType t1' && not (sameGround t1' t2) =
             Blame t2 $ "cannot cast from " ++ show t1' ++ " to " ++ show t2
-    -- SUCCEEDFAIL/\ - cast is either sucessful or fails
+    -- MERGE1/\ - cast is either sucessful or fails
     | isValue expr && isIntersectionCasts expr =
         evaluationStyle $ IntersectionCasts (map (\x -> SingleCast (getCastLabel x) t1 t2 x) cs) expr''
     -- GROUND - cast types through their ground types
@@ -130,30 +130,25 @@ evaluate e@(IntersectionCasts cs expr)
     -- push blame to top level
     | isBlame expr = evaluationStyle expr
     -- group all casts to be reduced
-    | isIntersectionCasts expr || isCast expr = evaluationStyle $ mergeCasts e
+    | isValue expr && (isIntersectionCasts expr || isCast expr) = evaluationStyle $ mergeCasts e
     -- values don't reduce
     | isValue e = e
     -- evaluate inside a cast
     | not (isValue expr) =
         let expr2 = evaluate expr
         in evaluationStyle $ IntersectionCasts cs expr2
-    -- Remove empty casts
-    | isValue expr && all isEmptyCast cs = evaluationStyle expr
+    -- evaluate casts in intersections
+    | isValue expr && not (all isCastValue cs) =
+        evaluationStyle $ IntersectionCasts (map evaluateCasts cs) expr
     -- Propagate blame
     | isValue expr && all isBlameCast cs =
         let (BlameCast _ t msg) = head cs
-        in evaluationStyle $ Blame t msg
-    -- reduce the casts in the intersection
-    | otherwise =
-        let
-            -- reduce intersection casts and filter stuck ones
-            cs' = filter (not . isStuckCast) $ map evaluateCasts cs
-            result
-                -- if there is only one intersection cast, convert to cast
-                | length cs' == 1 = convertToSimpleCast (head cs') expr
-                -- otherwise return intersection of casts
-                | not $ null cs' = IntersectionCasts cs' expr
-        in evaluationStyle result
+        in evaluationStyle $ Blame (IntersectionType $ map (\x -> let (BlameCast cl t msg) = x in t) cs) msg
+    -- Remove empty casts
+    | isValue expr && all isEmptyCast cs = evaluationStyle expr
+    -- Remove stuck casts
+    | isValue expr && all isCastValue cs && not (all isStuckCast cs) && any isStuckCast cs =
+        evaluationStyle $ IntersectionCasts (filter (not . isStuckCast) cs) expr
 
 -- blames are values
 evaluate e@Blame{} = e

@@ -1,0 +1,20 @@
+%% Types
+\newcommand{\Int}{{\ensuremath{Int}}}
+\newcommand{\Bool}{\ensuremath{Bool}}
+\newcommand{\Dyn}{\ensuremath{Dyn}}
+
+%% Terms
+\newcommand{\true}{\ensuremath{true}}
+\newcommand{\false}{\ensuremath{false}}
+\newcommand{\blame}[2]{\ensuremath{blame_{#1}\ #2}}
+
+
+%% Terms of intersection cast language
+\newcommand{\blamecast}[4]{\ensuremath{blame\ #1\ #2\ #3\ ^{#4}}}
+\newcommand{\emptycast}[2]{\ensuremath{\varnothing\ #1\ ^{#2}}}
+\newcommand{\stuckcast}[3]{\ensuremath{\bot\ #1\ #2\ ^{#3}}}
+
+
+%% Auxiliary definitions
+\newcommand{\erasee}[1]{\ensuremath{\llbracket #1 \rrbracket_{_e}}}
+\newcommand{\erasec}[1]{\ensuremath{\llbracket #1 \rrbracket_{_c}}}

@@ -1,0 +1,979 @@
+\documentclass[a4paper]{article}
+
+\include{packages}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\begin{document}
+
+\title{Gradual Intersection Types}
+
+\author{Pedro Ângelo}
+
+\maketitle
+\pagenumbering{arabic}
+
+\section{Language Definition}
+\begin{figure}[H]
+Syntax
+\begin{align*}
+&Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T'\ |\ T \cap \ldots \cap T\\
+                          T' &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T' \rightarrow T' \end{aligned}\\
+&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\ |\ e + e\\
+                                      |&\ e : T' \Rightarrow^l T'\\
+                                      |&\ e : c \cap \ldots \cap c\\
+                                      |&\ \blame{T}{l} \end{aligned}\\
+&Ground\ Types\ G\ ::=\ \Int\ |\ \Bool\ |\ \Dyn \rightarrow \Dyn\\
+&Casts\ \begin{aligned}[t] c\ ::=&\ c : T' \Rightarrow^l T'\ ^n\ |\ \blamecast{T'}{T'}{l}{n}\ |\ \emptycast{T'}{n}\ |\ \stuckcast{T'}{T'}{n}\end{aligned}\\
+&Values\ \begin{aligned}[t] v\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ n\ |\ \true\ |\ \false\ |\ \blame{T}{l}\\
+                                 |&\ v : G \Rightarrow^l \Dyn\\
+                                 |&\ v : T'_1 \rightarrow T'_2 \Rightarrow^l T'_3 \rightarrow T'_4\\
+                                 |&\ v : cv_1 \cap \ldots \cap cv_n\ such\ that\\
+                                 &\neg(\forall_{i\in 1..n}\ .\ cv_i = \blamecast{T'}{T'}{l}{m})\ \land\\
+                                 &\neg(\forall_{i\in 1..n}\ .\ cv_i = \emptycast{T'}{m})\ \land\\
+                                 &\neg(\exists{i\in 1..n}\ .\ cv_i = \stuckcast{T'}{T'}{m}) \end{aligned}\\
+&Cast\ Values\ \begin{aligned}[t] cv\ ::=&\ cv1\ |\ cv2\\
+                                cv1\ ::=&\ \emptycast{T'}{n} : G \Rightarrow^l \Dyn\ ^n\\
+                                       |&\ \emptycast{T'}{n} : T'_1 \rightarrow T'_2 \Rightarrow^l T'_3 \rightarrow T'_4\\
+                                       |&\ cv1 : G \Rightarrow^l \Dyn\ ^n\\
+                                       |&\ cv2 : T'_1 \rightarrow T'_2 \Rightarrow^l T'_3 \rightarrow T'_4\\
+                                cv2\ ::=&\ \blamecast{T'}{T'}{l}{n}\\
+                                       |&\ \emptycast{T'}{n}\\
+                                       |&\ \stuckcast{T'}{T'}{n} \end{aligned}
+\end{align*}
+
+\hrulefill
+\caption{Gradual Intersection System}
+\label{intersection_syntax}
+\end{figure}
+
+\begin{figure}[H]
+\framebox[1.2\width]{$\Gamma \vdash_{\cap G} e : T$}\ Typing
+\begin{mathpar}
+\inferrule* [right=${\rightarrow} I$]
+{\Gamma, x : T_1 \cap \ldots \cap T_n \vdash_{\cap G}\ e : T}
+{\Gamma \vdash_{\cap G} \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T}
+
+\inferrule* [right=${\rightarrow} I'$]
+{\Gamma, x : T_i \vdash_{\cap G}\ e : T}
+{\Gamma \vdash_{\cap G} \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T}
+
+\inferrule* [right=${\rightarrow} E$]
+{\Gamma \vdash_{\cap G} e_1 : PM \\
+ PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T \\\\
+ \Gamma \vdash_{\cap G} e_2 : T'_1 \cap \ldots \cap T'_n \\
+ T'_1 \cap \ldots \cap T'_n \sim T_1 \cap \ldots \cap T_n}
+{\Gamma \vdash_{\cap G} e_1\ e_2 : T}
+
+\inferrule* [right=${\cap} I$]
+{\Gamma \vdash_{\cap G} e : T_1\ \ldots\ \Gamma \vdash_{\cap G} e : T_n}
+{\Gamma \vdash_{\cap G} e : T_1 \cap \ldots \cap T_n}
+
+\inferrule* [right=${\cap} E$]
+{x : T_1 \cap \ldots \cap T_n \in \Gamma}
+{\Gamma \vdash_{\cap G} x : T_i}
+\end{mathpar}
+
+\framebox[1.2\width]{$T \sim T$}\ Consistency
+\begin{mathpar}
+\inferrule* []
+{ }
+{B \sim B}
+
+\inferrule* []
+{ }
+{T \sim \Dyn}
+
+\inferrule* []
+{ }
+{\Dyn \sim T}
+
+\inferrule* []
+{T_1 \sim T_3 \\ T_2 \sim T_4}
+{T_1 \rightarrow T_2 \sim T_3 \rightarrow T_4}
+
+\inferrule* []
+{T_1 \sim T'_1\ \ldots\ T_n \sim T'_n}
+{T_1 \cap \ldots \cap T_n \sim T'_1 \cap \ldots \cap T'_n}
+
+\inferrule* []
+{T \sim T_1\ \ldots\ T \sim T_n}
+{T \sim T_1 \cap \ldots \cap T_n}
+
+\inferrule* []
+{T_1 \sim T\ \ldots\ T_n \sim T}
+{T_1 \cap \ldots \cap T_n \sim T}
+\end{mathpar}
+
+\framebox[1.2\width]{$T \rhd T$}\ Pattern Matching
+\begin{mathpar}
+\inferrule* []
+{ }
+{(T_1 \rightarrow T_2) \rhd T_1 \rightarrow T_2}
+
+\inferrule* []
+{ }
+{\Dyn \rhd \Dyn \rightarrow \Dyn}
+\end{mathpar}
+\hrulefill
+\caption{Gradual Intersection Type System ($\vdash_{\cap G}$)}
+\label{intersection_type_system}
+\end{figure}
+
+\begin{figure}[H]
+\framebox[1.2\width]{$\Gamma \vdash_{\cap G} e : T$}\ Typing
+\begin{mathpar}
+\inferrule* []
+{}
+{rules\ in\ Figure\ \ref{intersection_type_system}\ and}\\
+
+\inferrule* [right=T-Cast]
+{\Gamma \vdash_{\cap CC} e : T_1 \\ T_1 \sim T_2}
+{\Gamma \vdash_{\cap CC} (e : T_1 \Rightarrow^l T_2) : T_2}
+
+\inferrule* [right=T-Blame]
+{ }
+{\Gamma \vdash_{\cap CC} \blame{T}{l} : T}
+
+\inferrule* [right=T-IntersectionCast]
+{\Gamma \vdash_{\cap CC} e : T \\ \vdash_{\cap IC} c_1 : T_1\ \ldots\ \vdash_{\cap IC} c_n : T_n \\\\ initialType(c_1) \cap \ldots \cap initialType(c_n) =_{\cap} T}
+{\Gamma \vdash_{\cap CC} (e : c_1 \cap \ldots \cap c_n) : T_1 \cap \ldots \cap T_n}
+\end{mathpar}
+
+\framebox[1.2\width]{initialType(c) = T}
+\begin{mathpar}
+\inferrule* []
+{}
+{initialType(c : T_1 \Rightarrow^l T_2\ ^n) = initialType(c)}\\
+
+\inferrule* []
+{}
+{initialType(\emptycast{T}{n}) = T}\\
+
+\inferrule* []
+{}
+{initialType(\blamecast{T_I}{T_F}{l}{n}) = T_I}\\
+
+\inferrule* []
+{}
+{initialType(\stuckcast{T_I}{T_F}{n}) = T_I}
+\end{mathpar}
+\hrulefill
+\caption{Intersection Cast Calculus ($\vdash_{\cap CC}$)}
+\label{intersection_cast_calculus}
+\end{figure}
+
+\begin{figure}[H]
+\framebox[1.2\width]{$\Gamma \vdash_{\cap CC} e \leadsto e : T$}\ Compilation
+\begin{mathpar}
+\inferrule* []
+{x : T_1 \cap \ldots \cap T_n \in \Gamma}
+{\Gamma \vdash_{\cap CC} x \leadsto x : T_i}
+
+\inferrule* []
+{\Gamma, x : T_1 \cap \ldots \cap T_n \vdash_{\cap CC} e \leadsto e' : T}
+{\Gamma \vdash_{\cap CC} (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e) \leadsto (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e') : T_1 \cap \ldots \cap T_n \rightarrow T}
+
+\inferrule* []
+{\Gamma \vdash_{CC} e_1 \leadsto e_1' : PM \\ PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T \\\\ \Gamma \vdash_{CC} e_2 \leadsto e_2' : T'_1 \cap \ldots \cap T'_n \\ T'_1 \cap \ldots \cap T'_n \sim T_1 \cap \ldots \cap T_n\\\\ e_1'' = addCasts(getInstances(PM),\ getInstances(T_1 \cap \ldots \cap T_n \rightarrow T),\ e_1') \\\\ e_2'' = addCasts(getInstances(T'_1 \cap \ldots \cap T'_n),\ getInstances(T_1 \cap \ldots \cap T_n),\ e_2')}
+{\Gamma \vdash_{CC} e_1\ e_2 \leadsto e_1''\ e_2'' : T}
+\end{mathpar}
+\hrulefill
+\caption{Compilation to the Cast Calculus}
+\label{intersection_cast_insertion}
+\end{figure}
+
+\begin{figure}[H]
+\framebox[1.2\width]{$e \longrightarrow_{\cap CC} e$}\ Evaluation
+\begin{mathpar}
+\inferrule* []
+{}
+{Simulate\ casts\ on\ data\ types}
+
+\inferrule* [right=Simulate$\cap$]
+{isValue\ v_1 : cv_1 \cap \ldots \cap cv_n \\ \exists i \in 1..n\ .\ isArrowCompatible\ cv_i \\\\ (cv_1', \ldots, cv_m') = filter\ isArrowCompatible\ (cv_1, \ldots, cv_n) \\\\ ((c_{11}, c_{12}, r_1), \ldots, (c_{m1}, c_{m2}, r_m)) = map\ simulateArrow\ (cv_1', \ldots, cv_m')}
+{(v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 \longrightarrow_{\cap CC}\\ (v_1 : r_1 \cap \ldots \cap r_m)\ (v_2 : c_{11}^1 \cap \ldots \cap c_{m1}^m) : c_{12}^1 \cap \ldots \cap c_{m2}^m}
+
+\inferrule* []
+{}
+{Merge\ casts}\\
+
+\inferrule* [right=Merge1$\cap$]
+{isValue\ v : cv_1 \cap \ldots \cap cv_n \\ label(c_1) = m_1\ \ldots\ label (c_n) = m_n}
+{v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC}\\ v : (cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1}) \cap \ldots \cap (cv_n : T_1 \Rightarrow^l T_2\ ^{m_n})}
+
+\inferrule* [right=Merge2$\cap$]
+{isIntersectionCast\ v \lor isCast\ v \\ v' : c_1' \cap \ldots \cap c_m' = mergeCasts (v : c_1 \cap \ldots \cap c_n)}
+{v : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v' : c_1' \cap \ldots \cap c_m'}\\
+
+\inferrule* []
+{}
+{Evaluate\ intersection\ casts}\\
+
+\inferrule* [right=Evaluate$\cap$]
+{\neg(\forall i \in 1..n\ .\ isCastValue\ c_i) \\ c_1 \longrightarrow_{\cap IC} cv_1\ \ldots\ c_n \longrightarrow_{\cap IC} cv_n}
+{v : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n}\\
+
+\inferrule* []
+{}
+{Transition\ from\ cast\ values\ to\ values}
+
+\inferrule* [right=PropagateBlame$\cap$]
+{ }
+{v : \blamecast{T_1'}{T_1}{l_1}{m_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{m_n}\\ \longrightarrow_{\cap CC} \blame{(T_1 \cap \ldots \cap T_n)}{l_1}}
+
+\inferrule* [right=RemoveEmpty$\cap$]
+{ }
+{v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n} \longrightarrow_{\cap CC} v}
+
+\inferrule* [right=RemoveStuck$\cap$]
+{\neg(\forall i \in 1..n\ .\ isStuckCast\ cv_i) \\ \exists i \in 1..n\ .\ isStuckCast\ cv_i  \\ (cv_1', \ldots, cv_m') = filter\ (\neg isStuckCast)\ (cv_1, \ldots, cv_n)}
+{v : cv_1 \cap \ldots \cap cv_n \longrightarrow_{\cap CC} v : cv_1' \cap \ldots \cap cv_m'}
+\end{mathpar}
+\hrulefill
+\caption{Cast Calculus Semantics ($\longrightarrow_{\cap CC}$)}
+\label{casts_calculus_semantics}
+\end{figure}
+
+\begin{figure}[H]
+\framebox[1.2\width]{$\vdash_{\cap IC} c : T$}\ Typing
+\begin{mathpar}
+
+\inferrule* [right=T-SingleC]
+{\vdash_{\cap IG} c : T_1 \\ T_1 \sim T_2}
+{\vdash_{\cap IG} (c : T_1 \Rightarrow^l T_2\ ^n) : T_1}
+
+\inferrule* [right=T-EmptyC]
+{ }
+{\vdash_{\cap IG} \emptycast{T}{n} : T}
+
+\inferrule* [right=T-BlameC]
+{ }
+{\vdash_{\cap IG} \blamecast{T_I}{T_F}{l}{n} : T_F}
+
+\inferrule* [right=T-StuckC]
+{ }
+{\vdash_{\cap IG} \stuckcast{T_I}{T_F}{n} : T_F}
+\end{mathpar}
+\hrulefill
+\caption{Intersection Casts Type System ($\vdash_{\cap IC}$)}
+\label{intersection_casts_type_system}
+\end{figure}
+
+\begin{figure}[H]
+\framebox[1.2\width]{$c \longrightarrow_{\cap IC} c$}\ Evaluation
+\begin{mathpar}
+\inferrule* []
+{}
+{Push\ blame\ and\ stuck\ to\ top\ level}\\
+
+\inferrule* [right=PushBlameC]
+{ }
+{\blamecast{T_I}{T_F}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_2\ ^{n_2} \longrightarrow_{\cap IC} \blamecast{T_I}{T_2}{l_1}{n_1}}
+
+\inferrule* [right=PushStuckC]
+{ }
+{\stuckcast{T_I}{T_F}{n_1} : T_1 \Rightarrow^l T_2\ ^{n_2} \longrightarrow_{\cap IC} \stuckcast{T_I}{T_2}{n_1}}\\
+
+\inferrule* []
+{}
+{Evaluate\ inside\ casts}\\
+
+\inferrule* [right=EvaluateC]
+{\neg(isCastValue\ c) \\ c \longrightarrow_{\cap IC} c'}
+{c : T_1 \Rightarrow^l T_2\ ^n \longrightarrow_{\cap IC} c' : T_1 \Rightarrow^l T_2\ ^n}
+
+\inferrule* []
+{}
+{Detect\ success\ or\ failure\ of\ casts}\\
+
+\inferrule* [right=IdentityC]
+{isCastValue1\ c \lor isEmptyCast\ c}
+{c : T \Rightarrow^l T\ ^n \longrightarrow_{\cap IC} c}
+
+\inferrule* [right=SucceedC]
+{isCastValue1\ c \lor isEmptyCast\ c}
+{c : G \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G\ ^{n_2} \longrightarrow_{\cap IC} c}
+
+\inferrule* [right=FailC]
+{isCastValue1\ c \lor isEmptyCast\ c \\ \neg(same\ ground\ G_1\ G_2) \\ initialType(c) = T_I}
+{c : G_1 \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{n_2} \longrightarrow_{\cap IC} \blamecast{T_I}{G_2}{l_2}{n_1}}\\
+
+\inferrule* []
+{}
+{Mediate\ the\ transition\ between\ the\ two\ disciplines}\\
+
+\inferrule* [right=GroundC]
+{isCastValue1\ c \lor isEmptyCast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
+{c : T \Rightarrow^l \Dyn\ ^n \longrightarrow_{\cap IC} c : T \Rightarrow^l G : G \Rightarrow^l \Dyn\ ^n}
+
+\inferrule* [right=ExpandC]
+{isCastValue1\ c \lor isEmptyCast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
+{c : \Dyn \Rightarrow^l T\ ^n \longrightarrow_{\cap IC} c : \Dyn \Rightarrow^l G : G \Rightarrow^l T\ ^n}\\
+
+\inferrule* []
+{}
+{Trigger\ stuck}\\
+
+\inferrule* [right=TriggerStuckC]
+{isCastValue1\ c \lor isEmptyCast\ c \\ initialType(c) = T_I}
+{c : T_1 \Rightarrow^l T_2\ ^n \longrightarrow_{\cap IC} \stuckcast{T_I}{T_2}{n}}
+\end{mathpar}
+\hrulefill
+\caption{Intersection Casts Semantics ($\longrightarrow_{\cap IC}$)}
+\label{intersection_casts_semantics}
+\end{figure}
+
+\begin{figure}[H]
+\framebox[1.2\width]{\erasee{e} = e} Erase identity casts
+\begin{mathpar}
+\inferrule* []
+{}
+{\erasee{x} = x}\\
+
+\inferrule* []
+{}
+{\erasee{\lambda x : T\ .\ e} = \lambda x : T\ .\ \erasee{e}}\\
+
+\inferrule* []
+{}
+{\erasee{e_1\ e_2} = \erasee{e_1}\ \erasee{e_2}}\\
+
+\inferrule* []
+{}
+{\erasee{n} = n}\\
+
+\inferrule* []
+{}
+{\erasee{\true} = \true}\\
+
+\inferrule* []
+{}
+{\erasee{\false} = \false}\\
+
+\inferrule* []
+{}
+{\erasee{e_1 + e_2} = \erasee{e_1} + \erasee{e_2}}\\
+
+\inferrule* []
+{}
+{\erasee{e : T \Rightarrow^l T} = \erasee{e}}\\
+
+\inferrule* []
+{}
+{\erasee{e : T_1 \Rightarrow^l T_2} = \erasee{e} : T_1 \Rightarrow^l T_2}\\
+
+\inferrule* []
+{\erasec{c_1} = \emptycast{T_1}{n_1}\ \ldots\ \erasec{c_n} = \emptycast{T_n}{n_n}}
+{\erasee{e : c_1 \cap \ldots \cap c_n} = \erasee{e}}\\
+
+\inferrule* []
+{\erasec{c_1} = c_1'\ \ldots\ \erasec{c_n} = c_n'}
+{\erasee{e : c_1 \cap \ldots \cap c_n} = \erasee{e} : c_1' \cap \ldots \cap c_n'}\\
+
+\end{mathpar}
+
+\framebox[1.2\width]{\erasec{c} = c} Erase identity casts
+\begin{mathpar}
+\inferrule* []
+{}
+{\erasec{c : T \Rightarrow^l T\ ^n} = \erasec{c}}\\
+
+\inferrule* []
+{}
+{\erasec{c : T_1 \Rightarrow^l T_2\ ^n} = \erasec{c} : T_1 \Rightarrow^l T_2\ ^n}\\
+
+\inferrule* []
+{}
+{\erasec{\blamecast{T_I}{T_F}{l}{n}} = \blamecast{T_I}{T_F}{l}{n}}\\
+
+\inferrule* []
+{}
+{\erasec{\emptycast{T}{n}} = \emptycast{T}{n}}\\
+
+\inferrule* []
+{}
+{\erasec{\stuckcast{T_I}{T_F}{n}} = \stuckcast{T_I}{T_F}{n}}\\
+\end{mathpar}
+\hrulefill
+\caption{Identity Cast Erasure}
+\label{identity_cast_erasure}
+\end{figure}
+
+\newpage
+
+\section{Proofs}
+\begin{theorem}[Depends on Lemmas \ref{consistencytoequality}, \ref{staticcompilation}, \ref{eliminationidentitycastse}]
+\label{theorem1}
+Equivalence to the Intersection System for fully static terms\\
+If e is fully static, T is a static type, and $\Gamma \vdash_{\cap CC} e \leadsto e' : T$:
+\begin{enumerate}
+    \item $\Gamma \vdash_{\cap S} e : T \iff \Gamma \vdash_{\cap G} e : T$
+    \item $e \longrightarrow_{\cap S} v \iff e' \longrightarrow_{\cap CC} v$
+    %\item $e \longrightarrow_{\cap S} v \iff e \longrightarrow_{\cap CC} v$
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(1) First we will prove that if $\vdash_{\cap S} e : T$ then $\vdash_{\cap G} e : T$.
+We proceed by induction on the length of the derivation tree of $\vdash_{\cap S}$.\\\\
+Base case:
+\begin{itemize}
+    \item e = $x$.
+    If $\Gamma \vdash_{\cap S} x : T_i$, then $x : T_1 \cap \ldots \cap T_n \in \Gamma$ such that $T_i \in \{T_1, \ldots, T_n\}$.
+    Therefore, by rule $\cap E$ of $\vdash_{\cap G}$, $\Gamma \vdash_{\cap G} e : T_i$.\\
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item e = $\lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e'$.
+    There are two possibilities:
+    \begin{itemize}
+        \item Using the rule ${\rightarrow} I$.
+        If $\Gamma \vdash_{\cap S} \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$, then $\Gamma, x : T_1 \cap \ldots \cap T_n \vdash_{\cap S} e' : T$.
+        By the induction hypothesis, $\Gamma, x : T_1 \cap \ldots \cap T_n \vdash_{\cap G} e' : T$.
+        Therefore, by rule ${\rightarrow} I$, $\Gamma \vdash_{\cap G} \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$.
+        \item Using the rule ${\rightarrow} I'$.
+        If $\Gamma \vdash_{\cap S} \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$, then $\Gamma, x : T_i \vdash_{\cap S} e' : T$.
+        By the induction hypothesis, $\Gamma, x : T_i \vdash_{\cap G} e' : T$.
+        Therefore, by rule ${\rightarrow} I'$, $\Gamma \vdash_{\cap G} \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$.
+    \end{itemize}
+    \item e = $e_1\ e_2$.
+    If $\Gamma \vdash_{\cap S} e_1\ e_2 : T$ then $\Gamma \vdash_{\cap S} e_1 : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \vdash_{\cap S} e_2 : T_1 \cap \ldots \cap T_n$.
+    By the induction hypothesis, $\Gamma \vdash_{\cap G} e_1\ : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \vdash_{\cap G} e_2 : T_1 \cap \ldots \cap T_n$.
+    By the definition of $\rhd$, $T_1 \cap \ldots \cap T_n \rightarrow T \rhd T_1 \cap \ldots \cap T_n \rightarrow T$.
+    By the definition of consistency ($T \sim T$), $T_1 \cap \ldots \cap T_n \sim T_1 \cap \ldots \cap T_n$.
+    Therefore, by rule ${\rightarrow} E$, $\Gamma \vdash_{\cap G} e_1\ e_2 : T$.
+    \item e = $e$.
+    If $\Gamma \vdash_{\cap S} e : T_1 \cap \ldots \cap T_n$ then $\Gamma \vdash_{\cap S} e : T_1$ and ... and $\Gamma \vdash_{\cap S} e : T_n$.
+    By the induction hypothesis, $\Gamma \vdash_{\cap G} e : T_1$ and ... and $\Gamma \vdash_{\cap G} e : T_n$.
+    Therefore, by rule ${\cap} E$, $\Gamma \vdash_{\cap G} e : T_1 \cap \ldots \cap T_n$.\\
+\end{itemize}
+Now we will prove that if $\vdash_{\cap G} e : T$ then $\vdash_{\cap S} e : T$.
+We proceed by induction on the length of the derivation tree of $\vdash_{\cap G}$.\\\\
+Base case:
+\begin{itemize}
+    \item e = $x$.
+    If $\Gamma \vdash_{\cap G} x : T_i$, then $x : T_1 \cap \ldots \cap T_n \in \Gamma$ such that $T_i \in \{T_1, \ldots, T_n\}$.
+    Therefore, by rule $\cap E$ of $\vdash_{\cap S}$, $\Gamma \vdash_{\cap S} e : T_i$.\\
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item e = $\lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e'$.
+    There are two possibilities:
+    \begin{itemize}
+        \item Using the rule ${\rightarrow} I$.
+        If $\Gamma \vdash_{\cap G} \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$, then $\Gamma, x : T_1 \cap \ldots \cap T_n \vdash_{\cap G} e' : T$.
+        By the induction hypothesis, $\Gamma, x : T_1 \cap \ldots \cap T_n \vdash_{\cap S} e' : T$.
+        Therefore, by rule ${\rightarrow} I$, $\Gamma \vdash_{\cap S} \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$.
+        \item Using the rule ${\rightarrow} I'$.
+        If $\Gamma \vdash_{\cap G} \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$, then $\Gamma, x : T_i \vdash_{\cap G} e' : T$.
+        By the induction hypothesis, $\Gamma, x : T_i \vdash_{\cap S} e' : T$.
+        Therefore, by rule ${\rightarrow} I'$, $\Gamma \vdash_{\cap S} \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$.
+    \end{itemize}
+    \item e = $e_1\ e_2$.
+    If $\Gamma \vdash_{\cap G} e_1\ e_2 : T$ then $\Gamma \vdash_{\cap G} e_1 : PM$, $PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T$, $\Gamma \vdash_{\cap G} e_2 : T'_1 \cap \ldots \cap T'_n$ and $T'_1 \cap \ldots \cap T'_n \sim T_1 \cap \ldots \cap T_n$.
+    By the definition of $\rhd$, $PM = T_1 \cap \ldots \cap T_n \rightarrow T$, therefore $\Gamma \vdash_{\cap G} e_1 : T_1 \cap \ldots \cap T_n \rightarrow T$.
+    By Lemma \ref{consistencytoequality}, $T'_1 \cap \ldots \cap T'_n = T_1 \cap \ldots \cap T_n$, and therefore $\Gamma \vdash_{\cap G} e_2 : T_1 \cap \ldots \cap T_n$.
+    By the induction hypothesis, $\Gamma \vdash_{\cap S} e_1\ : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \vdash_{\cap S} e_2 : T_1 \cap \ldots \cap T_n$.
+    Therefore, by rule ${\rightarrow} E$, $\Gamma \vdash_{\cap S} e_1\ e_2 : T$.
+    \item e = $e$.
+    If $\Gamma \vdash_{\cap G} e : T_1 \cap \ldots \cap T_n$ then $\Gamma \vdash_{\cap G} e : T_1$ and ... and $\Gamma \vdash_{\cap G} e : T_n$.
+    By the induction hypothesis, $\Gamma \vdash_{\cap S} e : T_1$ and ... and $\Gamma \vdash_{\cap S} e : T_n$.
+    Therefore, by rule ${\cap} E$, $\Gamma \vdash_{\cap S} e : T_1 \cap \ldots \cap T_n$.\\
+\end{itemize}
+(2) Since $\Gamma \vdash_{\cap CC} e \leadsto e' : T$ e $e$ is fully static, then by Lemma \ref{staticcompilation} e by the definition of $\Gamma \vdash_{\cap CC} e \leadsto e' : T$, the expression $e$ equals $e'$, except that $e'$ contains identity casts.
+Therefore, $\erasee{e'} = e$.
+Then, by Lemma \ref{eliminationidentitycastse}, if $e \longrightarrow v$ and $e' \longrightarrow_{\cap CC} v'$, then v = v'.
+\end{proof}
+
+\begin{lemma}
+\label{consistencytoequality}
+Consistency reduces to equality when comparing static types\\
+If $T_1$ and $T_2$ are static types then $T_1 = T_2 \iff T_1 \sim T_2$.
+\end{lemma}
+\begin{proof}
+We proceed by structural induction on $T$.\\\\
+Base cases:
+\begin{itemize}
+    \item $T_1 = \Int$.
+    \begin{itemize}
+        \item If $T_1 = T_2$, then by the definition of $\sim$, $T_1 \sim T_2$.
+        \item If $T_1 \sim T_2$, then by the definition of $\sim$, $T_1 = T_2$.
+    \end{itemize}
+    \item $T_1 = \Bool$.
+    \begin{itemize}
+        \item If $T_1 = T_2$, then by the definition of $\sim$, $T_1 \sim T_2$.
+        \item If $T_1 \sim T_2$, then by the definition of $\sim$, $T_1 = T_2$.
+    \end{itemize}
+    \item $T_1 = \Dyn$.
+    This case is not considered due to the assumption that $T_1$ is a static type.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item $T_1 = T_{11} \rightarrow T_{12}$.
+    \begin{itemize}
+        \item If $T_1 = T_2$, then $\exists T_{21}, T_{22}\ .\ T_2 = T_{21} \rightarrow T_{22}$ and $T_{11} = T_{21}$ and $T_{12} = T_{22}$.
+        By the induction hypothesis, $T_{11} \sim T_{21}$ and $T_{12} \sim T_{22}$.
+        Therefore, by the definition of $\sim$, $T_1 \sim T_2$.
+        \item If $T_1 \sim T_2$, then $\exists T_{21}, T_{22}\ .\ T_2 = T_{21} \rightarrow T_{22}$ and $T_{11} = T_{21}$ and $T_{12} = T_{22}$.
+        By the induction hypothesis, $T_{11} = T_{21}$ and $T_{12} = T_{22}$.
+        Therefore, by the definition of $=$, $T_1 = T_2$.
+    \end{itemize}
+    \item $T_1 = T_{11} \cap \ldots \cap T_{1n}$.
+    \begin{itemize}
+        \item If $T_1 = T_2$, then $\exists T_{21}, \ldots, T_{2n}\ .\ T_2 = T_{21} \cap \ldots \cap T_{2n}$ and $T_{11} = T_{21}$ and ... and $T_{1n} = T_{2n}$.
+        By the induction hypothesis, $T_{11} \sim T_{21}$ and ... and $T_{1n} \sim T_{2n}$.
+        Therefore, by the definition of $\sim$, $T_1 \sim T_2$.
+        \item If $T_1 \sim T_2$, then $\exists T_{21}, \ldots, T_{2n}\ .\ T_2 = T_{21} \cap \ldots \cap T_{2n}$ and $T_{11} \sim T_{21}$ and ... and $T_{1n} \sim T_{2n}$.
+        By the induction hypothesis, $T_{11} = T_{21}$ and ... and $T_{1n} = T_{2n}$.
+        Therefore, by the definition of $=$, $T_1 = T_2$.
+    \end{itemize}
+\end{itemize}
+\end{proof}
+
+\begin{lemma}
+\label{subjectreductionIC}
+Subject reduction of $\longrightarrow_{\cap IC}$\\
+If $\vdash_{\cap IC} c : T$ for some $T$ and $c \longrightarrow_{\cap IC} c'$ then $\vdash_{\cap IC} c' : T$.
+\end{lemma}
+\begin{proof}
+We proceed by induction on the length of the derivation tree of $\longrightarrow_{\cap IC}$.\\\\
+Base cases:
+\begin{itemize}
+    \item c = $\blamecast{T_I}{T_F}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_2\ ^{n_2}$.
+    $\vdash_{\cap IC} \blamecast{T_I}{T_F}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_2\ ^{n_2} : T_2$ and by rule PushBlameC, $\blamecast{T_I}{T_F}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_2\ ^{n_2} \longrightarrow_{\cap IC} \blamecast{T_I}{T_2}{l_1}{n_1}$.
+    As $\vdash_{\cap IC} \blamecast{T_I}{T_2}{l_1}{n_1} : T_2$, then it is proved.
+    \item c = $\stuckcast{T_I}{T_F}{n_1} : T_1 \Rightarrow^{l} T_2\ ^{n_2}$.
+    $\vdash_{\cap IC} \stuckcast{T_I}{T_F}{n_1} : T_1 \Rightarrow^{l} T_2\ ^{n_2} : T_2$ and by rule PushStuckC, $\stuckcast{T_I}{T_F}he{n_1} : T_1 \Rightarrow^{l} T_2\ ^{n_2} \longrightarrow_{\cap IC} \stuckcast{T_I}{T_2}{n_1}$.
+    As $\vdash_{\cap IC} \stuckcast{T_I}{T_2}{n_1} : T_2$, then it is proved.
+    \item c = $c' : T \Rightarrow^l T\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$.
+    If $\vdash_{\cap IC} c' : T \Rightarrow^l T\ ^n : T$, then $\vdash_{\cap IC} c' : T$.
+    By rule IdentityC, $c' : T \Rightarrow^l T\ ^n \longrightarrow_{\cap IC} c'$.
+    Therefore it is proved.
+    \item c = $c' : G \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G\ ^{n_2}$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$.
+    If $\vdash_{\cap IC} c' : G \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G\ ^{n_2} : G$, then $\vdash_{\cap IC} c' : G$.
+    By rule SucceedC, $c' : G \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G\ ^{n_2} \longrightarrow_{\cap IC} c'$.
+    Therefore it is proved.
+    \item c = $c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{n_2}$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $\neg(same\ ground\ G_1\ G_2)$ and $initialType(c') = T_I$.
+    If $\vdash_{\cap IC} c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{n_2} : G_2$, and by rule FailC, $c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{n_2} \longrightarrow_{\cap IC} \blamecast{T_I}{G_2}{l_2}{n_1}$ and $\vdash_{\cap IC} \blamecast{T_I}{G_2}{l_2}{n_1} : G_2$, it is proved.
+    \item c = $c' : T \Rightarrow^l \Dyn\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $G\ is\ ground\ type\ of\ T$ and $\neg(ground\ T)$.
+    If $\vdash_{\cap IC} c' : T \Rightarrow^l \Dyn\ ^n : \Dyn$ then $\vdash_{\cap IC} c' : T$.
+    By rule GroundC, $c' : T \Rightarrow^l \Dyn\ ^n \longrightarrow_{\cap IC} c' : T \Rightarrow^l G\ ^n : G \Rightarrow^l \Dyn\ ^n$.
+    As $\vdash_{\cap IC} c' : T \Rightarrow^l G\ ^n : G \Rightarrow^l \Dyn\ ^n : \Dyn$, it is proved.
+    \item c = $c' : \Dyn \Rightarrow^l T\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $G\ is\ ground\ type\ of\ T$ and $\neg(ground\ T)$.
+    If $\vdash_{\cap IC} c' : \Dyn \Rightarrow^l T\ ^n : T$ then $\vdash_{\cap IC} c' : \Dyn$.
+    By rule ExpandC, $c' : \Dyn \Rightarrow^l T\ ^n \longrightarrow_{\cap IC} c' : \Dyn \Rightarrow^l G\ ^n : G \Rightarrow^l T\ ^n$.
+    As $\vdash_{\cap IC} c' : \Dyn \Rightarrow^l G\ ^n : G \Rightarrow^l T\ ^n : T$, it is proved.
+    \item c = $c' : T_1 \Rightarrow^l T_2\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $initialType(c) = T_I$.
+    If $\vdash_{\cap IC} c' : T_1 \Rightarrow^l T_2\ ^n : T_2$, and by rule TriggerStuckC, $c' : T_1 \Rightarrow^l T_2\ ^n \longrightarrow_{\cap IC} \stuckcast{T_I}{T_2}{n}$, then $\vdash_{\cap IC} \stuckcast{T_I}{T_2}{n} : T_2$.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item c = $c' : T_1 \Rightarrow^l T_2\ ^n$ and $\neg(isCastValue\ c)$.
+    If $\vdash_{\cap IC} c' : T_1 \Rightarrow^l T_2\ ^n : T_2$ then $\vdash_{\cap IC} c' : T_1$.
+    By rule EvaluateC, $c' \longrightarrow_{\cap IC} c''$.
+    By the induction hypothesis, $\vdash_{\cap IC} c'' : T_1$.
+    By rule EvaluateC, $c' : T_1 \Rightarrow^l T_2\ ^n \longrightarrow_{\cap IC} c'' : T_1 \Rightarrow^l T_2\ ^n$.
+    As $\vdash_{\cap IC} c'' : T_1 \Rightarrow^l T_2\ ^n : T_2$ it is proved.
+\end{itemize}
+\end{proof}
+
+\begin{lemma}
+\label{initialtypepreservationIC}
+Initial type preservation of $\longrightarrow_{\cap IC}$\\
+If $initialType(c) = T$ for some $T$ and $c \longrightarrow_{\cap IC} c'$ then $initialType(c') = T$.
+\end{lemma}
+\begin{proof}
+We proceed by induction on the length of the derivation tree of $\longrightarrow_{\cap IC}$.\\\\
+Base cases:
+\begin{itemize}
+    \item c = $\blamecast{T_I}{T_F}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_2\ ^{n_2}$.
+    By the definition of $initialType$, $initialType(\blamecast{T_I}{T_F}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_2\ ^{n_2}) = T_I$.
+    By rule PushBlameC, $\blamecast{T_I}{T_F}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_2\ ^{n_2} \longrightarrow_{\cap IC} \blamecast{T_I}{T_2}{l_1}{n_1}$.
+    Since $initialType(\blamecast{T_I}{T_2}{l_1}{n_1}) = T_I$, it is proved.
+    \item c = $\stuckcast{T_I}{T_F}{n_1} : T_1 \Rightarrow^{l} T_2\ ^{n_2}$.
+    By the definition of $initialType$, $initialType(\stuckcast{T_I}{T_F}{n_1} : T_1 \Rightarrow^{l} T_2\ ^{n_2}) = T_I$.
+    By rule PushStuckC, $\stuckcast{T_I}{T_F}{n_1} : T_1 \Rightarrow^{l} T_2\ ^{n_2} \longrightarrow_{\cap IC} \stuckcast{T_I}{T_2}{n_1}$.
+    Since $initialType(\stuckcast{T_I}{T_2}{n_1}) = T_I$, it is proved.
+    \item c = $c' : T \Rightarrow^l T\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$.
+    By the definitions of $initialType$, $initialType(c' : T \Rightarrow^l T\ ^n) = initialType(c')$.
+    By rule IdentityC, $c' : T \Rightarrow^l T\ ^n \longrightarrow_{\cap IC} c'$.
+    Therefore it is proved.
+    \item c = $c' : G \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G\ ^{n_2}$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$.
+    By the definition of $initialType$, $initialType(c' : G \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G\ ^{n_2}) = initialType(c')$.
+    By rule SucceedC, $c' : G \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G\ ^{n_2} \longrightarrow_{\cap IC} c'$.
+    Therefore it is proved.
+    \item c = $c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{n_2}$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $\neg(same\ ground\ G_1\ G_2)$ and $initialType(c') = T_I$.
+    By the definition of $initialType$, $initialType(c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{n_2}) = T_I$.
+    By rule FailC, $c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{n_2} \longrightarrow_{\cap IC} \blamecast{T_I}{G_2}{l_2}{n_1}$.
+    Since $initialType(\blamecast{T_I}{G_2}{l_2}{n_1}) = T_I$, it is proved.
+    \item c = $c' : T \Rightarrow^l \Dyn\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $G\ is\ ground\ type\ of\ T$ and $\neg(ground\ T)$.
+    By the definition of $initialType$, $initialType(c' : T \Rightarrow^l \Dyn\ ^n) = initialType(c')$.
+    By rule GroundC, $c' : T \Rightarrow^l \Dyn\ ^n \longrightarrow_{\cap IC} c' : T \Rightarrow^l G\ ^n : G \Rightarrow^l \Dyn\ ^n$.
+    Since $initialType(c' : T \Rightarrow^l G\ ^n : G \Rightarrow^l \Dyn\ ^n) = initialType(c')$, it is proved.
+    \item c = $c' : \Dyn \Rightarrow^l T\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $G\ is\ ground\ type\ of\ T$ and $\neg(ground\ T)$.
+    By the definition of $initialType$, $initialType(c' : \Dyn \Rightarrow^l T\ ^n) = initialType(c')$.
+    By rule ExpandC, $c' : \Dyn \Rightarrow^l T\ ^n \longrightarrow_{\cap IC} c' : \Dyn \Rightarrow^l G\ ^n : G \Rightarrow^l T\ ^n$.
+    Since $initialType(c' : \Dyn \Rightarrow^l G\ ^n : G \Rightarrow^l T\ ^n) = initialType(c')$, it is proved.
+    \item c = $c' : T_1 \Rightarrow^l T_2\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $initialType(c') = T_I$.
+    By the definition of $initialType$, $initialType(c' : T_1 \Rightarrow^l T_2\ ^n) = T_I$.
+    By rule TriggerStuckC, $c' : T_1 \Rightarrow^l T_2\ ^n \longrightarrow_{\cap IC} \stuckcast{T_I}{T_2}{n}$.
+    Since $initialType(\stuckcast{T_I}{T_2}{n}) = T_I$, it is proved.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item c = $c' : T_1 \Rightarrow^l T_2\ ^n$ and $\neg(isCastValue\ c')$.
+    By the definition of $initialType$, $initialType(c' : T_1 \Rightarrow^l T_2\ ^n) = initialType(c')$.
+    By rule EvaluateC, $c' \longrightarrow_{\cap IC} c''$.
+    By the induction hypothesis, $initialType(c'') = initialType(c')$.
+    By rule EvaluateC, $c' : T_1 \Rightarrow^l T_2\ ^n \longrightarrow_{\cap IC} c'' : T_1 \Rightarrow^l T_2\ ^n$.
+    Since $initialType(c'' : T_1 \Rightarrow^l T_2\ ^n) = initialType(c'')$, it is proved.
+\end{itemize}
+\end{proof}
+
+\begin{lemma}
+\label{staticexpressionstypestatic}
+Expressions annotated with only static types type with static types\\
+If $e$ is annotated with only static types then:
+\begin{enumerate}
+    \item $\Gamma \vdash_{\cap G} e : T$, for some static $T$.
+    \item $\Gamma \vdash_{\cap CC} e \leadsto e' : T$, for some static $T$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(1) We proceed by induction on the length of the derivation tree of $\vdash_{\cap G}$.\\\\
+Base cases:
+\begin{itemize}
+    \item e = $x$.
+    If $\Gamma \vdash_{\cap G} x : T_i$, then there is a binding $x : T' \in \Gamma$, such that $T_i \subseteq T'$.
+    Therefore, there must have been at some point in the typing derivation, the application of the rules $({\rightarrow} I)$ or $({\rightarrow} I')$. If $e$ is annotated with only static types, then both rules introduze the binding $x : T'$ in $\Gamma$, such that $T'$ is a static type. Therefore, $T_i$ is also a static type.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item e = $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e'$.
+    There are two possibilities:
+    \begin{itemize}
+        \item Using the rule ${\rightarrow} I$.
+        If $e$ is annotated with only static types, then $T_1 \cap \ldots \cap T_n$ is a static type.
+        By rule $({\rightarrow} I)$, $\Gamma, x : T_1 \cap \ldots \cap T_n \vdash_{\cap G} e : T$.
+        By the induction hypothesis, $T$ is a static type.
+        Therefore $T_1 \cap \ldots \cap T_n \rightarrow T$ is a static type.
+        \item Using the rule ${\rightarrow} I'$.
+        If $e$ is annotated with only static types, then $T_1 \cap \ldots \cap T_n$ is a static type.
+        By rule $({\rightarrow} I')$, $\Gamma, x : T_i \vdash_{\cap G} e : T$.
+        Since $T_1 \cap \ldots \cap T_n$ is a static type, then so is $T_i$.
+        By the induction hypothesis, $T$ is a static type, therefore so is $T_i \rightarrow T$.
+    \end{itemize}
+    \item e = $e_1\ e_2$.
+    If $e$ is annotated with only static types, then so are $e_1$ and $e_2$.
+    By the induction hypothesis, $PM$ is a static type.
+    By the definition of $\rhd$, $T_1 \cap \ldots \cap T_n \rightarrow T$ is also a static type.
+    Therefore, $T$ is a static type.
+    \item e = $e$.
+    If $e$ annotated with only static types, then by the induction hypothesis, $T_1 \ldots T_n$ are static types.
+    Therefore $T_1 \cap \ldots \cap T_n$ is a static type.
+\end{itemize}
+(2) We proceed by induction on the length of the derivation tree of $\Gamma \vdash_{\cap CC} e \leadsto e : T$.\\\\
+Base cases:
+\begin{itemize}
+    \item e = $x$.
+    If $\Gamma \vdash_{\cap CC} x \leadsto x : T_i$, then there is a binding $x : T' \in \Gamma$, such that $T_i \subseteq T'$.
+    Therefore, there must have been at some point in the typing derivation, the application of the rule for the term $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e'$.
+    If $e$ is annotated with only static types, then the rule introduzes the binding $x : T'$ in $\Gamma$, such that $T'$ is a static type.
+    Therefore, $T_i$ is also a static type.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item e = $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e'$.
+    If $e$ is annotated with only static types, then $T_1 \cap \ldots \cap T_n$ is a static type.
+    By the induction hypothesis, $T$ is a static type.
+    Therefore $T_1 \cap \ldots \cap T_n \rightarrow T$ is a static type.
+    \item e = $e_1\ e_2$.
+    If $e$ is annotated with only static types, then so are $e_1$ and $e_2$.
+    By the induction hypothesis, $PM$ is a static type.
+    By the definition of $\rhd$, $T_1 \cap \ldots \cap T_n \rightarrow T$ is also a static type.
+    Therefore, $T$ is a static type.
+\end{itemize}
+\end{proof}
+
+\begin{lemma}[Depends on Lemmas \ref{consistencytoequality} and \ref{staticexpressionstypestatic}]
+\label{staticcompilation}
+Static program compilation only adds identity casts\\
+If $e$ is annotated with only static types and $\Gamma \vdash_{\cap CC} e \leadsto e' : T$, then any casts $e'$ contains are identity casts.\\
+By identity casts, we mean casts of the form $e : T \Rightarrow^l T$ for some $T$ and casts $e : c_1 \cap \ldots \cap c_n$ such that $c_1 = \emptycast{T_1}{0} : T_1 \Rightarrow T_1\ ^{0}$ and ... and $c_n = \emptycast{T_n}{0} : T_n \Rightarrow T_n\ ^{0}$ for some $T_1,\ \ldots,\ T_n$.
+\end{lemma}
+\begin{proof}
+We proceed by structural induction on $e$.\\\\
+Base cases:
+\begin{itemize}
+    \item e = $x$.
+    As $\Gamma \vdash_{\cap CC} x \leadsto x : T_i$, and $x$ doesn't have any casts, then it is proved.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item e = $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e'$.
+    By rule, $\Gamma \vdash_{\cap CC} e' \leadsto e'' : T$.
+    By the induction hypothesis, $e''$ either doesn't contain casts or contains only identity casts.
+    By rule, $\Gamma \vdash_{\cap CC} (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e') \leadsto (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e'') : T_1 \cap \ldots \cap T_n \rightarrow T$.
+    As the rule doesn't introduze new casts, then it is proved.
+    \item e = $e_1\ e_2$.
+    By rule, $\Gamma \vdash_{\cap CC} e_1 \leadsto e_1' : PM$ and $\Gamma \vdash_{\cap CC} e_2 \leadsto e_2' : T_1' \cap \ldots \cap T_n'$.
+    By the induction hypothesis, both $e_1'$ as well as $e_2'$ either only have identity casts or no casts at all.
+    By Lemma \ref{staticexpressionstypestatic}, $PM$ and $T_1' \cap \ldots \cap T_n'$ are static types.
+    Therefore, by the definition of $\rhd$, $PM = T_1' \cap \ldots \cap T_n' \rightarrow T$ and by Lemma \ref{consistencytoequality}, $T_1' \cap \ldots \cap T_n' = T_1 \cap \ldots \cap T_n$.
+    Therefore by the definition of $getInstances$ and $addCasts$, only identity casts are introduzed.
+\end{itemize}
+\end{proof}
+
+\begin{lemma}
+\label{eliminationidentitycastsc}
+Elimination of identity casts in c\\
+For any cast $c$, such that $\vdash_{\cap IC} c : T_F$, $initialType(c) = T_I$ and $c \longrightarrow_{\cap IC} cv$:
+\begin{enumerate}
+    \item $\vdash_{\cap IC} \erasec{c} : T_F$ and $initialType(\erasec{c}) = T_I$.
+    \item $\erasec{c} \longrightarrow_{\cap IC} cv$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(1) We proceed by structural induction on $c$.\\\\
+Base cases:
+\begin{itemize}
+    \item c = $\emptycast{T}{n}$.
+    As $\vdash_{\cap IC} \emptycast{T}{n} : T$, $initialType(\emptycast{T}{n}) = T$ and $\erasec{c} = \emptycast{T}{n}$, then $\vdash_{\cap IC} \erasec{c} : T$ and $initialType(\erasec{c}) = T$.
+    \item c = $\blamecast{T_I}{T_F}{l}{n}$.
+    As $\vdash_{\cap IC} \blamecast{T_I}{T_F}{l}{n} : T_F$, $initialType(\blamecast{T_I}{T_F}{l}{n}) = T_I$ and $\erasec{c} = \blamecast{T_I}{T_F}{l}{n}$, then $\vdash_{\cap IC} \erasec{c} : T_F$ and $initialType(\erasec{c}) = T_I$.
+    \item c = $\stuckcast{T_I}{T_F}{n}$.
+    As $\vdash_{\cap IC} \stuckcast{T_I}{T_F}{n} : T_F$, $initialType(\stuckcast{T_I}{T_F}{n}) = T_I$ and $\erasec{c} = \stuckcast{T_I}{T_F}{n}$, then $\vdash_{\cap IC} \erasec{c} : T_F$ and $initialType(\erasec{c}) = T_I$.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item c = $c' : T_1 \Rightarrow^l T_2\ ^n$.
+    There are two cases:
+    \begin{itemize}
+        \item $T_1 \neq T_2$.
+        As $\vdash_{\cap IC} c' : T_1 \Rightarrow^l T_2\ ^n : T_2$ and $initialType(c' : T_1 \Rightarrow^l T_2\ ^n) = initialType(c')$, then $\vdash_{\cap IC} c' : T_1$.
+        By the induction hypothesis, $\vdash_{\cap IC} \erasec{c'} : T_1$ and $initialType(\erasec{c'}) = initialType(c')$.
+        With $\erasec{c} = \erasec{c'} : T_1 \Rightarrow^l T_2\ ^n$, $\vdash_{\cap IC} \erasec{c} : T_2$ and $initialType(\erasec{c}) = initialType(\erasec{c'}) = initialType(c') = initialType(c)$.
+        \item $T_1 = T_2$.
+        As $\vdash_{\cap IC} c' : T_1 \Rightarrow^l T_1\ ^n : T_1$ and $initialType(c' : T_1 \Rightarrow^l T_1\ ^n) = initialType(c')$ then $\vdash_{\cap IC} c' : T_1$.
+        By the induction hypothesis, $\vdash_{\cap IC} \erasec{c'} : T_1$ and $initialType(\erasec{c'}) = initialType(c')$.
+        With $\erasec{c} = \erasec{c'}$, $\vdash_{\cap IC} \erasec{c} : T_1$ and $initialType(\erasec{c}) = initialType(\erasec{c'}) = initialType(c') = initialType(c)$.
+    \end{itemize}
+\end{itemize}
+(2) We proceed by structural induction on $c$.\\\\
+Base cases:
+\begin{itemize}
+    \item c = $\blamecast{T_I}{T_F}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_2\ ^{n_2}$.
+    There are two cases:
+    \begin{itemize}
+        \item $T_1 \neq T_2$.
+        As $\erasec{c} = \blamecast{T_I}{T_F}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_2\ ^{n_2}$ and by rule PushBlameC, $\blamecast{T_I}{T_F}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_2\ ^{n_2} \longrightarrow_{\cap IC} \blamecast{T_I}{T_2}{l_1}{n_1}$ it is proved.
+        \item $T_1 = T_2$.
+        If $T_1 = T_2$, then by rules T-SingleC and T-BlameC, $T_F = T_1$.
+        Therefore, $c = \blamecast{T_I}{T_1}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_1\ ^{n_2}$.
+        By rule PushBlameC, $\blamecast{T_I}{T_1}{l_1}{n_1} : T_1 \Rightarrow^{l_2} T_1\ ^{n_2} \longrightarrow_{\cap IC} \blamecast{T_I}{T_1}{l_1}{n_1}$.
+        Since $\erasec{c} = \blamecast{T_I}{T_1}{l_1}{n_1}$, and it is already a value, it is proved.
+    \end{itemize}
+    \item c = $\stuckcast{T_I}{T_F}{n_1} : T_1 \Rightarrow^l T_2\ ^{n_2}$.
+    There are two cases:
+    \begin{itemize}
+        \item $T_1 \neq T_2$.
+        As $\erasec{c} = \stuckcast{T_I}{T_F}{n_1} : T_1 \Rightarrow^l T_2\ ^{n_2}$ and by rule PushStuckC, $\stuckcast{T_I}{T_F}{n_1} : T_1 \Rightarrow^l T_2\ ^{n_2} \longrightarrow_{\cap IC} \stuckcast{T_I}{T_2}{n_1}$ it is proved.
+        \item $T_1 = T_2$.
+        If $T_1 = T_2$, then by rules T-SingleC and T-StuckC, $T_F = T_1$.
+        Therefore, $c = \stuckcast{T_I}{T_1}{n_1} : T_1 \Rightarrow^l T_1\ ^{n_2}$.
+        By rule PushStuckC, $\stuckcast{T_I}{T_1}{n_1} : T_1 \Rightarrow^l T_1\ ^{n_2} \longrightarrow_{\cap IC} \stuckcast{T_I}{T_1}{n_1}$.
+        Since $\erasec{c} = \stuckcast{T_I}{T_1}{n_1}$, and it is already a value, it is proved.
+    \end{itemize}
+    \item c = $c' : T \Rightarrow^l T\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$.
+    By rule IdentityC, $c' : T \Rightarrow^l T\ ^n \longrightarrow_{\cap IC} c'$.
+    As $c'$ is a value, it doesn't contain identity casts, therefore $\erasec{c} = c'$.
+    As $\erasec{c}$ is already a value, it reduces to itself, therefore it is proved.
+    \item c = $c' : G \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G\ ^{n_2}$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$.
+    By rule SucceedC, $c' : G \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G\ ^{n_2} \longrightarrow_{\cap IC} c'$.
+    As $c'$ is already a value, then it doesn't contain identity casts, so $\erasec{c} = c' : G \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G\ ^{n_2}$.
+    Therefore, $\erasec{c} \longrightarrow_{\cap IC} c'$.
+    \item c = $c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{n_2}$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $\neg(same\ ground\ G_1\ G_2)$ and $initialType(c') = T_I$.
+    By rule FailC, $c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{n_2} \longrightarrow_{\cap IC} \blamecast{T_I}{G_2}{l_2}{n_1}$.
+    As $c'$ is already a value, then it doesn't contain identity casts, so $\erasec{c} = c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{n_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{n_2}$.
+    Therefore, $\erasec{c} \longrightarrow_{\cap IC} \blamecast{T_I}{G_2}{l_2}{n_1}$.
+    \item c = $c' : T \Rightarrow^l \Dyn\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $G\ is\ ground\ type\ of\ T$ and $\neg(ground\ T)$.
+    By rule GroundC, $c' : T \Rightarrow^l \Dyn\ ^n \longrightarrow_{\cap IC} c' : T \Rightarrow^l G : G \Rightarrow^l \Dyn\ ^n$.
+    As $c'$ is a value, it doesn't contain identity casts, therefore $\erasec{c} = c' : T \Rightarrow^l \Dyn\ ^n$.
+    Therefore $\erasec{c} \longrightarrow_{\cap IC} c' : T \Rightarrow^l G : G \Rightarrow^l \Dyn\ ^n$.
+    \item c = $c' : \Dyn \Rightarrow^l T\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $G\ is\ ground\ type\ of\ T$ and $\neg(ground\ T)$.
+    By rule ExpandC, $c' : \Dyn \Rightarrow^l T\ ^n \longrightarrow_{\cap IC} c' : \Dyn \Rightarrow^l G : G \Rightarrow^l T\ ^n$.
+    As $c'$ is a value, it doesn't contain identity casts, therefore $\erasec{c} = c' : \Dyn \Rightarrow^l T\ ^n$.
+    Therefore $\erasec{c} \longrightarrow_{\cap IC} c' : \Dyn \Rightarrow^l G : G \Rightarrow^l T\ ^n$.
+    \item c = $c' : T_1 \Rightarrow^l T_2\ ^n$ and $isCastValue1\ c'\ \lor\ isEmptyCast\ c'$ and $initialType(c') = T_I$.
+    By rule TriggerStuckC, $c' : T_1 \Rightarrow^l T_2\ ^n \longrightarrow_{\cap IC} \stuckcast{T_I}{T_2}{n}$.
+    As $T_1 \neq T_2$ and $c'$ is a value, then $\erasec{c} = c' : T_1 \Rightarrow^l T_2\ ^n$.
+    Therefore, $\erasec{c} \longrightarrow_{\cap IC} \stuckcast{T_I}{T_2}{n}$.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item c = $c' : T_1 \Rightarrow^l T_2\ ^{n}$ and $\neg(isCastValue c')$.
+    There are two cases:
+    \begin{itemize}
+        \item $T_1 \neq T_2$.
+        By rule EvaluateC, $c' \longrightarrow_{\cap IC} c''$.
+        By the induction hypothesis, $\erasec{c'} \longrightarrow_{\cap IC} c''$.
+        As $\erasec{c}$ equals $\erasec{c'} : T_1 \Rightarrow^l T_2\ ^n$, then by rule EvaluateC, $\erasec{c} \longrightarrow_{\cap IC} c'' : T_1 \Rightarrow T_2\ ^n$.
+        \item $T_1 = T_2$.
+        By the induction hypothesis, as $c' \longrightarrow_{\cap IC} cv'$, then $\erasec{c'} \longrightarrow_{\cap IC} cv'$.
+        By rule EvaluateC, $c' : T_1 \Rightarrow^l T_1\ ^n \longrightarrow_{\cap IC} cv' : T_1 \Rightarrow^l T_1\ ^n$.
+        However, as $cv' : T_1 \Rightarrow^l T_1\ ^n$ is not a value, the rule IdentityC must be applied, therefore $c' : T_1 \Rightarrow^l T_1\ ^n \longrightarrow_{\cap IC} cv'$.
+        As $\erasec{c} \longrightarrow_{\cap IC} cv'$, then it is proved.
+    \end{itemize}
+\end{itemize}
+\end{proof}
+
+\begin{lemma}[Depends on Lemma \ref{eliminationidentitycastsc}]
+\label{eliminationidentitycastse}
+Elimination of identity casts in e\\
+For any expression $e$, such that $\Gamma \vdash_{\cap CC} e : T$, and $e \longrightarrow_{\cap CC} v$:
+\begin{enumerate}
+    \item $\Gamma \vdash_{\cap CC} \erasee{e} : T$.
+    \item $\erasee{e} \longrightarrow_{\cap CC} v$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(1) We proceed by induction on the length of the derivation tree of $\Gamma \vdash_{\cap CC} e : T$.\\\\
+Base cases:
+\begin{itemize}
+    \item e = $x$.
+    As $x$ doesn't contain casts, then $\erasee{e} = x$.
+    Therefore it is proved.
+    \item e = $n$.
+    As $n$ doesn't contain casts, then $\erasee{e} = n$.
+    Therefore it is proved.
+    \item e = $\true$.
+    As $\true$ doesn't contain casts, then $\erasee{e} = \true$.
+    Therefore it is proved.
+    \item e = $\false$.
+    As $\false$ doesn't contain casts, then $\erasee{e} = \false$.
+    Therefore it is proved.
+    \item e = $\blame{T}{l}$.
+    As $blame{T}{l}$ doesn't contain casts, then $\erasee{e} = blame{T}{l}$.
+    Therefore it is proved.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item e = $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e'$.
+    There are two possibilities:
+    \begin{itemize}
+        \item Using the rule ${\rightarrow} I$.
+        If $\Gamma \vdash_{\cap CC} \lambda x : T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$, then $\Gamma, x : T_1 \cap \ldots \cap T_n \vdash_{\cap CC} e' : T$.
+        By the induction hypothesis, $\Gamma, x : T_1 \cap \ldots \cap T_n \vdash_{\cap CC} \erasee{e'} : T$.
+        As $\erasee{e} = \lambda x : T_1 \cap \ldots \cap T_n\ .\ \erasee{e'}$, then $\Gamma \vdash_{\cap CC} \erasee{e} : T_1 \cap \ldots \cap T_n \rightarrow T$.
+        \item Using the rule ${\rightarrow} I'$.
+        If $\Gamma \vdash_{\cap CC} \lambda x : T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$, then $\Gamma, x : T_i \vdash_{\cap CC} e' : T$.
+        By the induction hypothesis, $\Gamma, x : T_i \vdash_{\cap CC} \erasee{e'} : T$.
+        As $\erasee{e} = \lambda x : T_1 \cap \ldots \cap T_n\ .\ \erasee{e'}$, then $\Gamma \vdash_{\cap CC} \erasee{e} : T_i \rightarrow T$.
+    \end{itemize}
+    \item e = $e_1\ e_2$.
+    If $\Gamma \vdash_{\cap CC} e_1\ e_2 : T$, then $\Gamma \vdash_{\cap CC} e_1 : PM$, $PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T$, $\Gamma \vdash_{\cap CC} e_2 : T_1' \cap \ldots \cap T_n'$ and $T_1' \cap \ldots \cap T_n' \sim T_1 \cap \ldots \cap T_n$.
+    By the induction hypothesis, $\Gamma \vdash_{\cap CC} \erasee{e_1} : PM$ and $\Gamma \vdash_{\cap CC} \erasee{e_2} : T_1' \cap \ldots \cap T_n'$.
+    As $\erasee{e} = \erasee{e_1}\ \erasee{e_2}$, therefore $\Gamma \vdash_{\cap CC} \erasee{e} : T$.
+    \item e = $e$.
+    If $\Gamma \vdash_{\cap CC} e : T_1 \cap \ldots \cap T_n$, then $\Gamma \vdash_{\cap CC} e : T_1$ and ... and $\Gamma \vdash_{\cap CC} e : T_n$.
+    By the induction hypothesis, $\Gamma \vdash_{\cap CC} \erasee{e} : T_1$ and ... and $\Gamma \vdash_{\cap CC} \erasee{e} : T_n$.
+    Therefore $\Gamma \vdash_{\cap CC} \erasee{e} : T_1 \cap \ldots \cap T_n$.
+    \item e = $e' : T_1 \Rightarrow^l T_2$.
+    There are two possibilities:
+    \begin{itemize}
+        \item $T_1 \neq T_2$.
+        If $\Gamma \vdash_{\cap CC} e' : T_1 \Rightarrow^l T_2 : T_2$, then $\Gamma \vdash_{\cap CC} e' : T_1$.
+        By the induction hypothesis, $\Gamma \vdash_{\cap CC} \erasee{e'} : T_1$.
+        As $\erasee{e} = \erasee{e'} : T_1 \Rightarrow^l T_2$, then $\Gamma \vdash_{\cap CC} \erasee{e} : T_2$.
+        \item $T_1 = T_2$.
+        If $\Gamma \vdash_{\cap CC} e' : T_1 \Rightarrow^l T_1 : T_1$, then $\Gamma \vdash_{\cap CC} e' : T_1$.
+        By the induction hypothesis, $\Gamma \vdash_{\cap CC} \erasee{e'} : T_1$.
+        As $\erasee{e} = \erasee{e'} : T_1 \Rightarrow^l T_1$, then $\Gamma \vdash_{\cap CC} \erasee{e} : T_1$.
+    \end{itemize}
+    \item e = $e' : c_1 \cap \ldots \cap c_n$.
+    If $\Gamma \vdash_{\cap CC} e' : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$, then $\Gamma \vdash_{\cap CC} e' : T$, $\vdash_{\cap IC} c_1 : T_1$ and ... and $\vdash_{\cap IC} c_n : T_n$ and $initialType(c_1) \cap \ldots \cap initialType(c_n) =_{\cap} T$.
+    By the induction hypothesis, $\Gamma \vdash_{\cap CC} \erasee{e'} : T$.
+    We now have 2 possibilities:
+    \begin{itemize}
+        \item $\neg(\forall i \in 1..n\ .\ isEmptyCast\ \erasec{c_i})$:
+        For all casts $c_i$, with $i \in 1..n$, that don't contain identity casts, then $\erasec{c_i} = c_i$, therefore $\vdash_{\cap IC} \erasec{c_i} : T_i$ and $initialType(\erasec{c_i}) = initialType(c_i)$.
+        For the remaining casts, by Lemma \ref{eliminationidentitycastsc}, $\vdash_{\cap IC} \erasec{c_i} : T_i$ and $initialType(\erasec{c_i}) = initialType(c_i)$.
+        Therefore, with $\erasee{e} = \erasee{e'} : \erasec{c_1} \cap \ldots \cap \erasec{c_n}$, $\Gamma \vdash_{\cap CC} \erasee{e} : T_1 \cap \ldots \cap T_n$.
+        \item $\forall i \in 1..n\ .\ isEmptyCast\ \erasec{c_i}$:
+        As all casts are empty casts, then for all casts $\erasec{c_i}$, by Lemma \ref{eliminationidentitycastsc} and by rule T-EmptyC, $\vdash_{\cap IC} \erasec{c_i} : T_i$ and $initialType(\erasec{c_i}) = T_i$.
+        Therefore $\erasee{e} = \erasee{e'}$.
+        We now have two possibilities:
+        \begin{itemize}
+            \item If $T$ is not an intersection type, then $T_1 = \ldots = T_n = T$ and by idempotence of $\cap$, we have that $\Gamma \vdash_{\cap CC} \erasee{e} : T_1 \cap \ldots \cap T_n$.
+            \item If $T$ is an intersection type, then $T = T_1 \cap \ldots \cap T_n$. Therefore $\Gamma \vdash_{\cap CC} \erasee{e} : T_1 \cap \ldots \cap T_n$.
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+(2) We proceed by induction on the length of the derivation tree of $\longrightarrow_{\cap CC}$.\\\\
+Base cases:
+\begin{itemize}
+    \item e = $v_1 : cv_1 \cap \ldots \cap cv_n$ and $isValue(v_1 : cv_1 \cap \ldots \cap cv_n)$ and $\exists i \in 1..n\ .\ isArrowCompatible\ cv_i$.
+    As $v_1 : cv_1 \cap \ldots \cap cv_n$ is a value, then it doesn't contain identity casts.
+    Therefore $\erasee{e} = e$.
+    \item e = $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2$ and $isValue\ v : cv_1 \cap \ldots \cap cv_n$ and $label(cv_1) = m_1$ and ... and $label(cv_n) = m_n$.
+    There are 2 possibilities:
+    \begin{itemize}
+        \item If $T_1 \neq T_2$ and as $v : cv_1 \cap \ldots \cap cv_n$ doesn't contain identity casts, then $\erasee{e} = e$, therefore it is proved.
+        \item If $T_1 = T_2$ and as $v : cv_1 \cap \ldots \cap cv_n$ doesn't contain identity casts, then $\erasee{e} = v : cv_1 \cap \ldots \cap cv_n$.
+        By rule Merge1$\cap$, $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2\ ^{m_n}$.
+        By rule EvaluateCasts$\cap$, $v : cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $cv_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$ by rule IdentityC.
+        As $\erasee{e}$ is already a value, it is proved.
+    \end{itemize}
+    \iffalse
+    \item e = $v : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2$ and $label(c_1) = m_1$ and ... and $label(c_n) = m_n$.
+    There are 4 possibilities:
+    \begin{itemize}
+        \item If $T_1 \neq T_2$ and $v : c_1 \cap \ldots \cap c_n$ doesn't contain identity casts, then $\erasee{e} = e$, therefore it is proved.
+        \item If $T_1 = T_2$ and $v : c_1 \cap \ldots \cap c_n$ doesn't contain identity casts, then $\erasee{e} = v : c_1 \cap \ldots \cap c_n$.
+        By rule Merge1$\cap$, $v : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n}$.
+        By rule EvaluateCasts$\cap$, $v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$.
+        By Lemma \ref{eliminationidentitycastsc}, $c_1 \longrightarrow_{\cap IC} cv_1$ and ... and $c_n \longrightarrow_{\cap IC} cv_n$.
+        Therefore by rule EvaluateCasts$\cap$, $\erasee{e} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$.
+        \item If $T_1 \neq T_2$ and $v : c_1 \cap \ldots \cap c_n$ contains identity casts, then $\erasee{e} = v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} : T_1 \Rightarrow^l T_2$.
+        By rule Merge1$\cap$, $v : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n}$.
+        By rule EvaluateCasts$\cap$, $v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$.
+        By rule Merge1$\cap$, $v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : \erasec{c_1} : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap \erasec{c_n} : T_1 \Rightarrow^l T_2\ ^{m_n}$.
+        By Lemma \ref{eliminationidentitycastsc}, $\erasec{c_1} : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $\erasec{c_n} : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$.
+        Therefore, by rule EvaluateCasts$\cap$, $v : \erasec{c_1} : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap \erasec{c_n} : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$.
+        \item If $T_1 = T_2$ and $v : c_1 \cap \ldots \cap c_n$ contains identity casts, then $\erasee{e} = v : \erasec{c_1} \cap \ldots \cap \erasec{c_n}$.
+        By rule Merge1$\cap$, $v : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n}$.
+        By rule EvaluateCasts$\cap$, $v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$ and the use of the rule IdentityC.
+        By Lemma \ref{eliminationidentitycastsc}, $\erasec{c_1} \longrightarrow_{\cap IC} cv_1$ and ... and $\erasec{c_n} \longrightarrow_{\cap IC} cv_n$.
+        Therefore, by rule EvaluateCasts$\cap$, $v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$.
+    \end{itemize}
+    \fi
+    \item e = $v : c_1 \cap \ldots \cap c_n$ and $isIntersectionCast\ v \lor isCast\ v$.
+    There are 2 possibilities:
+    \begin{itemize}
+        \item $v : c_1 \cap \ldots \cap c_n$ doesn't contain identity casts, then $\erasee{e} = e$, therefore it is proved.
+        \item $v : c_1 \cap \ldots \cap c_n$ contain identity casts.
+        By rule Merge2$\cap$, $v : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v' : c_1' \cap \ldots \cap c_m'$.
+        By rule Evaluate$\cap$, $v' : c_1' \cap \ldots \cap c_m' \longrightarrow_{\cap CC} v' : cv_1' \cap \ldots \cap cv_m'$, with $c_1' \longrightarrow_{\cap IC} cv_1'$ and ... and $c_m' \longrightarrow_{\cap IC} cv_m'$.
+        For all casts $c_i$ that don't contain identity casts, then $\erasec{c_i} = c_i$, therefore for those casts, the property is proved.
+        For all casts $c_i$ that contain identity casts, $margeCasts$ will generate casts $c_i'$ that will evaluate to $cv_i'$.
+        By Lemma 6, casts $\erasec{c_i}$ will generate casts $c_i''$ that will evaluate to $cv_i'$, therefore it is proved.
+    \end{itemize}
+    \item e = $v : c_1 \cap \ldots \cap c_n$ and $\neg(\forall i \in 1 .. n\ .\ isCastValue\ c_i)$.
+    By rule EvaluateCasts$\cap$, $v : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $c_1 \longrightarrow_{\cap IC} cv_1$ and ... and $c_n \longrightarrow_{\cap IC} cv_n$.
+    With $\erasee{e} = v : \erasec{c_1} \cap \ldots \cap \erasec{c_n}$, by Lemma \ref{eliminationidentitycastsc}, $\erasec{c_1} \longrightarrow_{\cap IC} cv_1$ and ... and $\erasec{c_n} \longrightarrow_{\cap IC} cv_n$.
+    Therefore, by rule EvaluateCasts$\cap$, $v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$.
+    \item e = $v : \blamecast{I_1}{F_1}{l_1}{m_1} \cap \ldots \cap \blamecast{I_n}{F_n}{l_n}{m_n}$.
+    As $\erasee{e} = e$, then it is proved.
+    \item e = $v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n}$.
+    As $\erasee{e} = e$, then it is proved.
+    \item e = $v : cv_1 \cap \ldots \cap cv_n$ and $\neg(\forall i \in 1 .. n\ .\ isStuck\ c_i)$ and $\exists i \in 1 .. n\ .\ isStuck\ c_i$.
+    As $\erasee{e} = e$, then it is proved.
+
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item e =
+\end{itemize}
+\end{proof}
+\end{document}
