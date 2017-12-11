@@ -129,8 +129,9 @@ evaluate e@(Cast t1 t2 expr)
 evaluate e@(IntersectionCasts cs expr)
     -- push blame to top level
     | isBlame expr = evaluationStyle expr
-    -- group all casts to be reduced
-    | isValue expr && (isIntersectionCasts expr || isCast expr) = evaluationStyle $ mergeCasts e
+    -- Merge casts
+    | isValue expr && isCast expr = evaluationStyle $ mergeCI e
+    | isValue expr && isIntersectionCasts expr = evaluationStyle $ mergeCC e
     -- values don't reduce
     | isValue e = e
     -- evaluate inside a cast

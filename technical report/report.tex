@@ -199,13 +199,17 @@ Syntax
 {}
 {Merge\ casts}\\
 
-\inferrule* [right=Merge1$\cap$]
-{isValue\ v : cv_1 \cap \ldots \cap cv_n \\ label(c_1) = m_1\ \ldots\ label (c_n) = m_n}
+\inferrule* [right=MergeIC$\cap$]
+{isValue\ v : cv_1 \cap \ldots \cap cv_n \\ label(cv_1) = m_1\ \ldots\ label (cv_n) = m_n}
 {v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC}\\ v : (cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1}) \cap \ldots \cap (cv_n : T_1 \Rightarrow^l T_2\ ^{m_n})}
 
-\inferrule* [right=Merge2$\cap$]
-{isIntersectionCast\ v \lor isCast\ v \\ v' : c_1' \cap \ldots \cap c_m' = mergeCasts (v : c_1 \cap \ldots \cap c_n)}
-{v : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v' : c_1' \cap \ldots \cap c_m'}\\
+\inferrule* [right=MergeCI$\cap$]
+{isValue\ v : T_1 \Rightarrow^l T_2 \\ v : c_1' \cap \ldots \cap c_n' = mergeCI (v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n)}
+{v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v : c_1' \cap \ldots \cap c_n'}\\
+
+\inferrule* [right=MergeII$\cap$]
+{isValue\ v : cv_1 \cap \ldots \cap cv_n \\ v : c_1' \cap \ldots \cap c_j' = mergeII (v : cv_1 \cap \ldots \cap cv_n : c_1 \cap \ldots \cap c_m)}
+{v : cv_1 \cap \ldots \cap cv_n : c_1 \cap \ldots \cap c_m \longrightarrow_{\cap CC} v : c_1' \cap \ldots \cap c_j'}\\
 
 \inferrule* []
 {}
@@ -481,9 +485,47 @@ Induction step:
     By the induction hypothesis, $\Gamma \vdash_{\cap S} e : T_1$ and ... and $\Gamma \vdash_{\cap S} e : T_n$.
     Therefore, by rule ${\cap} E$, $\Gamma \vdash_{\cap S} e : T_1 \cap \ldots \cap T_n$.\\
 \end{itemize}
-(2) Since $\Gamma \vdash_{\cap CC} e \leadsto e' : T$ e $e$ is fully static, then by Lemma \ref{staticcompilation} e by the definition of $\Gamma \vdash_{\cap CC} e \leadsto e' : T$, the expression $e$ equals $e'$, except that $e'$ contains identity casts.
+(2) Since $\Gamma \vdash_{\cap CC} e \leadsto e' : T$ and $e$ is fully static, then by Lemma \ref{staticcompilation} and by the definition of $\Gamma \vdash_{\cap CC} e \leadsto e' : T$, the expression $e$ equals $e'$, except that $e'$ contains identity casts.
 Therefore, $\erasee{e'} = e$.
 Then, by Lemma \ref{eliminationidentitycastse}, if $e \longrightarrow v$ and $e' \longrightarrow_{\cap CC} v'$, then v = v'.
+\end{proof}
+
+\begin{theorem}[Depends on Lemmas \ref{subjectreductionIC} and \ref{initialtypepreservationIC}]
+\label{theorem2}
+Subject reduction of $\longrightarrow_{\cap CC}$\\
+If $\Gamma \vdash_{\cap CC} e : T$ and $e \longrightarrow_{\cap CC} e'$ then $\Gamma \vdash_{\cap CC} e' : T$.
+\end{theorem}
+\begin{proof}
+We proceed by induction on the length of the derivation tree of $\vdash_{\cap S}$.\\\\
+Base case:
+\begin{itemize}
+    \item e = $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2$ and $isValue\ v : cv_1 \cap \ldots \cap cv_n$ and $label(cv_1) = m_1$ and ... and $label(cv_n) = m_n$.
+    If $\Gamma \vdash_{\cap CC} v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 : T_2$ then $\vdash_{\cap IC} cv_1 : T_{11}$ and ... and $\vdash_{\cap IC} cv_n : T_{1n}$, $\Gamma \vdash_{\cap CC} v : cv_1 \cap \ldots \cap cv_n : T_{11} \cap \ldots \cap T_{1n}$ and $\Gamma \vdash_{\cap CC} v : I_1 \cap \ldots \cap I_n$, with $I_1 = initialType(cv_1)$ and ... and $I_n = initialType(cv_n)$.
+    As $T_{11} \cap \ldots \cap T_{1n} =_{\cap} T_1$, then $T_{11} = T_1$ and ... and $T_{1n} = T_1$.
+    By rule MergeIC$\cap$, $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : (cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1}) \cap \ldots \cap (cv_n : T_1 \Rightarrow^l T_2\ ^{m_n})$.
+    By the definition of initialType, $initialType(cv_1) = initialType(cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1}) = I_1$ and ... and $initialType(cv_n) = initialType(cv_n : T_1 \Rightarrow^l T_2\ ^{m_n}) = I_n$.
+    Therefore, $\Gamma \vdash_{\cap CC} v : (cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1}) \cap \ldots \cap (cv_n : T_1 \Rightarrow^l T_2\ ^{m_n}) : T_2 \cap \ldots \cap T_2$ and $T_2 \cap \ldots \cap T_2 =_{\cap} T_2$.
+    Therefore it is proved.
+    \item e = $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n$ and $isValue\ v : T_1 \Rightarrow^l T_2$ and $v : c_1' \cap \ldots \cap c_n' = mergeCI (v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n)$.
+    If $\Gamma \vdash_{\cap CC} v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n : T_1' \cap \ldots \cap T_n'$, with $\vdash_{\cap IC} c_1 : T_1'$ and $initialType(c_1) = T_2$ ... and $\vdash_{\cap IC} c_n : T_n'$ and $initialType(c_n) = T_2$ and $\Gamma \vdash_{\cap CC} v : T_1$.
+    By the definition of mergeCI, $\Gamma \vdash_{\cap IC} c_1' : T_1'$ and $initialType(c_1') = T_2$ and ... and $\Gamma \vdash_{\cap IC} c_n' : T_n'$ and $initialType(c_n') = T_2$.
+    By rule MergeCI$\cap$, $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v : c_1' \cap \ldots \cap c_n'$.
+    As $\Gamma \vdash_{\cap IC} v : c_1' \cap \ldots \cap c_n' : T_1' \cap \ldots \cap T_n'$, then it is proved.
+    \item e = $v : c_1 \cap \ldots \cap c_n$ and $\neg(\forall i \in 1 .. n\ .\ isCastValue\ c_i)$.
+    If $\Gamma \vdash_{\cap CC} v : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then $\vdash_{\cap IC} c_1 : T_1$ and ... and $\vdash_{\cap IC} c_n : T_n$, $\Gamma \vdash_{\cap CC} v : I_1 \cap \ldots \cap I_n$, with $I_1 = initialType(c_1)$ and ... and $I_n = initialType(c_n)$.
+    By rule Evaluate$\cap$, $c_1 \longrightarrow_{\cap IC} cv_1$ and ... and $c_n \longrightarrow_{\cap IC} cv_n$.
+    By Lemmas \ref{subjectreductionIC} and \ref{initialtypepreservationIC}, $\vdash_{\cap IC} cv_1 : T_1$ and ... and $\vdash_{\cap IC} cv_n : T_n$ and $initialType(cv_1) = I_1$ and ... and $initialType(cv_n) = I_n$.
+    Therefore $\Gamma \vdash_{\cap CC} v : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_n$.
+    \item e = $v : \blamecast{T_1'}{T_1}{l_1}{m_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{m_n}$.
+    If $\Gamma \vdash_{\cap CC} v : \blamecast{T_1'}{T_1}{l_1}{m_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{m_n} : T_1 \cap \ldots \cap T_n$ and by rule PropagateBlame$\cap$ $v : \blamecast{T_1'}{T_1}{l_1}{m_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{m_n} \longrightarrow_{\cap CC} \blame{(T_1 \cap \ldots \cap T_n)}{l_1}$, and $\Gamma \vdash_{\cap CC} \blame{(T_1 \cap \ldots \cap T_n)}{l_1} : T_1 \cap \ldots \cap T_n$, then it is proved.
+    \item e = $v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n}$.
+    If $\Gamma \vdash_{\cap CC} v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n} : T_1 \cap \ldots \cap T_n$, then $\vdash_{\cap IC} \emptycast{T_1}{m_1} : T_1$ and $initialType(\emptycast{T_1}{m_1}) = T_1$ and ... and $\vdash_{\cap IC} \emptycast{T_n}{m_n} : T_n$ and $initialType(\emptycast{T_n}{m_n}) = T_n$ and $\Gamma \vdash_{\cap CC} v : T_1 \cap \ldots \cap T_n$.
+    By rule RemoveEmpty$\cap$, $v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n} \longrightarrow_{\cap CC} v$, therefore it is proved.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item e =
+\end{itemize}
 \end{proof}
 
 \begin{lemma}
@@ -921,48 +963,35 @@ Base cases:
     \begin{itemize}
         \item If $T_1 \neq T_2$ and as $v : cv_1 \cap \ldots \cap cv_n$ doesn't contain identity casts, then $\erasee{e} = e$, therefore it is proved.
         \item If $T_1 = T_2$ and as $v : cv_1 \cap \ldots \cap cv_n$ doesn't contain identity casts, then $\erasee{e} = v : cv_1 \cap \ldots \cap cv_n$.
-        By rule Merge1$\cap$, $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2\ ^{m_n}$.
-        By rule EvaluateCasts$\cap$, $v : cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $cv_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$ by rule IdentityC.
+        By rule MergeIC$\cap$, $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2\ ^{m_n}$.
+        By rule Evaluate$\cap$, $v : cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $cv_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$ by rule IdentityC.
         As $\erasee{e}$ is already a value, it is proved.
     \end{itemize}
-    \iffalse
-    \item e = $v : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2$ and $label(c_1) = m_1$ and ... and $label(c_n) = m_n$.
-    There are 4 possibilities:
-    \begin{itemize}
-        \item If $T_1 \neq T_2$ and $v : c_1 \cap \ldots \cap c_n$ doesn't contain identity casts, then $\erasee{e} = e$, therefore it is proved.
-        \item If $T_1 = T_2$ and $v : c_1 \cap \ldots \cap c_n$ doesn't contain identity casts, then $\erasee{e} = v : c_1 \cap \ldots \cap c_n$.
-        By rule Merge1$\cap$, $v : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n}$.
-        By rule EvaluateCasts$\cap$, $v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$.
-        By Lemma \ref{eliminationidentitycastsc}, $c_1 \longrightarrow_{\cap IC} cv_1$ and ... and $c_n \longrightarrow_{\cap IC} cv_n$.
-        Therefore by rule EvaluateCasts$\cap$, $\erasee{e} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$.
-        \item If $T_1 \neq T_2$ and $v : c_1 \cap \ldots \cap c_n$ contains identity casts, then $\erasee{e} = v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} : T_1 \Rightarrow^l T_2$.
-        By rule Merge1$\cap$, $v : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n}$.
-        By rule EvaluateCasts$\cap$, $v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$.
-        By rule Merge1$\cap$, $v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : \erasec{c_1} : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap \erasec{c_n} : T_1 \Rightarrow^l T_2\ ^{m_n}$.
-        By Lemma \ref{eliminationidentitycastsc}, $\erasec{c_1} : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $\erasec{c_n} : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$.
-        Therefore, by rule EvaluateCasts$\cap$, $v : \erasec{c_1} : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap \erasec{c_n} : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$.
-        \item If $T_1 = T_2$ and $v : c_1 \cap \ldots \cap c_n$ contains identity casts, then $\erasee{e} = v : \erasec{c_1} \cap \ldots \cap \erasec{c_n}$.
-        By rule Merge1$\cap$, $v : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n}$.
-        By rule EvaluateCasts$\cap$, $v : c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $c_1 : T_1 \Rightarrow^l T_2\ ^{m_1} \longrightarrow_{\cap IC} cv_1$ and ... and $c_n : T_1 \Rightarrow^l T_2\ ^{m_n} \longrightarrow_{\cap IC} cv_n$ and the use of the rule IdentityC.
-        By Lemma \ref{eliminationidentitycastsc}, $\erasec{c_1} \longrightarrow_{\cap IC} cv_1$ and ... and $\erasec{c_n} \longrightarrow_{\cap IC} cv_n$.
-        Therefore, by rule EvaluateCasts$\cap$, $v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$.
-    \end{itemize}
-    \fi
-    \item e = $v : c_1 \cap \ldots \cap c_n$ and $isIntersectionCast\ v \lor isCast\ v$.
+    \item e = $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n$ and $isValue\ v : T_1 \Rightarrow^l T_2$ and $v : c_1' \cap \ldots \cap c_n' = mergeCI (v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n)$.
     There are 2 possibilities:
     \begin{itemize}
-        \item $v : c_1 \cap \ldots \cap c_n$ doesn't contain identity casts, then $\erasee{e} = e$, therefore it is proved.
-        \item $v : c_1 \cap \ldots \cap c_n$ contain identity casts.
-        By rule Merge2$\cap$, $v : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v' : c_1' \cap \ldots \cap c_m'$.
-        By rule Evaluate$\cap$, $v' : c_1' \cap \ldots \cap c_m' \longrightarrow_{\cap CC} v' : cv_1' \cap \ldots \cap cv_m'$, with $c_1' \longrightarrow_{\cap IC} cv_1'$ and ... and $c_m' \longrightarrow_{\cap IC} cv_m'$.
+        \item $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n$ doesn't contain identity casts, then $\erasee{e} = e$, therefore it is proved.
+        \item $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n$ contain identity casts.
+        By rule MergeCI$\cap$, $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v : c_1' \cap \ldots \cap c_n'$.
+        By rule Evaluate$\cap$, $v : T_1 \Rightarrow^l T_2 : c_1' \cap \ldots \cap c_n' \longrightarrow_{\cap CC} v : cv_1' \cap \ldots \cap cv_n'$, with $c_1' \longrightarrow_{\cap IC} cv_1'$ and ... and $c_n' \longrightarrow_{\cap IC} cv_n'$.
         For all casts $c_i$ that don't contain identity casts, then $\erasec{c_i} = c_i$, therefore for those casts, the property is proved.
-        For all casts $c_i$ that contain identity casts, $margeCasts$ will generate casts $c_i'$ that will evaluate to $cv_i'$.
+        For all casts $c_i$ that contain identity casts, $mergeCI$ will generate casts $c_i'$ that will evaluate to $cv_i'$.
         By Lemma 6, casts $\erasec{c_i}$ will generate casts $c_i''$ that will evaluate to $cv_i'$, therefore it is proved.
     \end{itemize}
+    \item e = $v : cv_1 \cap \ldots \cap cv_n : c_1 \cap \ldots \cap c_m$ and $isValue\ v : cv_1 \cap \ldots \cap cv_n$ and $v : c_1' \cap \ldots \cap c_j' = mergeII (v : cv_1 \cap \ldots \cap cv_n : c_1 \cap \ldots \cap c_m)$.
+    There are 2 possibilities:
+    \begin{itemize}
+        \item $v : cv_1 \cap \ldots \cap cv_n : c_1 \cap \ldots \cap c_m$ doesn't contain identity casts, then $\erasee{e} = e$, therefore it is proved.
+        \item $v : cv_1 \cap \ldots \cap cv_n : c_1 \cap \ldots \cap c_m$ contain identity casts.
+        By rule MergeII$\cap$, $v : cv_1 \cap \ldots \cap cv_n : c_1 \cap \ldots \cap c_m \longrightarrow_{\cap CC} v : c_1' \cap \ldots \cap c_j'$.
+        By rule Evaluate$\cap$, $v : c_1' \cap \ldots \cap c_j' \longrightarrow_{\cap CC} v' : cv_1' \cap \ldots \cap cv_j'$, with $c_1' \longrightarrow_{\cap IC} cv_1'$ and ... and $c_j' \longrightarrow_{\cap IC} cv_j'$.
+        For all casts $cv_i$ and $c_i$ that will be joined into $c_i'$ by function mergeII, and that don't contain identity casts, then $\erasec{c_i'} = c_i'$, therefore for those casts, the property is proved.
+        For all casts $cv_i$ and $c_i$ that will be joined into $c_i'$ by function mergeII, and that contain identity casts, $c_i' \longrightarrow_{\cap IC} cv_i'$ and by Lemma \ref{eliminationidentitycastsc}, $\erasec{c_i'} \longrightarrow_{\cap IC} cv_i'$, therefore it is proved.
+    \end{itemize}
     \item e = $v : c_1 \cap \ldots \cap c_n$ and $\neg(\forall i \in 1 .. n\ .\ isCastValue\ c_i)$.
-    By rule EvaluateCasts$\cap$, $v : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $c_1 \longrightarrow_{\cap IC} cv_1$ and ... and $c_n \longrightarrow_{\cap IC} cv_n$.
+    By rule Evaluate$\cap$, $v : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$, with $c_1 \longrightarrow_{\cap IC} cv_1$ and ... and $c_n \longrightarrow_{\cap IC} cv_n$.
     With $\erasee{e} = v : \erasec{c_1} \cap \ldots \cap \erasec{c_n}$, by Lemma \ref{eliminationidentitycastsc}, $\erasec{c_1} \longrightarrow_{\cap IC} cv_1$ and ... and $\erasec{c_n} \longrightarrow_{\cap IC} cv_n$.
-    Therefore, by rule EvaluateCasts$\cap$, $v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$.
+    Therefore, by rule Evaluate$\cap$, $v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} \longrightarrow_{\cap CC} v : cv_1 \cap \ldots \cap cv_n$.
     \item e = $v : \blamecast{I_1}{F_1}{l_1}{m_1} \cap \ldots \cap \blamecast{I_n}{F_n}{l_n}{m_n}$.
     As $\erasee{e} = e$, then it is proved.
     \item e = $v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n}$.
