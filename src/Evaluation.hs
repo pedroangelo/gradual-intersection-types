@@ -110,9 +110,9 @@ evaluate e@(Cast t1 t2 expr)
     | isValue expr && isCast expr && t1 == DynType && t2' == DynType &&
         isGroundType t2 && isGroundType t1' && not (sameGround t1' t2) =
             Blame t2 $ "cannot cast from " ++ show t1' ++ " to " ++ show t2
-    -- MERGE1/\ - cast is either sucessful or fails
+    -- MERGEIC/\ - merge cast with intersection of casts
     | isValue expr && isIntersectionCasts expr =
-        evaluationStyle $ IntersectionCasts (map (\x -> SingleCast (getCastLabel x) t1 t2 x) cs) expr''
+        evaluationStyle $ mergeIC e
     -- GROUND - cast types through their ground types
     | isValue expr && not (isGroundType t1) && t2 == DynType =
         let g = getGroundType t1
@@ -123,15 +123,15 @@ evaluate e@(Cast t1 t2 expr)
         in evaluationStyle $ Cast g t2 $ Cast DynType g expr
     -- Project types and expression from inner casts
     where (Cast t1' t2' expr') = expr
-          (IntersectionCasts cs expr'') = expr
 
 -- if expression is an intersection of casts
 evaluate e@(IntersectionCasts cs expr)
     -- push blame to top level
     | isBlame expr = evaluationStyle expr
-    -- Merge casts
+    -- MERGECI/\ - merge intersection of casts with cast
     | isValue expr && isCast expr = evaluationStyle $ mergeCI e
-    | isValue expr && isIntersectionCasts expr = evaluationStyle $ mergeCC e
+    -- MERGEII/\ - merge intersection of casts with intersection of casts
+    | isValue expr && isIntersectionCasts expr = evaluationStyle $ mergeII e
     -- values don't reduce
     | isValue e = e
     -- evaluate inside a cast
@@ -143,13 +143,10 @@ evaluate e@(IntersectionCasts cs expr)
         evaluationStyle $ IntersectionCasts (map evaluateCasts cs) expr
     -- Propagate blame
     | isValue expr && all isBlameCast cs =
-        let (BlameCast _ t msg) = head cs
-        in evaluationStyle $ Blame (IntersectionType $ map (\x -> let (BlameCast cl t msg) = x in t) cs) msg
+        let (BlameCast _ i f msg) = head cs
+        in evaluationStyle $ Blame (IntersectionType $ map (\x -> let (BlameCast cl i f msg) = x in f) cs) msg
     -- Remove empty casts
     | isValue expr && all isEmptyCast cs = evaluationStyle expr
-    -- Remove stuck casts
-    | isValue expr && all isCastValue cs && not (all isStuckCast cs) && any isStuckCast cs =
-        evaluationStyle $ IntersectionCasts (filter (not . isStuckCast) cs) expr
 
 -- blames are values
 evaluate e@Blame{} = e
@@ -161,10 +158,8 @@ evaluateCasts :: CastI -> CastI
 evaluateCasts c@(SingleCast cl t1 t2 c1)
     -- push blames to top level
     | isBlameCast c1 =
-        let (BlameCast _ _ msg) = c1
-        in BlameCast cl t2 msg
-    -- push stuck to top level
-    | isStuckCast c1 = StuckCast cl t2
+        let (BlameCast cl' i _ msg) = c1
+        in BlameCast cl' i t2 msg
     -- values don't reduce
     | isCastValue c = c
     -- evaluate inside cast
@@ -179,7 +174,7 @@ evaluateCasts c@(SingleCast cl t1 t2 c1)
     -- FAIL - cast fails
     | (isCastValue1 c1 || isEmptyCast c1) && isSingleCast c1 && t1 == DynType && t2' == DynType &&
         isGroundType t2 && isGroundType t1' && not (sameGround t1' t2) =
-            BlameCast cl t2 $ "cannot cast from " ++ show t1' ++ " to " ++ show t2
+            BlameCast (getCastLabel c1) (initialType c') t2 $ "cannot cast from " ++ show t1' ++ " to " ++ show t2
     -- GROUND - cast types through their ground types
     | (isCastValue1 c1 || isEmptyCast c1) && not (isGroundType t1) && t2 == DynType =
         let g = getGroundType t1
@@ -188,7 +183,6 @@ evaluateCasts c@(SingleCast cl t1 t2 c1)
     | (isCastValue1 c1 || isEmptyCast c1) && not (isGroundType t2) && t1 == DynType =
         let g = getGroundType t2
         in evaluateCastStyle $ SingleCast cl g t2 $ SingleCast cl DynType g c1
-    | isCastValue1 c1 || isEmptyCast c1 = StuckCast cl t2
     -- Project types and expression from inner casts
     where (SingleCast cl' t1' t2' c') = c1
 
@@ -197,6 +191,3 @@ evaluateCasts c@BlameCast{} = c
 
 -- empty cast evaluates to itself
 evaluateCasts c@EmptyCast{} = c
-
--- stuck cast evaluates to itself
-evaluateCasts c@StuckCast{} = c

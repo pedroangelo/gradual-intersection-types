@@ -54,14 +54,11 @@ prettyCasts (SingleCast cl t1 t2 c) = hsep
     [printParensCasts c, colon, printParensType t1, text "=>", printParensType t2, int cl]
 
 -- Blame
-prettyCasts (BlameCast cl typ msg) = hsep
-    [text "Blame:", text msg, int cl]
+prettyCasts (BlameCast cl i f msg) = hsep
+    [text "blame", printParensType i, printParensType f, text msg, int cl]
 
 -- Empty Cast
-prettyCasts (EmptyCast cl t) = hsep [text "(/)", int cl]
-
--- Stuck
-prettyCasts (StuckCast cl t) = hsep [text "_|_", int cl]
+prettyCasts (EmptyCast cl t) = hsep [text "(/)", printParensType t, int cl]
 
 -- pretty print type
 prettyType :: Type -> Doc
