@@ -58,8 +58,8 @@ Syntax
 \inferrule* [right=${\rightarrow} E$]
 {\Gamma \vdash_{\cap G} e_1 : PM \\
  PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T \\\\
- \Gamma \vdash_{\cap G} e_2 : T'_1 \cap \ldots \cap T'_n \\
- T'_1 \cap \ldots \cap T'_n \sim T_1 \cap \ldots \cap T_n}
+ \Gamma \vdash_{\cap G} e_2 : T_1' \cap \ldots \cap T_n' \\
+ T_1' \cap \ldots \cap T_n' \sim T_1 \cap \ldots \cap T_n}
 {\Gamma \vdash_{\cap G} e_1\ e_2 : T}
 
 \inferrule* [right=${\cap} I$]
@@ -67,8 +67,12 @@ Syntax
 {\Gamma \vdash_{\cap G} e : T_1 \cap \ldots \cap T_n}
 
 \inferrule* [right=${\cap} E$]
-{x : T_1 \cap \ldots \cap T_n \in \Gamma}
-{\Gamma \vdash_{\cap G} x : T_i}
+{\Gamma \vdash_{\cap G} e : T_1 \cap \ldots \cap T_n}
+{\Gamma \vdash_{\cap G} e : T_i}
+
+\inferrule* [right=$Var$]
+{x : T \in \Gamma}
+{\Gamma \vdash_{\cap G} x : T}
 \end{mathpar}
 
 \framebox[1.2\width]{$T \sim T$}\ Consistency
@@ -165,6 +169,12 @@ Syntax
 \inferrule* []
 {}
 {rules\ in\ Figure\ \ref{intersection_type_system}\ and}\\
+
+\inferrule* [right=T-App]
+{\Gamma \vdash_{\cap CC} e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2} \\
+ \Gamma \vdash_{\cap CC} e_2 : T_1' \cap \ldots \cap T_n' \\
+ T_{11} \sim T_1' \ldots T_{n1} \sim T_n'}
+{\Gamma \vdash_{\cap CC} e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}}
 
 \inferrule* [right=T-Cast]
 {\Gamma \vdash_{\cap CC} e : T_1 \\ T_1 \sim T_2}
@@ -299,8 +309,8 @@ Syntax
 {v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v : c_1' \cap \ldots \cap c_m'}\\
 
 \inferrule* [right=MergeII$\cap$]
-{isValue\ v : cv_1 \cap \ldots \cap cv_n \\ v : c_1' \cap \ldots \cap c_j' = mergeII (v : cv_1 \cap \ldots \cap cv_n : c_1 \cap \ldots \cap c_m)}
-{v : cv_1 \cap \ldots \cap cv_n : c_1 \cap \ldots \cap c_m \longrightarrow_{\cap CC} v : c_1' \cap \ldots \cap c_j'}\\
+{isValue\ v : cv_1 \cap \ldots \cap cv_n \\ v : c_1'' \cap \ldots \cap c_j'' = mergeII (v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m')}
+{v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \longrightarrow_{\cap CC} v : c_1'' \cap \ldots \cap c_j''}\\
 
 \inferrule* []
 {}
@@ -634,17 +644,40 @@ Depends on Lemmas \ref{subjectreductionIC} and \ref{initialtypepreservationIC}.
 If $\Gamma \vdash_{\cap CC} e : T$ and $e \longrightarrow_{\cap CC} e'$ then $\Gamma \vdash_{\cap CC} e' : T$.
 \end{theorem}
 \begin{proof}
-We proceed by induction on the length of the derivation tree of $\vdash_{\cap S}$.\\\\
+We proceed by induction on the length of the derivation tree of $\longrightarrow_{\cap CC}$.\\\\
 Base case:
 \begin{itemize}
+    \item $e = (v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2$ and $isValue\ v_1 : cv1 \cap \ldots \cap cv_n$ and $\exists i \in 1 .. n\ .\ isArrowCompatible(cv_i)$ and $(cv_1', \ldots, cv_m') = filter\ isArrowCompatible (cv_1, \ldots, cv_n)$ and $((c_{11}, c_{12}, r_1), \ldots, (c_{m1}, c_{m2}, r_m)) = map\ simulateArrow\ (cv_1', \ldots, cv_m')$.
+    If $\Gamma \vdash_{\cap CC} (v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 : T_{12} \cap \ldots \cap T_{n2}$, then $\Gamma \vdash_{\cap CC} v_1 : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_n$ with $\vdash_{\cap IC} cv_1 : T_1$ and ... and $\vdash_{\cap IC} cv_n : T_n$, such that $\exists i \in 1 .. n\ .\ T_i = T_{i1} \rightarrow T_{i2}$ and $\Gamma \vdash_{\cap CC} v_1 : T_1' \cap \ldots \cap T_l'$ and $I_1 = initialType(cv_1)$ and ... and $I_n = initialType(cv_n)$ such that either $T_1' \cap \ldots \cap T_l' =_{\cap} I_1 \cap \ldots \cap I_n$ or $unique\ types\ in\ [I_1, \ldots, I_n] \subset unique\ types\ in\ [T_1', \ldots, T_l']$ and $\Gamma \vdash_{\cap CC} v_2 : T_{11} \cap \ldots \cap T_{n1}$.
+    For the sake of simplicity lets elide cast labels and blame labels.
+    As $\vdash_{\cap IC} cv_1' : T_{11} \rightarrow T_{12}$ and ... and $\vdash_{\cap IC} cv_m' : T_{m1} \rightarrow T_{m2}$ then $cv_1' = cv_1'' : T_{11}' \rightarrow T_{12}' \Rightarrow T_{11} \rightarrow T_{12}$ and ... and $cv_m' = cv_m'' : T_{m1}' \rightarrow T_{m2}' \Rightarrow T_{m1} \rightarrow T_{m2}$.
+    By the definition of simulateArrow, $c_{11} : \emptycast{T_{11}}{} : T_{11} \Rightarrow T_{11}'$ and ... and $c_{m1} = \emptycast{T_{m1}}{} : T_{m1} \Rightarrow T_{m1}'$ and $c_{12} : \emptycast{T_{12}'}{} : T_{12}' \Rightarrow T_{12}$ and ... and $c_{m2} = \emptycast{T_{m2}'}{} : T_{m2}' \Rightarrow T_{m2}$ and $initialType(r_1) = I_1$ and ... and $initialType(r_m) = I_m$ and $\vdash_{\cap IC} r_1 : T_{11}' \rightarrow T_{12}'$ and ... and $\vdash_{\cap IC} r_m : T_{m1}' \rightarrow T_{m2}'$.
+    Therefore $\Gamma \vdash_{\cap CC} v_1 : r_1 \cap \ldots \cap r_m : T_{11}' \rightarrow T_{12}' \cap \ldots \cap T_{m1}' \rightarrow T_{m2}'$ and $\Gamma \vdash_{\cap CC} v_2 : c_{11} \cap \ldots \cap c_{m1} : T_{11}' \cap \ldots \cap T_{m1}'$ and therefore $\Gamma \vdash_{\cap CC} (v_1 : r_1 \cap \ldots \cap r_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : T_{12}' \cap \ldots \cap T_{m2}'$.
+    Therefore, $\Gamma \vdash_{\cap CC} (v_1 : r_1 \cap \ldots \cap r_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2} : T_{12} \cap \ldots \cap T_{m2}$, such that $unique\ types\ in\ [T_{12}, \ldots, T_{m2}] \subset unique\ types\ in\ [T_{12}, \ldots, T_{n2}]$.
+    By rule Simulate$\cap$, $(v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 \longrightarrow_{\cap CC}\\ (v_1 : r_1 \cap \ldots \cap r_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2}$, therefore it is proved.
     \item e = $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2$ and $isValue\ v : cv_1 \cap \ldots \cap cv_n$ and $v : c_1' \cap \ldots \cap c_m' = mergeIC(v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2)$.
-    If $\Gamma \vdash_{\cap CC} v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 : T_2$ then $\Gamma \vdash_{\cap CC} v : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_1$ and $T_1 \cap \ldots \cap T_1 =_{\cap} T_1$ and $\vdash_{\cap IC} cv_1 : T_1$ and $I_1 = initialType(cv_1)$ and ... and $\vdash_{\cap IC} cv_n : T_1$ and $I_n = initialType(cv_n)$ and $\Gamma \vdash_{\cap CC} v : I_1 \cap \ldots \cap I_n$.
-    By the definition of mergeIC, $mergeIC(v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2) = v : (cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1}) \cap \ldots \cap (cv_n : T_1 \Rightarrow^l T_2\ ^{m_n})$.
-    As $\Gamma \vdash_{\cap CC} v : (cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1}) \cap \ldots \cap (cv_n : T_1 \Rightarrow^l T_2\ ^{m_n}) : T_2 \cap \ldots \cap T_2$ and $T_2 \cap \ldots \cap T_2 =_{\cap} T_2$ and by rule MergeIC$\cap$, $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : (cv_1 : T_1 \Rightarrow^l T_2\ ^{m_1}) \cap \ldots \cap (cv_n : T_1 \Rightarrow^l T_2\ ^{m_n})$, then it is proved.
+    If $\Gamma \vdash_{\cap CC} v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 : T_2$ then $\Gamma \vdash_{\cap CC} v : cv_1 \cap \ldots \cap cv_n : T_{11} \cap \ldots \cap T_{1n}$ and such that $\exists T_{1i}\ .\ T_{1i} = T_1$ and $\vdash_{\cap IC} cv_1 : T_{11}$ and $I_1 = initialType(cv_1)$ and ... and $\vdash_{\cap IC} cv_n : T_{1n}$ and $I_n = initialType(cv_n)$ and $\Gamma \vdash_{\cap CC} v : I_1 \cap \ldots \cap I_n$ and $m \leq n$.
+    By the definition of mergeIC, $\vdash_{\cap IC} c_1' : T_2$ and $initialType(c_1') : I_1$ and ... and $\vdash_{\cap IC} c_m' : T_2$ and $initialType(c_m') : I_m$.
+    As $\Gamma \vdash_{\cap CC} v : I_1 \cap \ldots \cap I_m$ and therefore $\Gamma \vdash_{\cap CC} v : c_1' \cap \ldots \cap c_m' : T_2 \cap \ldots \cap T_2$ and $T_2 \cap \ldots \cap T_2 =_{\cap} T_2$ and by rule MergeIC$\cap$, $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \longrightarrow_{\cap CC} v : c_1' \cap \ldots \cap c_m'$, then it is proved.
     \item e = $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n$ and $isValue\ v : T_1 \Rightarrow^l T_2$ and $v : c_1' \cap \ldots \cap c_m' = mergeCI(v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n)$.
-    If $\Gamma \vdash_{\cap CC} v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n : F_1 \cap \ldots \cap F_n$ then $\Gamma \vdash_{\cap CC} v : T_1 \Rightarrow T_2 : T_2$ and $\Gamma \vdash_{\cap CC} v : T_1$ and $\vdash_{\cap IC} c_1 : F_1$ and $initialType(c_1) : T_2$ and ... and $\vdash_{\cap IC} c_n : F_n$ and $initialType(c_n) : T_2$.
+    If $\Gamma \vdash_{\cap CC} v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n : F_1 \cap \ldots \cap F_n$ then $\Gamma \vdash_{\cap CC} v : T_1 \Rightarrow T_2 : T_2$ and $\Gamma \vdash_{\cap CC} v : T_1$ and $\vdash_{\cap IC} c_1 : F_1$ and $initialType(c_1) = T_2$ and ... and $\vdash_{\cap IC} c_n : F_n$ and $initialType(c_n) = T_2$.
     By the definition of mergeCI, $mergeCI(v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n) = v : c_1' \cap \ldots \cap c_n'$, such that $\vdash_{\cap IC} c_1' : F_1$ and $initialType(c_1') : T_1$ and ... and $\vdash_{\cap IC} c_n' : F_n$ and $initialType(c_n') : T_1$.
     As $\Gamma \vdash_{\cap CC} v : c_1' \cap \ldots \cap c_n' : F_1 \cap \ldots \cap F_n$ and by rule MergeCI$\cap$, $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \longrightarrow_{\cap CC} v : c_1' \cap \ldots \cap c_n'$, then it is proved.
+    \item e = $v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m'$ and $isValue\ v : cv_1 \cap \ldots \cap cv_n$ and $v : c_1'' \cap \ldots \cap c_j'' = mergeII(v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m')$.
+    If $\Gamma \vdash_{\cap CC} v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' : F_1' \cap \ldots \cap F_m'$ then $\vdash_{\cap IC} c_1' : F_1'$ and $initialType(c_1') = I_1'$ and ... and $\vdash_{\cap IC} c_m' : F_m'$ and $initialType(c_m') = I_m'$ and $\Gamma \vdash_{\cap CC} v : cv_1 \cap \ldots \cap cv_n : F_1 \cap \ldots \cap F_n$ and $\vdash_{\cap IC} cv_1 : F_1$ and $initialType(cv_1) = I_1$ and ... and $\vdash_{\cap IC} cv_n : F_n$ and $initialType(cv_n) = I_n$ and $\Gamma \vdash_{\cap CC} v : T_1 \cap \ldots \cap T_l$ such that either $T_1 \cap \ldots \cap T_l =_{\cap} I_1 \cap \ldots \cap I_n$ or $unique\ types\ in\ [I_1, \ldots, I_n] \subset unique\ types\ in\ [T_1, \ldots, T_l]$.
+    There are two possibilities:
+    \begin{itemize}
+        \item $F_1 \cap \ldots \cap F_n =_{\cap} I_1' \cap \ldots \cap I_m'$.
+        By the definition of mergeII, $\vdash_{\cap IC} c_1'' : F_1''$ and ... and $\vdash_{\cap IC} c_j'' : F_j''$ such that $F_1'' \cap \ldots \cap F_j'' =_{\cap} F_1' \cap \ldots \cap F_m'$ and $initialType(c_1'') = I_1''$ and ... and $initialType(c_j'') = I_j''$ such that $I_1'' \cap \ldots \cap I_j'' =_{\cap} I_1 \cap \ldots \cap I_n$.
+        Therefore $\Gamma \vdash_{\cap CC} v : c_1'' \cap \ldots \cap c_j'' : F_1'' \cap \ldots \cap F_j''$.
+        By rule MergeII$\cap$, $v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \longrightarrow_{\cap CC} v : c_1'' \cap \ldots \cap c_j''$.
+        Therefore it is proved.
+        \item $unique\ types\ in\ [I_1', \ldots, I_m'] \subset unique\ types\ in\ [F_1, \ldots, F_n]$.
+        By the definition of mergeII, $\vdash_{\cap IC} c_1'' : F_1''$ and $initialType(c_1'') = I_1''$ and ... and $\vdash_{\cap IC} c_j'' : F_j''$ and $initialType(c_j'') = I_j''$ such that $unique\ types\ in\ [I_1'', \ldots, I_j''] \subset unique\ types\ in\ [T_1, \ldots, T_l]$ and $unique\ types\ in\ [F_1'', \ldots, F_j''] \subset unique\ types\ in\ [F_1', \ldots, F_m']$.
+        Therefore, $\Gamma \vdash_{\cap CC} v : c_1'' \cap \ldots \cap c_j'' : F_1'' \cap \ldots \cap F_j''$.
+        By rule MergeII$\cap$, $v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \longrightarrow_{\cap CC} v : c_1'' \cap \ldots \cap c_j''$.
+        As $\Gamma \vdash_{\cap CC} v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' : F_1'' \cap \ldots \cap F_j''$, it is proved.
+    \end{itemize}
     \item e = $v : c_1 \cap \ldots \cap c_n$ and $\neg(\forall i \in 1 .. n\ .\ isCastValue\ c_i)$.
     If $\Gamma \vdash_{\cap CC} v : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then $\vdash_{\cap IC} c_1 : T_1$ and ... and $\vdash_{\cap IC} c_n : T_n$, $\Gamma \vdash_{\cap CC} v : I_1 \cap \ldots \cap I_n$, with $I_1 = initialType(c_1)$ and ... and $I_n = initialType(c_n)$.
     By rule Evaluate$\cap$, $c_1 \longrightarrow_{\cap IC} cv_1$ and ... and $c_n \longrightarrow_{\cap IC} cv_n$.

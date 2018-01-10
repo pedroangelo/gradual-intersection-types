@@ -17,9 +17,13 @@ example0fail = TypeInformation DynType (Application (TypeInformation (ArrowType 
 
 -- INTERSECTION TYPE EXAMPLES
 
+-- (\x : Int -> Int /\ Dyn . x 1 + x 2) (\y : Int . y + 1) : Int
+-- -->/\G 5
+example3 = TypeInformation IntType (Application (TypeInformation (ArrowType (IntersectionType [ArrowType IntType IntType, DynType]) IntType) (Abstraction "x" (IntersectionType [ArrowType IntType IntType, DynType]) (TypeInformation IntType (Addition (TypeInformation IntType (Application (TypeInformation (ArrowType IntType IntType) (Variable "x")) (TypeInformation IntType (Int 1)))) (TypeInformation DynType (Application (TypeInformation DynType (Variable "x")) (TypeInformation IntType (Int 2)))))))) (TypeInformation (ArrowType IntType IntType) (Abstraction "y" IntType (TypeInformation IntType (Addition (TypeInformation IntType (Variable "y")) (TypeInformation IntType (Int 1)))))))
+
 -- (\x : Int -> Int /\ Dyn . x 1 + x true) (\y : Int . y + 1) : Int
 -- -->/\G blame Bool => Int
-example3 = TypeInformation IntType (Application (TypeInformation (ArrowType (IntersectionType [ArrowType IntType IntType, DynType]) IntType) (Abstraction "x" (IntersectionType [ArrowType IntType IntType, DynType]) (TypeInformation IntType (Addition (TypeInformation IntType (Application (TypeInformation (ArrowType IntType IntType) (Variable "x")) (TypeInformation IntType (Int 1)))) (TypeInformation DynType (Application (TypeInformation DynType (Variable "x")) (TypeInformation BoolType (Bool True)))))))) (TypeInformation (ArrowType IntType IntType) (Abstraction "y" IntType (TypeInformation IntType (Addition (TypeInformation IntType (Variable "y")) (TypeInformation IntType (Int 1)))))))
+example3fail = TypeInformation IntType (Application (TypeInformation (ArrowType (IntersectionType [ArrowType IntType IntType, DynType]) IntType) (Abstraction "x" (IntersectionType [ArrowType IntType IntType, DynType]) (TypeInformation IntType (Addition (TypeInformation IntType (Application (TypeInformation (ArrowType IntType IntType) (Variable "x")) (TypeInformation IntType (Int 1)))) (TypeInformation DynType (Application (TypeInformation DynType (Variable "x")) (TypeInformation BoolType (Bool True)))))))) (TypeInformation (ArrowType IntType IntType) (Abstraction "y" IntType (TypeInformation IntType (Addition (TypeInformation IntType (Variable "y")) (TypeInformation IntType (Int 1)))))))
 
 -- (\x : Int /\ Dyn . x + x) 1 : Int
 -- -->/\ 2
