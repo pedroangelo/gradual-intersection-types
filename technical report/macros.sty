@@ -7,13 +7,31 @@
 \newcommand{\true}{\ensuremath{true}}
 \newcommand{\false}{\ensuremath{false}}
 \newcommand{\blame}[2]{\ensuremath{blame_{#1}\ #2}}
-
+%\newcommand{\cast}[4]{\ensuremath{#1 : #2 \Rightarrow^{#4} #3}}
 
 %% Terms of intersection cast language
 \newcommand{\blamecast}[4]{\ensuremath{blame\ #1\ #2\ #3\ ^{#4}}}
 \newcommand{\emptycast}[2]{\ensuremath{\varnothing\ #1\ ^{#2}}}
-
+%\newcommand{\singleCast}[5]{\ensuremath{#1 : #2 \Rightarrow^{#4} #3\ ^{#5}}}
 
 %% Auxiliary definitions
 \newcommand{\erasee}[1]{\ensuremath{[#1]_{_e}}}
 \newcommand{\erasec}[1]{\ensuremath{[#1]_{_c}}}
+\newcommand{\assignCastLabel}[2]{\ensuremath{\langle #1 \rangle^{#2}}}
+\newcommand{\separateIntersectionCast}[1]{\ensuremath{separateIntersectionCast(#1)}}
+\newcommand{\breakdownArrowType}[1]{\ensuremath{breakdownArrowType(#1)}}
+\newcommand{\mergeIC}[1]{mergeIC(#1)}
+\newcommand{\mergeCI}[1]{mergeCI(#1)}
+\newcommand{\mergeII}[1]{mergeII(#1)}
+
+
+%% Type Systems
+\newcommand{\gits}{\ensuremath{\vdash_{\cap G}}}
+\newcommand{\sits}{\ensuremath{\vdash_{\cap S}}}
+\newcommand{\iccts}{\ensuremath{\vdash_{\cap CC}}}
+\newcommand{\icts}{\ensuremath{\vdash_{\cap IC}}}
+
+%% Operational Semantics
+\newcommand{\sios}{\ensuremath{\longrightarrow_{\cap S}}}
+\newcommand{\gios}{\ensuremath{\longrightarrow_{\cap CC}}}
+\newcommand{\icos}{\ensuremath{\longrightarrow_{\cap IC}}}

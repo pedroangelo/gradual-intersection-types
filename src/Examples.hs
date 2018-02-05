@@ -29,6 +29,10 @@ example3fail = TypeInformation IntType (Application (TypeInformation (ArrowType 
 -- -->/\ 2
 example4 = TypeInformation (IntType ) $ Application (TypeInformation (ArrowType (IntersectionType [IntType, DynType]) IntType) $ Abstraction "x" (IntersectionType [IntType, DynType]) $ TypeInformation IntType $ Addition (TypeInformation IntType $ Variable "x") (TypeInformation DynType $ Variable "x")) (TypeInformation IntType $ Int 1)
 
+-- (\x : Int /\ Dyn . x) 1 : Int
+-- -->/\ 2
+example6 = TypeInformation (IntType ) $ Application (TypeInformation (ArrowType (IntersectionType [IntType, DynType]) IntType) $ Abstraction "x" (IntersectionType [IntType, DynType]) $ (TypeInformation IntType $ Variable "x")) (TypeInformation IntType $ Int 1)
+
 t' = ArrowType (IntersectionType [ArrowType (IntersectionType [IntType, DynType]) IntType, DynType]) IntType
 
 -- (\x : (((Int /\ Dyn) -> Int) /\ Dyn) -> Int . x (\y : Int . y + 1)) (\z : Int -> Int . z 1) : Int
@@ -36,7 +40,7 @@ t' = ArrowType (IntersectionType [ArrowType (IntersectionType [IntType, DynType]
 example5 = TypeInformation (IntType) $ Application (TypeInformation (ArrowType t' IntType) $ Abstraction "x" t' $ TypeInformation (IntType) $ Application (TypeInformation (t') $ Variable "x") (TypeInformation (ArrowType IntType IntType) $ Abstraction "y" IntType $ TypeInformation (IntType) $ Addition (TypeInformation (IntType) $ Variable "y") (TypeInformation (IntType) $ Int 1))) (TypeInformation (ArrowType (ArrowType IntType IntType) IntType) $ Abstraction "z" (ArrowType IntType IntType) $ TypeInformation IntType $ Application (TypeInformation (ArrowType IntType IntType) $ Variable "z") (TypeInformation (IntType) $ Int 1))
 
 -- (\x : (((Int /\ Dyn) -> Int) /\ Dyn) -> Int . x (\y : Dyn . y + 1)) (\z : Dyn . z true) : Int
--- --> /\ blame Bool => Int
+-- -->/\ blame Bool => Int
 example5Dyn = TypeInformation (IntType) $ Application (TypeInformation (ArrowType t' IntType) $ Abstraction "x" t' $ TypeInformation (IntType) $ Application (TypeInformation (t') $ Variable "x") (TypeInformation (ArrowType DynType IntType) $ Abstraction "y" DynType $ TypeInformation (IntType) $ Addition (TypeInformation (DynType) $ Variable "y") (TypeInformation (IntType) $ Int 1))) (TypeInformation (ArrowType DynType DynType) $ Abstraction "z" DynType $ TypeInformation DynType $ Application (TypeInformation DynType $ Variable "z") (TypeInformation (BoolType) $ Bool True))
 
 -- SELF APPLICATION EXAMPLES

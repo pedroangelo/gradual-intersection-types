@@ -44,15 +44,7 @@ evaluate e@(Application expr1 expr2)
         in evaluationStyle $ Cast t12 t22 $ Application expr1' expr2'
     -- C-BETA/\ - simulate casts on data types
     | isValue expr1 && isValue expr2 && isIntersectionCasts expr1 && any isArrowCompatible cs =
-        let
-            -- filter arrow compatible casts, and separate first casts from second casts
-            compatibleExpr = getArrowCompatibleCasts $ IntersectionCasts (map (mapCast cleanCastLabel) cs) expr1''
-            result
-                -- apply simulate step if there is a cast
-                | isIntersectionCasts compatibleExpr || isCast compatibleExpr = simulateCastsArrow compatibleExpr expr2
-                -- otherwise just reduce to a simple application
-                | otherwise = evaluationStyle $ Application compatibleExpr expr2
-        in evaluationStyle result
+        evaluationStyle $ simulateArrow expr1 expr2
     -- beta reduction
     | isAbstraction expr1 && isValue expr2 =
         let (Abstraction var typ expr) = expr1
