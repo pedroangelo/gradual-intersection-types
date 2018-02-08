@@ -36,9 +36,7 @@ prettyExpression (Addition expr1 expr2) = hsep
 prettyExpression (TypeInformation typ expr) = hsep
     [printParensExpression expr, colon, prettyType typ]
 
--- Casts
-prettyExpression (Cast t1 t2 expr) = hsep
-    [printParensExpression expr, colon, printParensType t1, text "=>", printParensType t2]
+-- Intersection of Casts
 prettyExpression (IntersectionCasts cs expr) = hsep
     [printParensExpression expr, colon, parens $ hcat $ punctuate (space <> text "/\\" <> space) $ map printParensCasts cs]
 
@@ -94,7 +92,6 @@ needsParensExpression expr =
     isApplication expr ||
     isAddition expr ||
     isTypeInformation expr ||
-    isCast expr ||
     isIntersectionCasts expr ||
     isBlame expr
 

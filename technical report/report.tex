@@ -18,25 +18,27 @@
 \begin{figure}[H]
 Syntax
 \begin{align*}
-&Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T'\ |\ T \cap \ldots \cap T\\
-                          T' &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T' \rightarrow T' \end{aligned}\\
+&Types\ \begin{aligned}[t] I &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ I \rightarrow T\ |\ I \cap \ldots \cap I\\
+                          T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T \end{aligned}\\
 &Ground\ Types\ G\ ::=\ \Int\ |\ \Bool\ |\ \Dyn \rightarrow \Dyn\\
-&Casts\ \begin{aligned}[t] c\ ::=&\ c : T' \Rightarrow^l T'\ ^{cl}\ |\ \blamecast{T'}{T'}{l}{cl}\ |\ \emptycast{T'}{cl}\ \iffalse |\ \stuckcast{T'}{T'}{n}\fi \end{aligned}\\
-&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\\
-                                      |&\ e : T' \Rightarrow^l T'\ |\ e : c \cap \ldots \cap c\ |\ \blame{T}{l} \end{aligned}\\
+&Casts\ \begin{aligned}[t] c\ ::=&\ c : T \Rightarrow^l T\ ^{cl}\ |\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}\\
+%&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\\
+%                                      |&\ e : T' \Rightarrow^l T'\ |\ e : c \cap \ldots \cap c\ |\ \blame{T}{l} \end{aligned}\\
+&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : I\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\\
+                                      |&\ e : c \cap \ldots \cap c\ |\ \blame{I}{l} \end{aligned}\\
 &Cast\ Values\ \begin{aligned}[t] cv\ ::=&\ cv1\ |\ cv2\\
-                                cv1\ ::=&\ \emptycast{T'}{cl} : G \Rightarrow^l \Dyn\ ^{cl}\\
-                                       |&\ \emptycast{T'}{cl} : T'_1 \rightarrow T'_2 \Rightarrow^l T'_3 \rightarrow T'_4\ ^{cl}\\
+                                cv1\ ::=&\ \emptycast{T}{cl} : G \Rightarrow^l \Dyn\ ^{cl}\\
+                                       |&\ \emptycast{T}{cl} : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}\\
                                        |&\ cv1 : G \Rightarrow^l \Dyn\ ^{cl}\\
-                                       |&\ cv1 : T'_1 \rightarrow T'_2 \Rightarrow^l T'_3 \rightarrow T'_4\ ^{cl}\\
-                                cv2\ ::=&\ \blamecast{T'}{T'}{l}{cl}\\
-                                       |&\ \emptycast{T'}{cl} \end{aligned}\\
-&Values\ \begin{aligned}[t] v\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ n\ |\ \true\ |\ \false\ |\ \blame{T}{l}\\
-                                 |&\ v : G \Rightarrow^l \Dyn\\
-                                 |&\ v : T'_1 \rightarrow T'_2 \Rightarrow^l T'_3 \rightarrow T'_4\\
+                                       |&\ cv1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}\\
+                                cv2\ ::=&\ \blamecast{T}{T}{l}{cl}\\
+                                       |&\ \emptycast{T}{cl} \end{aligned}\\
+&Values\ \begin{aligned}[t] v\ ::=&\ x\ |\ \lambda x : I\ .\ e\ |\ n\ |\ \true\ |\ \false\ |\ \blame{I}{l}\\
+%                                 |&\ v : G \Rightarrow^l \Dyn\\
+%                                 |&\ v : T'_1 \rightarrow T'_2 \Rightarrow^l T'_3 \rightarrow T'_4\\
                                  |&\ v : cv_1 \cap \ldots \cap cv_n\ such\ that\\
-                                 &\neg(\forall_{i\in 1..n}\ .\ cv_i = \blamecast{T'}{T'}{l}{cl})\ \land\\
-                                 &\neg(\forall_{i\in 1..n}\ .\ cv_i = \emptycast{T'}{cl}) \end{aligned}
+                                 &\neg(\forall_{i\in 1..n}\ .\ cv_i = \blamecast{T}{T}{l}{cl})\ \land\\
+                                 &\neg(\forall_{i\in 1..n}\ .\ cv_i = \emptycast{T}{cl}) \end{aligned}
 \end{align*}
 \hrulefill
 \caption{Gradual Intersection System}
@@ -46,32 +48,44 @@ Syntax
 \begin{figure}[H]
 \framebox[1.2\width]{$\Gamma \gits e : T$}\ Typing
 \begin{mathpar}
-\inferrule* [right=$Var$]
+\inferrule* [right=T-Var]
 {x : T \in \Gamma}
 {\Gamma \gits x : T}
 
-\inferrule* [right=${\rightarrow} I$]
+\inferrule* [right=T-Abs]
 {\Gamma, x : T_1 \cap \ldots \cap T_n \gits\ e : T}
 {\Gamma \gits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T}
 
-\inferrule* [right=${\rightarrow} I'$]
+\inferrule* [right=T-Abs']
 {\Gamma, x : T_i \gits\ e : T}
 {\Gamma \gits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T}
 
-\inferrule* [right=${\rightarrow} E$]
+\inferrule* [right=T-App]
 {\Gamma \gits e_1 : PM \\
  PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T \\\\
  \Gamma \gits e_2 : T_1' \cap \ldots \cap T_n' \\
  T_1' \cap \ldots \cap T_n' \sim T_1 \cap \ldots \cap T_n}
 {\Gamma \gits e_1\ e_2 : T}
 
-\inferrule* [right=${\cap} I$]
+\inferrule* [right=T-Gen]
 {\Gamma \gits e : T_1\ \ldots\ \Gamma \gits e : T_n}
 {\Gamma \gits e : T_1 \cap \ldots \cap T_n}
 
-\inferrule* [right=${\cap} E$]
+\inferrule* [right=T-Inst]
 {\Gamma \gits e : T_1 \cap \ldots \cap T_n}
 {\Gamma \gits e : T_i}
+
+\inferrule* [right=T-Int]
+{ }
+{\Gamma \gits n : \Int}
+
+\inferrule* [right=T-True]
+{ }
+{\Gamma \gits \true : \Bool}
+
+\inferrule* [right=T-False]
+{ }
+{\Gamma \gits \false : \Bool}
 \end{mathpar}
 
 \framebox[1.2\width]{$T \sim T$}\ Consistency
@@ -167,25 +181,24 @@ Syntax
 \begin{mathpar}
 \inferrule* []
 {}
-{rules\ in\ Figure\ \ref{intersection_type_system}\ and}\\
+{static\ type\ system\ ($$\Gamma \sits e : T$$)\ rules\ and}\\
 
-\inferrule* [right=T-App]
+\inferrule* [right=T-App']
 {\Gamma \iccts e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2} \\
- \Gamma \iccts e_2 : T_1' \cap \ldots \cap T_n' \\
- T_{11} \sim T_1' \ldots T_{n1} \sim T_n'}
+ \Gamma \iccts e_2 : T_{11} \cap \ldots \cap T_{n1}}
 {\Gamma \iccts e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}}
 
-\inferrule* [right=T-Cast]
-{\Gamma \iccts e : T_1 \\ T_1 \sim T_2}
-{\Gamma \iccts e : T_1 \Rightarrow^l T_2 : T_2}
-
-\inferrule* [right=T-Blame]
-{ }
-{\Gamma \iccts \blame{T}{l} : T}
+%\inferrule* [right=T-Cast]
+%{\Gamma \iccts e : T_1 \\ T_1 \sim T_2}
+%{\Gamma \iccts e : T_1 \Rightarrow^l T_2 : T_2}
 
 \inferrule* [right=T-IntersectionCast]
 {\Gamma \iccts e : T \\ \icts c_1 : T_1\ \ldots\ \icts c_n : T_n \\\\ initialType(c_1) \cap \ldots \cap initialType(c_n) = T}
 {\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n}
+
+\inferrule* [right=T-Blame]
+{ }
+{\Gamma \iccts \blame{T}{l} : T}
 \end{mathpar}
 
 \framebox[1.2\width]{initialType(c) = T}
@@ -225,17 +238,41 @@ Syntax
 \begin{figure}[H]
 \framebox[1.2\width]{$\Gamma \iccts e \leadsto e : T$}\ Compilation
 \begin{mathpar}
-\inferrule* [right=Var]
+\inferrule* [right=C-Var]
 {x : T \in \Gamma}
 {\Gamma \iccts x \leadsto x : T}
 
-\inferrule* [right=Abs]
+\inferrule* [right=C-Abs]
 {\Gamma, x : T_1 \cap \ldots \cap T_n \iccts e \leadsto e' : T}
 {\Gamma \iccts (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e) \leadsto (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e') : T_1 \cap \ldots \cap T_n \rightarrow T}
 
-\inferrule* [right=App]
+\inferrule* [right=C-Abs']
+{\Gamma, x : T_i \iccts e \leadsto e' : T}
+{\Gamma \iccts (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e) \leadsto (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e') : T_i \rightarrow T}
+
+\inferrule* [right=C-App]
 {\Gamma \iccts e_1 \leadsto e_1' : PM \\ PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T \\ \Gamma \iccts e_2 \leadsto e_2' : T'_1 \cap \ldots \cap T'_n \\ T'_1 \cap \ldots \cap T'_n \sim T_1 \cap \ldots \cap T_n \\ instances(PM) = S_1 \\ instances(T_1 \cap \ldots \cap T_n \rightarrow T) = S_2 \\ instances(T'_1 \cap \ldots \cap T'_n) = S_3 \\ instances(T_1 \cap \ldots \cap T_n) = S_4 \\ S_1,\ S_2,\ e_1' \hookrightarrow e_1'' \\ S_3,\ S_4,\ e_2' \hookrightarrow e_2''}
 {\Gamma \iccts e_1\ e_2 \leadsto e_1''\ e_2'' : T}
+
+\inferrule* [right=C-Gen]
+{\Gamma \iccts e \leadsto e' : T_1\ \ldots\ \Gamma \iccts e \leadsto e' : T_n}
+{\Gamma \iccts e \leadsto e': T_1 \cap \ldots \cap T_n}
+
+\inferrule* [right=C-Inst]
+{\Gamma \iccts e \leadsto e' : T_1 \cap \ldots \cap T_n}
+{\Gamma \iccts e \leadsto e' : T_i}
+
+\inferrule* [right=C-Int]
+{ }
+{\Gamma \iccts n \leadsto n : \Int}
+
+\inferrule* [right=C-True]
+{ }
+{\Gamma \iccts \true \leadsto \true : \Bool}
+
+\inferrule* [right=C-False]
+{ }
+{\Gamma \iccts \false \leadsto \false : \Bool}
 \end{mathpar}
 
 \framebox[1.2\width]{instances(T) = \{T\}}
@@ -265,19 +302,19 @@ Syntax
 \begin{mathpar}
 \inferrule* []
 {}
-{\{T_1\},\ \{T_2\},\ e \hookrightarrow e : T_1 \Rightarrow^l T_2}\\
+{\{T_1\},\ \{T_2\},\ e \hookrightarrow e : (\emptycast{T_1}{0} : T_1 \Rightarrow^l T_2\ ^{0})}\\
 
 \inferrule* []
 {}
-{\{T_{11}, \ldots, T_{1n}\},\ \{T_{21}, \ldots, T_{2n}\},\ e \hookrightarrow e : (\emptycast{T_{11}}{0} : T_{11} \Rightarrow^l T_{21}\ ^{0}) \cap \ldots \cap (\emptycast{T_{1n}}{0} : T_{1n} \Rightarrow^l T_{2n}\ ^{0})}\\
+{\{T_{11}, \ldots, T_{1n}\},\ \{T_{21}, \ldots, T_{2n}\},\ e \hookrightarrow e : (\emptycast{T_{11}}{0} : T_{11} \Rightarrow^{l_1} T_{21}\ ^{0}) \cap \ldots \cap (\emptycast{T_{1n}}{0} : T_{1n} \Rightarrow^{l_n} T_{2n}\ ^{0})}\\
 
 \inferrule* []
 {}
-{\{T_{11}, \ldots, T_{1n}\},\ \{T_2\},\ e \hookrightarrow e : (\emptycast{T_{11}}{0} : T_{11} \Rightarrow^l T_2\ ^{0}) \cap \ldots \cap (\emptycast{T_{1n}}{0} : T_{1n} \Rightarrow^l T_2\ ^{0})}\\
+{\{T_{11}, \ldots, T_{1n}\},\ \{T_2\},\ e \hookrightarrow e : (\emptycast{T_{11}}{0} : T_{11} \Rightarrow^{l_1} T_2\ ^{0}) \cap \ldots \cap (\emptycast{T_{1n}}{0} : T_{1n} \Rightarrow^{l_n} T_2\ ^{0})}\\
 
 \inferrule* []
 {}
-{\{T_1\},\ \{T_{21}, \ldots, T_{2n}\},\ e \hookrightarrow e : (\emptycast{T_1}{0} : T_1 \Rightarrow^l T_{21}\ ^{0}) \cap \ldots \cap (\emptycast{T_1}{0} : T_1 \Rightarrow^l T_{2n}\ ^{0})}
+{\{T_1\},\ \{T_{21}, \ldots, T_{2n}\},\ e \hookrightarrow e : (\emptycast{T_1}{0} : T_1 \Rightarrow^{l_1} T_{21}\ ^{0}) \cap \ldots \cap (\emptycast{T_1}{0} : T_1 \Rightarrow^{l_n} T_{2n}\ ^{0})}
 \end{mathpar}
 \hrulefill
 \caption{Compilation to the Cast Calculus}
@@ -287,47 +324,55 @@ Syntax
 \begin{figure}[H]
 \framebox[1.2\width]{$e \gios e$}\ Evaluation
 \begin{mathpar}
-\inferrule* []
-{}
-{Simulate\ casts\ on\ data\ types}
+\inferrule* [right=E-App1]
+{e_1 \gios e_1'}
+{e_1\ e_2 \gios\ e_1'\ e_2}
 
-\inferrule* [right=Simulate$\cap$]
-{is\ value\ v_1 : cv_1 \cap \ldots \cap cv_n \\ \exists i \in 1..n\ .\ isArrowCompatible(cv_i) \\\\ ((c_{11}, c_{12}, c_1^s), \ldots, (c_{m1}, c_{m2}, c_m^s)) = simulateArrow(cv_1, \ldots, cv_n)}
-{(v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 \gios\\ (v_1 : c_1^s \cap \ldots \cap c_m^s)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2}}
+\inferrule* [right=E-App2]
+{e_2 \gios e_2'}
+{v_1\ e_2 \gios\ v_1\ e_2'}
 
-\inferrule* []
-{}
-{Merge\ casts}\\
+\inferrule* [right=E-AppAbs]
+{ }
+{(\lambda x : T_1 \cap \ldots \cap T_n\ .\ e)\ v \gios\ [x \mapsto v] e}
 
-\inferrule* [right=MergeIC$\cap$]
-{is\ value\ v : cv_1 \cap \ldots \cap cv_n \\ v : c_1' \cap \ldots \cap c_m' = \mergeIC{v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2}}
-{v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \gios v : c_1' \cap \ldots \cap c_m'}
+\inferrule* [right=E-Evaluate]
+{e \gios e'}
+{e : c_1 \cap \ldots \cap c_n \gios e' : c_1 \cap \ldots \cap c_n}\\
 
-\inferrule* [right=MergeCI$\cap$]
-{is\ value\ v : T_1 \Rightarrow^l T_2 \\ v : c_1' \cap \ldots \cap c_m' = \mergeCI{v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n}}
-{v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \gios v : c_1' \cap \ldots \cap c_m'}\\
+Simulate\ casts\ on\ data\ types
 
-\inferrule* [right=MergeII$\cap$]
-{is\ value\ v : cv_1 \cap \ldots \cap cv_n \\ v : c_1'' \cap \ldots \cap c_j'' = \mergeII{v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m'}}
+\inferrule* [right=E-SimulateArrow]
+{is\ value\ (v_1 : cv_1 \cap \ldots \cap cv_n) \\ \exists i \in 1..n\ .\ isArrowCompatible(cv_i) \\\\ ((c_{11}, c_{12}, c_1^s), \ldots, (c_{m1}, c_{m2}, c_m^s)) = simulateArrow(cv_1, \ldots, cv_n)}
+{(v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 \gios\\ (v_1 : c_1^s \cap \ldots \cap c_m^s)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2}}\\
+
+Merge\ casts
+%
+%\inferrule* [right=E-MergeIC]
+%{is\ value\ v : cv_1 \cap \ldots \cap cv_n \\ v : c_1' \cap \ldots \cap c_m' = \mergeIC{v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2}}
+%{v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \gios v : c_1' \cap \ldots \cap c_m'}
+
+%\inferrule* [right=E-MergeCI]
+%{is\ value\ v : T_1 \Rightarrow^l T_2 \\ v : c_1' \cap \ldots \cap c_m' = \mergeCI{v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n}}
+%{v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \gios v : c_1' \cap \ldots \cap c_m'}\\
+
+\inferrule* [right=E-MergeCasts]
+{is\ value\ (v : cv_1 \cap \ldots \cap cv_n) \\ v : c_1'' \cap \ldots \cap c_j'' = \mergeCasts{v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m'}}
 {v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \gios v : c_1'' \cap \ldots \cap c_j''}\\
 
-\inferrule* []
-{}
-{Evaluate\ intersection\ casts}\\
+Evaluate\ intersection\ casts
 
-\inferrule* [right=EvaluateCasts$\cap$]
+\inferrule* [right=E-EvaluateCasts]
 {\neg(\forall i \in 1..n\ .\ is\ cast\ value\ c_i) \\ c_1 \icos cv_1\ \ldots\ c_n \icos cv_n}
 {v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n}\\
 
-\inferrule* []
-{}
-{Transition\ from\ cast\ values\ to\ values}
+Transition\ from\ cast\ values\ to\ values
 
-\inferrule* [right=PropagateBlame$\cap$]
+\inferrule* [right=E-PropagateBlame]
 { }
-{v : \blamecast{T_1'}{T_1}{l_1}{cl_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{cl_n}\\ \gios \blame{(T_1 \cap \ldots \cap T_n)}{l_1}}
+{v : \blamecast{I_1}{F_1}{l_1}{cl_1} \cap \ldots \cap \blamecast{I_n}{F_n}{l_n}{cl_n} \gios \blame{(F_1 \cap \ldots \cap F_n)}{l_1}}
 
-\inferrule* [right=RemoveEmpty$\cap$]
+\inferrule* [right=E-RemoveEmpty]
 { }
 {v : \emptycast{T_1}{cl_1} \cap \ldots \cap \emptycast{T_n}{cl_n} \gios v}
 \end{mathpar}
@@ -441,28 +486,28 @@ Syntax
 {}
 {getCastLabel(\emptycast{T}{cl}, c) = \assignCastLabel{c}{cl}}\\
 \end{mathpar}
+%
+%\framebox[1.2\width]{$\mergeIC{e} = e$}
+%\begin{mathpar}
+%\inferrule* []
+%{(c_1', \ldots, c_m') = filter\ (\lambda x\ .\ finalType\ x == T_1)\ (c_1, \ldots, c_n)\\
+% (cl_1, \ldots, cl_m) = map\ getCastLabel\ (c_1', \ldots, c_m')}
+%{\mergeIC{e : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2} = e : (c_1' : T_1 \Rightarrow^l T_2\ ^{cl_1}) \cap \ldots \cap (c_m' : T_1 \Rightarrow^l T_2\ ^{cl_m})}\\
+%\end{mathpar}
+%
+%\framebox[1.2\width]{$\mergeCI{e} = e$}
+%\begin{mathpar}
+%\inferrule* []
+%{(c_1', \ldots, c_m') = filter\ (\lambda x\ .\ initialType\ x == T_2)\ (c_1, \ldots, c_n)\\
+% (c_1'', \ldots, c_m'') = map\ (\lambda x\ .\ joinCasts\ x\ (\emptycast{T_1}{0} : T_1 \Rightarrow^l T_2\ ^0))\ (c_1', \ldots, c_m')}
+%{\mergeCI{e : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n} = e : c_1'' \cap \ldots \cap c_m''}\\
+%\end{mathpar}
 
-\framebox[1.2\width]{$\mergeIC{e} = e$}
-\begin{mathpar}
-\inferrule* []
-{(c_1', \ldots, c_m') = filter\ (\lambda x\ .\ finalType\ x == T_1)\ (c_1, \ldots, c_n)\\
- (cl_1, \ldots, cl_m) = map\ getCastLabel\ (c_1', \ldots, c_m')}
-{\mergeIC{e : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2} = e : (c_1' : T_1 \Rightarrow^l T_2\ ^{cl_1}) \cap \ldots \cap (c_m' : T_1 \Rightarrow^l T_2\ ^{cl_m})}\\
-\end{mathpar}
-
-\framebox[1.2\width]{$\mergeCI{e} = e$}
-\begin{mathpar}
-\inferrule* []
-{(c_1', \ldots, c_m') = filter\ (\lambda x\ .\ initialType\ x == T_2)\ (c_1, \ldots, c_n)\\
- (c_1'', \ldots, c_m'') = map\ (\lambda x\ .\ joinCasts\ x\ (\emptycast{T_1}{0} : T_1 \Rightarrow^l T_2\ ^0))\ (c_1', \ldots, c_m')}
-{\mergeCI{e : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n} = e : c_1'' \cap \ldots \cap c_m''}\\
-\end{mathpar}
-
-\framebox[1.2\width]{$\mergeII{e} = e$}
+\framebox[1.2\width]{$\mergeCasts{e} = e$}
 \begin{mathpar}
 \inferrule* []
 {(c_1', \ldots, c_o') = [joinCast\ y\ x\ |\ x \leftarrow (c_{11}, \ldots, c_{1m}),\ y \leftarrow (c_{21}, \ldots, c_{2n}),\\ sameCastLabel\ y\ x\ \&\&\ initialType(y) == finalType (x)]}
-{\mergeII{e : c_{11} \cap \ldots \cap c_{1m} : c_{21} \cap \ldots \cap c_{2n}} = e : c_1' \cap \ldots \cap c_o'}\\
+{\mergeCasts{e : c_{11} \cap \ldots \cap c_{1m} : c_{21} \cap \ldots \cap c_{2n}} = e : c_1' \cap \ldots \cap c_o'}\\
 \end{mathpar}
 \hrulefill
 \caption{Definitions for auxiliary semantic functions}
@@ -473,17 +518,17 @@ Syntax
 \framebox[1.2\width]{$\icts c : T$}\ Typing
 \begin{mathpar}
 
-\inferrule* [right=T-SingleC]
+\inferrule* [right=T-SingleIC]
 {\icts c : T_1 \\ T_1 \sim T_2}
-{\icts (c : T_1 \Rightarrow^l T_2\ ^{cl}) : T_1}
+{\icts (c : T_1 \Rightarrow^l T_2\ ^{cl}) : T_2}
 
-\inferrule* [right=T-EmptyC]
-{ }
-{\icts \emptycast{T}{cl} : T}
-
-\inferrule* [right=T-BlameC]
+\inferrule* [right=T-BlameIC]
 { }
 {\icts \blamecast{T_I}{T_F}{l}{cl} : T_F}
+
+\inferrule* [right=T-EmptyIC]
+{ }
+{\icts \emptycast{T}{cl} : T}
 \end{mathpar}
 \hrulefill
 \caption{Intersection Casts Type System ($\icts$)}
@@ -493,47 +538,39 @@ Syntax
 \begin{figure}[H]
 \framebox[1.2\width]{$c \icos c$}\ Evaluation
 \begin{mathpar}
-\inferrule* []
-{}
-{Push\ blame\ to\ top\ level}\\
+Push\ blame\ to\ top\ level
 
-\inferrule* [right=PushBlameC]
+\inferrule* [right=E-PushBlameIC]
 { }
 {\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}}
 
-\inferrule* []
-{}
-{Evaluate\ inside\ casts}\\
+Evaluate\ inside\ casts\\
 
-\inferrule* [right=EvaluateC]
+\inferrule* [right=E-EvaluateIC]
 {\neg(is\ cast\ value\ c) \\ c \icos c'}
-{c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}}
+{c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}}\\
 
-\inferrule* []
-{}
-{Detect\ success\ or\ failure\ of\ casts}\\
+Detect\ success\ or\ failure\ of\ casts\\
 
-\inferrule* [right=IdentityC]
+\inferrule* [right=E-IdentityIC]
 {is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c}
 {c : T \Rightarrow^l T\ ^{cl} \icos c}
 
-\inferrule* [right=SucceedC]
+\inferrule* [right=E-SucceedIC]
 {is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c}
 {c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c}
 
-\inferrule* [right=FailC]
+\inferrule* [right=E-FailIC]
 {is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ \neg(same\ ground\ G_1\ G_2) \\ initialType(c) = T_I}
 {c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}}\\
 
-\inferrule* []
-{}
-{Mediate\ the\ transition\ between\ the\ two\ disciplines}\\
+Mediate\ the\ transition\ between\ the\ two\ disciplines
 
-\inferrule* [right=GroundC]
+\inferrule* [right=E-GroundIC]
 {is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
 {c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}}
 
-\inferrule* [right=ExpandC]
+\inferrule* [right=E-ExpandIC]
 {is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
 {c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}}
 \end{mathpar}
@@ -568,14 +605,14 @@ Syntax
 \inferrule* []
 {}
 {\erasee{\false} = \false}\\
-
-\inferrule* []
-{}
-{\erasee{e : T \Rightarrow^l T} = \erasee{e}}\\
-
-\inferrule* []
-{}
-{\erasee{e : T_1 \Rightarrow^l T_2} = \erasee{e} : T_1 \Rightarrow^l T_2}\\
+%
+%\inferrule* []
+%{}
+%{\erasee{e : T \Rightarrow^l T} = \erasee{e}}\\
+%
+%\inferrule* []
+%{}
+%{\erasee{e : T_1 \Rightarrow^l T_2} = \erasee{e} : T_1 \Rightarrow^l T_2}\\
 
 \inferrule* []
 {\erasec{c_1} = \emptycast{T_1}{cl_1}\ \ldots\ \erasec{c_n} = \emptycast{T_n}{cl_n}}
@@ -623,16 +660,14 @@ Base cases:
 \begin{itemize}
     \item $T_1 = \Int$.
     \begin{itemize}
-        \item If $\Int = \Int$, then by the definition of $\sim$, $\Int \sim \Int$.
-        \item If $\Int \sim \Int$, then, $\Int = \Int$.
+        \item If $\Int = \Int$ then, by the definition of $\sim$, $\Int \sim \Int$.
+        \item If $\Int \sim \Int$, then $\Int = \Int$.
     \end{itemize}
     \item $T_1 = \Bool$.
     \begin{itemize}
-        \item If $\Bool = \Bool$, then by the definition of $\sim$, $\Bool \sim \Bool$.
-        \item If $\Bool \sim \Bool$, then, $\Bool = \Bool$.
+        \item If $\Bool = \Bool$ then, by the definition of $\sim$, $\Bool \sim \Bool$.
+        \item If $\Bool \sim \Bool$, then $\Bool = \Bool$.
     \end{itemize}
-    \item $T_1 = \Dyn$.
-    This case is not considered due to the assumption that $T_1$ is a static type.
 \end{itemize}
 Induction step:
 \begin{itemize}
@@ -657,8 +692,7 @@ Induction step:
             Therefore, $T_{11} \cap \ldots \cap T_{1n} = T_{21} \cap \ldots \cap T_{2n}$.
             \item $T_{11} \sim T_2$ and ... and $T_{1n} \sim T_2$.
             By the induction hypothesis, $T_{11} = T_2$ and ... and $T_{1n} = T_2$.
-            Due to the idempotence property of intersection types, $T_2 \cap \ldots \cap T_2 = T_2$
-            Therefore, $T_{11} \cap \ldots \cap T_{1n} = T_2$.
+            As $T_2 \cap \ldots \cap T_2 = T_2$, then $T_{11} \cap \ldots \cap T_{1n} = T_2$.
         \end{itemize}
     \end{itemize}
 \end{itemize}
@@ -670,27 +704,27 @@ Depends on Lemma \ref{consistencytoequality}.
 If e is fully static and T is a static type, then $\Gamma \sits e : T \iff \Gamma \gits e : T$.
 \end{theorem}
 \begin{proof}
-We proceed by induction on the length of the derivation tree of $\sits$ and $\gits$ for the left and right direction of the implication, respectively.\\\\
+We proceed by induction on the length of the derivation tree of $\sits$ and $\gits$ for the right and left direction of the implication, respectively.\\\\
 Base case:
 \begin{itemize}
-    \item Rule $Var$.
+    \item Rule T-Var.
     \begin{itemize}
         \item If $\Gamma \sits x : T$, then $x : T \in \Gamma$.
         Therefore, $\Gamma \gits x : T$.
         \item If $\Gamma \gits x : T$, then $x : T \in \Gamma$.
         Therefore, $\Gamma \sits e : T$.
     \end{itemize}
-    \item Rule $Int$.
+    \item Rule T-Int.
     \begin{itemize}
         \item If $\Gamma \sits n : \Int$, then $\Gamma \gits n : \Int$.
         \item If $\Gamma \gits n : \Int$, then $\Gamma \sits n : \Int$.
     \end{itemize}
-    \item Rule $True$.
+    \item Rule T-True.
     \begin{itemize}
         \item If $\Gamma \sits \true : \Bool$, then $\Gamma \gits \true : \Bool$.
         \item If $\Gamma \gits \true : \Bool$, then $\Gamma \sits \true : \Bool$.
     \end{itemize}
-    \item Rule $False$.
+    \item Rule T-False.
     \begin{itemize}
         \item If $\Gamma \sits \false : \Bool$, then $\Gamma \gits \false : \Bool$.
         \item If $\Gamma \gits \false : \Bool$, then $\Gamma \sits \false : \Bool$.
@@ -698,25 +732,25 @@ Base case:
 \end{itemize}
 Induction step:
 \begin{itemize}
-    \item Rule ${\rightarrow} I$.
+    \item Rule T-Abs.
     \begin{itemize}
-        \item If $\Gamma \sits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$, then $\Gamma, x : T_1 \cap \ldots \cap T_n \sits e' : T$.
-        By the induction hypothesis, $\Gamma, x : T_1 \cap \ldots \cap T_n \gits e' : T$.
-        Therefore, $\Gamma \gits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$.
-        \item If $\Gamma \gits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$, then $\Gamma, x : T_1 \cap \ldots \cap T_n \gits e' : T$.
-        By the induction hypothesis, $\Gamma, x : T_1 \cap \ldots \cap T_n \sits e' : T$.
-        Therefore, $\Gamma \sits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$.
+        \item If $\Gamma \sits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$, then $\Gamma, x : T_1 \cap \ldots \cap T_n \sits e : T$.
+        By the induction hypothesis, $\Gamma, x : T_1 \cap \ldots \cap T_n \gits e : T$.
+        Therefore, $\Gamma \gits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$.
+        \item If $\Gamma \gits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$, then $\Gamma, x : T_1 \cap \ldots \cap T_n \gits e : T$.
+        By the induction hypothesis, $\Gamma, x : T_1 \cap \ldots \cap T_n \sits e : T$.
+        Therefore, $\Gamma \sits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$.
     \end{itemize}
-    \item Rule ${\rightarrow} I'$.
+    \item Rule T-Abs'.
     \begin{itemize}
-        \item If $\Gamma \sits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$, then $\Gamma, x : T_i \sits e' : T$.
-        By the induction hypothesis, $\Gamma, x : T_i \gits e' : T$.
-        Therefore, $\Gamma \gits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$.
-        \item If $\Gamma \gits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$, then $\Gamma, x : T_i \gits e' : T$.
-        By the induction hypothesis, $\Gamma, x : T_i \sits e' : T$.
-        Therefore, $\Gamma \sits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$.
+        \item If $\Gamma \sits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T$, then $\Gamma, x : T_i \sits e : T$.
+        By the induction hypothesis, $\Gamma, x : T_i \gits e : T$.
+        Therefore, $\Gamma \gits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T$.
+        \item If $\Gamma \gits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T$, then $\Gamma, x : T_i \gits e : T$.
+        By the induction hypothesis, $\Gamma, x : T_i \sits e : T$.
+        Therefore, $\Gamma \sits \lambda x\ .\ T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T$.
     \end{itemize}
-    \item Rule ${\rightarrow} E$.
+    \item Rule T-App.
     \begin{itemize}
         \item If $\Gamma \sits e_1\ e_2 : T$ then $\Gamma \sits e_1 : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \sits e_2 : T_1 \cap \ldots \cap T_n$.
         By the induction hypothesis, $\Gamma \gits e_1\ : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \gits e_2 : T_1 \cap \ldots \cap T_n$.
@@ -729,7 +763,7 @@ Induction step:
         By the induction hypothesis, $\Gamma \sits e_1\ : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \sits e_2 : T_1 \cap \ldots \cap T_n$.
         Therefore, $\Gamma \sits e_1\ e_2 : T$.
     \end{itemize}
-    \item Rule ${\cap} I$.
+    \item Rule T-Gen.
     \begin{itemize}
         \item If $\Gamma \sits e : T_1 \cap \ldots \cap T_n$ then $\Gamma \sits e : T_1$ and ... and $\Gamma \sits e : T_n$.
         By the induction hypothesis, $\Gamma \gits e : T_1$ and ... and $\Gamma \gits e : T_n$.
@@ -738,7 +772,7 @@ Induction step:
         By the induction hypothesis, $\Gamma \sits e : T_1$ and ... and $\Gamma \sits e : T_n$.
         Therefore $\Gamma \sits e : T_1 \cap \ldots \cap T_n$.
     \end{itemize}
-    \item Rule ${\cap} E$.
+    \item Rule T-Inst.
     \begin{itemize}
         \item If $\Gamma \sits e : T_i$ then $\Gamma \sits e : T_1 \cap \ldots \cap T_n$, such that $T_i \in \{T_1, ..., T_n\}$.
         By the induction hypothesis, $\Gamma \gits e : T_1 \cap \ldots \cap T_n$.
@@ -752,41 +786,41 @@ Induction step:
 
 \begin{theorem}[Monotonicity w.r.t. precision]
 \label{monotonicity_wtr_precision}
-If $\Gamma \gits e : T$ and $e' \sqsubseteq e$ then $\Gamma \gits e' : T'$ and $T' \sqsubseteq T$ for some $T'$.
+If $\Gamma \gits e : T$ and $e' \sqsubseteq e$ then $\Gamma \gits e' : T'$ and $T' \sqsubseteq T$.
 \end{theorem}
 \begin{proof}
 We proceed by induction on the length of the derivation tree of $\Gamma \gits e : T$.\\\\
 Base case:
 \begin{itemize}
-    \item Rule $Var$.
+    \item Rule T-Var.
     If $\Gamma \gits x : T$ and $x \sqsubseteq x$, then $\Gamma \gits x : T$ and $T \sqsubseteq T$.
-    \item Rule $Int$.
+    \item Rule T-Int.
     If $\Gamma \gits n : \Int$ and $n \sqsubseteq n$, then $\Gamma \gits n : \Int$ and $\Int \sqsubseteq \Int$.
-    \item Rule $True$.
+    \item Rule T-True.
     If $\Gamma \gits \true : \Bool$ and $\true \sqsubseteq \true$, then $\Gamma \gits \true : \Bool$ and $\Bool \sqsubseteq \Bool$.
-    \item Rule $False$.
+    \item Rule T-False.
     If $\Gamma \gits \false : \Bool$ and $\false \sqsubseteq \false$, then $\Gamma \gits \false : \Bool$ and $\Bool \sqsubseteq \Bool$.
 \end{itemize}
 Induction step:
 \begin{itemize}
-    \item Rule ${\cap} I$.
-    If $\Gamma \gits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\lambda x : T_1' \cap \ldots \cap T_n'\ .\ e' \sqsubseteq \lambda x : T_1 \cap \ldots \cap T_n\ .\ e$, then $\Gamma \gits e : T$, $T_1' \cap \ldots \cap T_n' \sqsubseteq T_1 \cap \ldots \cap T_n$ and $e' \sqsubseteq e$.
-    By the induction hypothesis, $\Gamma \gits e' : T'$ and $T' \sqsubseteq T$.
+    \item Rule T-Abs.
+    If $\Gamma \gits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\lambda x : T_1' \cap \ldots \cap T_n'\ .\ e' \sqsubseteq \lambda x : T_1 \cap \ldots \cap T_n\ .\ e$, then $\Gamma, x : T_1 \cap \ldots \cap T_n \gits e : T$, $T_1' \cap \ldots \cap T_n' \sqsubseteq T_1 \cap \ldots \cap T_n$ and $e' \sqsubseteq e$.
+    By the induction hypothesis, $\Gamma, x : T_1' \cap \ldots \cap T_n' \gits e' : T'$ and $T' \sqsubseteq T$.
     As $\Gamma \gits \lambda x : T_1' \cap \ldots \cap T_n'\ .\ e' : T_1' \cap \ldots \cap T_n' \rightarrow T'$, and by the definition of $\sqsubseteq$, $T_1' \cap \ldots \cap T_n' \rightarrow T' \sqsubseteq T_1 \cap \ldots \cap T_n \rightarrow T$, then it is proved.
-    \item Rule ${\cap} I'$.
-    If $\Gamma \gits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T$ and $\lambda x : T_1' \cap \ldots \cap T_n'\ .\ e' \sqsubseteq \lambda x : T_1 \cap \ldots \cap T_n\ .\ e$, then $\Gamma \gits e : T$, $T_1' \cap \ldots \cap T_n' \sqsubseteq T_1 \cap \ldots \cap T_n$ and $e' \sqsubseteq e$.
-    By the induction hypothesis, $\Gamma \gits e' : T'$ and $T' \sqsubseteq T$.
+    \item Rule T-Abs'.
+    If $\Gamma \gits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T$ and $\lambda x : T_1' \cap \ldots \cap T_n'\ .\ e' \sqsubseteq \lambda x : T_1 \cap \ldots \cap T_n\ .\ e$, then $\Gamma, x : T_i \gits e : T$, $T_1' \cap \ldots \cap T_n' \sqsubseteq T_1 \cap \ldots \cap T_n$ and $e' \sqsubseteq e$.
+    By the induction hypothesis, $\Gamma, x : T_i' \gits e' : T'$ and $T' \sqsubseteq T$.
     As $\Gamma \gits \lambda x : T_1' \cap \ldots \cap T_n'\ .\ e' : T_i' \rightarrow T'$, and by the definition of $\sqsubseteq$, $T_i' \rightarrow T' \sqsubseteq T_i \rightarrow T$, then it is proved.
-    \item Rule ${\rightarrow} E$.
+    \item Rule T-App.
     If $\Gamma \gits e_1\ e_2 : T$ and $e_1'\ e_2' \sqsubseteq e_1\ e_2$ then $\Gamma \gits e_1 : PM$, $PM \rhd T_{11} \cap \ldots \cap T_{1n} \rightarrow T$, $\Gamma \gits e_2 : T_{21} \cap \ldots \cap T_{2n}$, and $T_{21} \cap \ldots \cap T_{2n} \sim T_{11} \cap \ldots \cap T_{1n}$, $e_1' \sqsubseteq e_1$ and $e_2' \sqsubseteq e_2$.
     By the induction hypothesis, $\Gamma \gits e_1' : PM'\ and\ PM' \sqsubseteq PM\ and\ PM' \rhd T_{11}' \cap \ldots \cap T_{1n}' \rightarrow T'$ and $\Gamma \gits e_2' : T_{21}' \cap \ldots \cap T_{2n}'\ and\ T_{21}' \cap \ldots \cap T_{2n}' \sqsubseteq T_{21} \cap \ldots \cap T_{2n}\ and\ T_{21}' \cap \ldots \cap T_{2n}' \sim T_{11}' \cap \ldots \cap T_{1n}'$.
     By the definition of $\sqsubseteq$ and $\rhd$, $T_{11}' \cap \ldots \cap T_{1n}' \rightarrow T' \sqsubseteq T_{11} \cap \ldots \cap T_{1n} \rightarrow T$, and therefore, $T' \sqsubseteq T$.
     As $\Gamma \gits e_1'\ e_2' : T'$, it is proved.
-    \item Rule ${\cap} I$.
+    \item Rule T-Gen.
     If $\Gamma \gits e : T_1 \cap \ldots \cap T_n$ and $e' \sqsubseteq e$, then $\Gamma \gits e : T_1$ and ... and $\Gamma \gits e : T_n$.
     By the induction hypothesis, $\Gamma \gits e' : T_1'\ and\ T_1' \sqsubseteq T_1$ and ... and $\Gamma \gits e' : T_n'\ and\ T_n' \sqsubseteq T_n$.
     Then, $\Gamma \gits e' : T_1' \cap \ldots \cap T_n'$ and by the definition of $\sqsubseteq$, $T_1' \cap \ldots \cap T_n' \sqsubseteq T_1 \cap \ldots \cap T_n$, then it is proved.
-    \item Rule ${\cap} E$.
+    \item Rule T-Inst.
     If $\Gamma \gits e : T_i$ and $e' \sqsubseteq e$, then $\Gamma \gits e : T_1 \cap \ldots \cap T_n$ such that $T_i \in \{T_1, ..., T_n\}$.
     By the induction hypothesis, $\Gamma \gits e' : T_1' \cap \ldots \cap T_n'$ and $T_1' \cap \ldots \cap T_n' \sqsubseteq T_1 \cap \ldots \cap T_n$.
     Therefore, $\Gamma \gits e' : T_i'$ and by the definition of $\sqsubseteq$, $T_i' \sqsubseteq T_i$, then it is proved.
@@ -797,570 +831,349 @@ Induction step:
 \label{type_preservation_cast_insertion}
 If $\Gamma \gits e : T$ then $\Gamma \iccts e \leadsto e' : T$ and $\Gamma \iccts e' : T$.
 \end{theorem}
+\begin{proof}
+We proceed by induction on the length of the derivation tree of $\Gamma \gits e : T$.\\\\
+Base case:
+\begin{itemize}
+    \item Rule T-Var.
+    If $\Gamma \gits x : T$ then $x : T \in \Gamma$.
+    As $\Gamma \iccts x \leadsto x : T$ and $\Gamma \iccts x : T$, it is proved.
+    \item Rule T-Int.
+    As $\Gamma \gits n : \Int$, $\Gamma \iccts n \leadsto n : \Int$ and $\Gamma \iccts n : \Int$, it is proved.
+    \item Rule T-True.
+    As $\Gamma \gits \true : \Bool$, $\Gamma \iccts \true \leadsto \true : \Bool$ and $\Gamma \iccts \true : \Bool$, it is proved.
+    \item Rule T-False.
+    As $\Gamma \gits \false : \Bool$, $\Gamma \iccts \false \leadsto \false : \Bool$ and $\Gamma \iccts \false : \Bool$, it is proved.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item Rule T-Abs.
+    If $\Gamma \gits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$ then $\Gamma, x : T_1 \cap \ldots \cap T_n \gits e : T$.
+    By the induction hypothesis, $\Gamma, x : T_1 \cap \ldots \cap T_n \iccts e \leadsto e' : T$ and $\Gamma, x : T_1 \cap \ldots \cap T_n \iccts e' : T$.
+    As $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e \leadsto \lambda x : T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$, it is proved.
+    \item Rule T-Abs'.
+    If $\Gamma \gits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T$ then $\Gamma, x : T_i \gits e : T$.
+    By the induction hypothesis, $\Gamma, x : T_i \iccts e \leadsto e' : T$ and $\Gamma, x : T_i \iccts e' : T$.
+    As $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e \leadsto \lambda x : T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$ and $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e' : T_i \rightarrow T$, it is proved.
+    \item Rule T-App.
+    If $\Gamma \gits e_1\ e_2 : T$ then $\Gamma \gits e_1 : PM$, $PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T$, $\Gamma \gits e_2 : T_1' \cap \ldots \cap T_n'$ and $T_1' \cap \ldots \cap T_n' \sim T_1 \cap \ldots \cap T_n$.
+    By the induction hypothesis, $\Gamma \iccts e_1 \leadsto e_1' : PM$ and $\Gamma \iccts e_1' : PM$, and $\Gamma \iccts e_2 \leadsto e_2' : T_1' \cap \ldots \cap T_n'$ and $\Gamma \iccts e_2' : T_1' \cap \ldots \cap T_n'$.
+    Therefore, $\Gamma \iccts e_1\ e_2 \leadsto e_1''\ e_2'' : T$.
+    By the definition of $instances$ and $S,\ S,\ e \hookrightarrow e$, we have $\Gamma \iccts e_1'' : T_1 \rightarrow T \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2'' : T_1 \cap \ldots \cap T_n$.
+    As $\Gamma \iccts e_1''\ e_2'' : T \cap \ldots \cap T$ then $\Gamma \iccts e_1''\ e_2'' : T$.
+    \item Rule T-Gen.
+    If $\Gamma \gits e : T_1 \cap \ldots \cap T_n$ then $\Gamma \gits e : T_1$ and ... and $\Gamma \gits e : T_n$.
+    By the induction hypothesis, $\Gamma \iccts e \leadsto e' : T_1$ and ... and $\Gamma \iccts e \leadsto e' : T_n$, and $\Gamma \iccts e' : T_1$ and ... and $\Gamma \iccts e' : T_n$.
+    Therefore, $\Gamma \iccts e \leadsto e' : T_1 \cap \ldots \cap T_n$ and $\Gamma \iccts e' : T_1 \cap \ldots \cap T_n$.
+    \item Rule T-Inst.
+    If $\Gamma \gits e : T_i$ then $\Gamma \gits e : T_1 \cap \ldots \cap T_n$, such that $T_i \in \{T_1, \ldots, T_n\}$.
+    By the induction hypothesis, $\Gamma \iccts e \leadsto e' : T_1 \cap \ldots \cap T_n$ and $\Gamma \iccts e' : T_1 \cap \ldots \cap T_n$.
+    Therefore, $\Gamma \iccts e \leadsto e' : T_i$ and $\Gamma \iccts e' : T_i$.
+\end{itemize}
+\end{proof}
 
 \begin{theorem}[Monotonicity of cast insertion]
 \label{monotonicity_cast_insertion}
 If $\Gamma \iccts e_1 \leadsto e_1' : T$ and $\Gamma \iccts e_2 \leadsto e_2' : T$ and $e_1 \sqsubseteq e_2$ then $e_1' \sqsubseteq e_2'$.
 \end{theorem}
 
-\begin{lemma}[Expressions annotated with only static types type with static types]
-\label{staticexpressionstypestatic}
-If $e$ is annotated with only static types then:
-\begin{enumerate}
-    \item $\Gamma \gits e : T$, for some static $T$.
-    \item $\Gamma \iccts e \leadsto e' : T$, for some static $T$.
-\end{enumerate}
-\end{lemma}
-\begin{proof}
-(1) We proceed by induction on the length of the derivation tree of $\gits$.\\\\
-Base cases:
-\begin{itemize}
-    \item Rule $Var$.
-    If $\Gamma \gits x : T$, then $x : T \in \Gamma$.
-    Therefore, there must have been at some point in the typing derivation the application of the rules $({\rightarrow} I)$ or $({\rightarrow} I')$ to type the expression $\lambda x : T . e$, for some $e$.
-    Both rules introduze the binding $x : T$ in $\Gamma$, such that $T$ is a static type.
-    \item Rule $Int$.
-    As $\Gamma \gits n : \Int$, it is proved.
-    \item Rule $True$.
-    As $\Gamma \gits \true : \Bool$, it is proved.
-    \item Rule $False$.
-    As $\Gamma \gits \false : \Bool$, it is proved.
-\end{itemize}
-Induction step:
-\begin{itemize}
-    \item Rule ${\rightarrow} I$.
-    If $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e$ is annotated with only static types, then $T_1 \cap \ldots \cap T_n$ is a static type.
-    By rule $({\rightarrow} I)$, $\Gamma, x : T_1 \cap \ldots \cap T_n \gits e : T$.
-    By the induction hypothesis, $T$ is a static type.
-    Therefore $T_1 \cap \ldots \cap T_n \rightarrow T$ is a static type.
-    As $\Gamma \gits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$, then it is proved.
-    \item Rule ${\rightarrow} I'$.
-    If $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e$ is annotated with only static types, then $T_1 \cap \ldots \cap T_n$ is a static type.
-    By rule $({\rightarrow} I')$, $\Gamma, x : T_i \gits e : T$.
-    Since $T_1 \cap \ldots \cap T_n$ is a static type, then so is $T_i$.
-    By the induction hypothesis, $T$ is a static type, therefore so is $T_i \rightarrow T$.
-    As $\Gamma \gits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T$, then it is proved.
-    \item Rule ${\rightarrow} E$.
-    If $e_1\ e_2$ is annotated with only static types, then so are $e_1$ and $e_2$.
-    By the induction hypothesis, $PM$ is a static type.
-    By the definition of $\rhd$, $T_1 \cap \ldots \cap T_n \rightarrow T$ is also a static type.
-    Therefore, $T$ is a static type.
-    As $\Gamma \gits e_1\ e_2 : T$, then it is proved.
-    \item Rule ${\cap} I$.
-    If $e$ is annotated with only static types, then by the induction hypothesis, $T_1 \ldots T_n$ are static types.
-    Therefore, $T_1 \cap \ldots \cap T_n$ is a static type.
-    As $\Gamma \gits e : T_1 \cap \ldots \cap T_n$, then it is proved.
-    \item Rule ${\cap} E$.
-    If $e$ is annotated with only static types, then by the induction hypothesis, $T_1 \cap \ldots \cap T_n$ is a static type.
-    Therefore, $T_i$ is a static type.
-    As $\Gamma \gits e : T_i$, then it is proved.
-\end{itemize}
-(2) We proceed by induction on the length of the derivation tree of $\Gamma \iccts e \leadsto e : T$.\\\\
-Base cases:
-\begin{itemize}
-    \item Rule $Var$.
-    If $\Gamma \iccts x \leadsto x : T$, then there is a binding $x : T \in \Gamma$.
-    Therefore, there must have been at some point in the typing derivation, the application of the rule for the term $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e$ for some expressions $e$.
-    If $e$ is annotated with only static types, then the rule introduzes the binding $x : T$ in $\Gamma$, such that $T$ is a static type.
-\end{itemize}
-Induction step:
-\begin{itemize}
-    \item Rule $Abs$.
-    If $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e$ is annotated with only static types, then $T_1 \cap \ldots \cap T_n$ is a static type.
-    By the induction hypothesis, $T$ is a static type.
-    Therefore $T_1 \cap \ldots \cap T_n \rightarrow T$ is a static type.
-    As $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e \leadsto \lambda x : T_1 \cap \ldots \cap T_n\ .\ e' : T_1 \cap \ldots \cap T_n \rightarrow T$, then it is proved.
-    \item Rule $App$.
-    If $e_1\ e_2$ is annotated with only static types, then so are $e_1$ and $e_2$.
-    By the induction hypothesis, $PM$ is a static type.
-    By the definition of $\rhd$, $T_1 \cap \ldots \cap T_n \rightarrow T$ is also a static type.
-    Therefore, $T$ is a static type.
-    As $\Gamma \iccts e_1\ e_2 \leadsto e_1'\ e_2' : T$, then it is proved.
-\end{itemize}
-\end{proof}
-
-\begin{lemma}[Static program compilation only adds identity casts]
-\label{staticcompilation}
-Depends on Lemmas \ref{consistencytoequality} and \ref{staticexpressionstypestatic}.
-If $e$ is annotated with only static types and $\Gamma \iccts e \leadsto e' : T$, then any casts $e'$ contains are identity casts.\\
-By identity casts, we mean casts of the form $e : T \Rightarrow^l T$ for some $T$ and casts $e : c_1 \cap \ldots \cap c_n$ such that $c_1 = \emptycast{T_1}{0} : T_1 \Rightarrow T_1\ ^{0}$ and ... and $c_n = \emptycast{T_n}{0} : T_n \Rightarrow T_n\ ^{0}$ for some $T_1,\ \ldots,\ T_n$.
-\end{lemma}
-\begin{proof}
-We proceed by induction on the length of the derivation tree of $\Gamma \iccts e \leadsto e : T$.\\\\
-Base cases:
-\begin{itemize}
-    \item Rule $Var$.
-    As $\Gamma \iccts x \leadsto x : T$, and $x$ doesn't have any casts, then it is proved.
-\end{itemize}
-Induction step:
-\begin{itemize}
-    \item Rule $Abs$.
-    If $\Gamma \iccts (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e) \leadsto (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e') : T_1 \cap \ldots \cap T_n \rightarrow T$, then $\Gamma, x : T_1 \cap \ldots \cap T_n \iccts e \leadsto e' : T$.
-    By the induction hypothesis, $e'$ either doesn't contain casts or contains only identity casts.
-    As the rule doesn't introduze new casts, then it is proved.
-    \item Rule $App$.
-    If $\Gamma \iccts e_1\ e_2 \leadsto e_1'\ e_2': T$, then $\Gamma \iccts e_1 \leadsto e_1' : PM$ and $PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2 \leadsto e_2' : T'_1 \cap \ldots \cap T'_n$ and $T'_1 \cap \ldots \cap T'_n \sim T_1 \cap \ldots \cap T_n$ and $instances(PM) = S_1$ and $instances(T_1 \cap \ldots \cap T_n \rightarrow T) = S_2$ and $instances(T'_1 \cap \ldots \cap T'_n) = S_3$ and $instances(T_1 \cap \ldots \cap T_n) = S_4$ and $S_1,\ S_2,\ e_1' \hookrightarrow e_1''$ and $S_3,\ S_4,\ e_2' \hookrightarrow e_2''$.
-    By the induction hypothesis, both $e_1'$ as well as $e_2'$ either only have identity casts or no casts at all.
-    By Lemma \ref{staticexpressionstypestatic}, $PM$ and $T_1' \cap \ldots \cap T_n'$ are static types.
-    Therefore, by the definition of $\rhd$, $PM = T_1 \cap \ldots \cap T_n \rightarrow T$ and by Lemma \ref{consistencytoequality}, $T_1' \cap \ldots \cap T_n' = T_1 \cap \ldots \cap T_n$.
-    Therefore by the definition of $instances(T) = \{T\}$ and $S,\ S,\ e \hookrightarrow e$, only identity casts are introduzed.
-\end{itemize}
-\end{proof}
-
-\begin{lemma}[Elimination of identity casts in c]
-\label{eliminationidentitycastsc}
-For any cast $c$, such that $\icts c : T_F$, $initialType(c) = T_I$ then:
-\begin{enumerate}
-    \item $\icts \erasec{c} : T_F$ and $initialType(\erasec{c}) = T_I$.
-    \item $c \icos cv \iff \erasec{c} \icos cv$.
-\end{enumerate}
-\end{lemma}
-\begin{proof}
-(1) We proceed by structural induction on $c$.\\\\
-Base cases:
-\begin{itemize}
-    \item c = $\emptycast{T}{cl}$.
-    As $\icts \emptycast{T}{cl} : T$, $initialType(\emptycast{T}{cl}) = T$ and $\erasec{c} = \emptycast{T}{cl}$, then $\icts \erasec{c} : T$ and $initialType(\erasec{c}) = T$.
-    \item c = $\blamecast{T_I}{T_F}{l}{cl}$.
-    As $\icts \blamecast{T_I}{T_F}{l}{cl} : T_F$, $initialType(\blamecast{T_I}{T_F}{l}{cl}) = T_I$ and $\erasec{c} = \blamecast{T_I}{T_F}{l}{cl}$, then $\icts \erasec{c} : T_F$ and $initialType(\erasec{c}) = T_I$.
-\end{itemize}
-Induction step:
-\begin{itemize}
-    \item c = $c' : T_1 \Rightarrow^l T_2\ ^{cl}$.
-    There are two cases:
-    \begin{itemize}
-        \item $T_1 \neq T_2$.
-        As $\icts c' : T_1 \Rightarrow^l T_2\ ^{cl} : T_2$ and $initialType(c' : T_1 \Rightarrow^l T_2\ ^{cl}) = initialType(c')$, then $\icts c' : T_1$.
-        By the induction hypothesis, $\icts \erasec{c'} : T_1$ and $initialType(\erasec{c'}) = initialType(c')$.
-        With $\erasec{c} = \erasec{c'} : T_1 \Rightarrow^l T_2\ ^{cl}$, $\icts \erasec{c} : T_2$ and $initialType(\erasec{c}) = initialType(\erasec{c'}) = initialType(c') = initialType(c)$.
-        \item $T_1 = T_2$.
-        As $\icts c' : T_1 \Rightarrow^l T_1\ ^{cl} : T_1$ and $initialType(c' : T_1 \Rightarrow^l T_1\ ^{cl}) = initialType(c')$ then $\icts c' : T_1$.
-        By the induction hypothesis, $\icts \erasec{c'} : T_1$ and $initialType(\erasec{c'}) = initialType(c')$.
-        With $\erasec{c} = \erasec{c'}$, $\icts \erasec{c} : T_1$ and $initialType(\erasec{c}) = initialType(\erasec{c'}) = initialType(c') = initialType(c)$.
-    \end{itemize}
-\end{itemize}
-(2) We proceed by induction on the length of the derivation tree of $\icos$.\\\\
-Base cases:
-\begin{itemize}
-    \item Rule $PushBlameC$.
-    \begin{itemize}
-        \item There are two cases:
-        \begin{itemize}
-            \item $T_1 \neq T_2$.
-            As $\erasec{c} = \blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2}$ and by rule PushBlameC, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}$ it is proved.
-            \item $T_1 = T_2$.
-            If $T_1 = T_2$, then by rules T-SingleC and T-BlameC, $T_F = T_1$.
-            Therefore, $c = \blamecast{T_I}{T_1}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_1\ ^{cl_2}$.
-            By rule PushBlameC, $\blamecast{T_I}{T_1}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_1\ ^{cl_2} \icos \blamecast{T_I}{T_1}{l_1}{cl_1}$.
-            Since $\erasec{c} = \blamecast{T_I}{T_1}{l_1}{cl_1}$, and it is already a value, it is proved.
-        \end{itemize}
-        \item There are two cases:
-        \begin{itemize}
-            \item $T_1 \neq T_2$.
-            As $c$ equals $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2}$ or may contain adicional identity casts, then $\erasec{c} = \blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2}$.
-            By the rule PushBlameC, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}$.
-            By the rules PushBlameC and IdentityC, $c \icos \blamecast{T_I}{T_2}{l_1}{cl_1}$, then it is proved.
-            \item $T_1 = T_2$.
-            As $c$ equals $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_1\ ^{cl_2}$ or may contain adicional identity casts, then $\erasec{c} = \blamecast{T_I}{T_F}{l_1}{cl_1}$.
-            As $\blamecast{T_I}{T_F}{l_1}{cl_1}$ is already a value, it reduced to itself.
-            By rules $T-SingleC$ and $T-BlameC$, $T_F = T_1$.
-            By the rules PushBlameC and IdentityC, $c \icos \blamecast{T_I}{T_F}{l_1}{cl_1}$, then it is proved.
-        \end{itemize}
-    \end{itemize}
-    \item Rule $IdentityC$.
-    \begin{itemize}
-        \item By rule IdentityC, $c : T \Rightarrow^l T\ ^{cl} \icos c$.
-        As $c$ is a value, it doesn't contain identity casts, therefore $\erasec{c} = c$.
-        As $\erasec{c}$ is already a value, it reduces to itself, therefore it is proved.
-        \item As $c$ equals $c' : T \Rightarrow^l T\ ^{cl}$ or may contain adicional identity casts, then $\erasec{c} = c'$.
-        As $c'$ is already a vaue, it reduced to itself.
-        By rules IdentityC, $c \icos c'$, then it is proved.
-    \end{itemize}
-    \item Rule $SucceedC$.
-    \begin{itemize}
-        \item By rule SucceedC, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c$.
-        As $c$ is already a value, then it doesn't contain identity casts, so $\erasec{c} = c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}$.
-        Therefore, $\erasec{c} \icos c$.
-        \item As $c$ equals $c' : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}$ or may contain adicional identity casts, then $\erasec{c} = c' : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}$.
-        By rule SucceedC, $c' : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c'$.
-        By rules SucceedC and IdentityC, $c \icos c'$, then it is proved.
-    \end{itemize}
-    \item Rule $FailC$.
-    \begin{itemize}
-        \item By rule FailC, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$.
-        As $c$ is already a value, then it doesn't contain identity casts, so $\erasec{c} = c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}$.
-        Therefore, $\erasec{c} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$.
-        \item As $c$ equals $c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}$ or may contain adicional identity casts, then $\erasec{c} = c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}$.
-        By rule FailC, $c' : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$.
-        By rules FailC and IdentityC, $c \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$, then it is proved.
-    \end{itemize}
-    \item Rule $GroundC$.
-    \begin{itemize}
-        \item By rule GroundC, $c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G : G \Rightarrow^l \Dyn\ ^{cl}$.
-        As $c$ is a value, it doesn't contain identity casts, therefore $\erasec{c} = c : T \Rightarrow^l \Dyn\ ^{cl}$.
-        Therefore $\erasec{c} \icos c : T \Rightarrow^l G : G \Rightarrow^l \Dyn\ ^{cl}$.
-        \item As $c$ equals $c' : T \Rightarrow^l \Dyn\ ^{cl}$ or may contain adicional identity casts, then $\erasec{c} = c' : T \Rightarrow^l \Dyn\ ^{cl}$.
-        By rule GroundC, $c' : T \Rightarrow^l \Dyn\ ^{cl} \icos c' : T \Rightarrow^l G : G \Rightarrow^l \Dyn\ ^{cl}$.
-        By rules GroundC and IdentityC, $c \icos c' : T \Rightarrow^l G : G \Rightarrow^l \Dyn\ ^{cl}$, then it is proved.
-    \end{itemize}
-    \item Rule $ExpandC$.
-    \begin{itemize}
-        \item By rule ExpandC, $c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G : G \Rightarrow^l T\ ^{cl}$.
-        As $c$ is a value, it doesn't contain identity casts, therefore $\erasec{c} = c : \Dyn \Rightarrow^l T\ ^{cl}$.
-        Therefore $\erasec{c} \icos c : \Dyn \Rightarrow^l G : G \Rightarrow^l T\ ^{cl}$.
-        \item As $c$ equals $c' : \Dyn \Rightarrow^l T\ ^{cl}$ or may contain adicional identity casts, then $\erasec{c} = c' : \Dyn \Rightarrow^l T\ ^{cl}$.
-        By rule ExpandC, $c' : \Dyn \Rightarrow^l T\ ^{cl} \icos c' : \Dyn \Rightarrow^l G : G \Rightarrow^l T\ ^{cl}$.
-        By rules ExpandC and IdentityC, $c \icos c' : \Dyn \Rightarrow^l G : G \Rightarrow^l T\ ^{cl}$, then it is proved.
-    \end{itemize}
-\end{itemize}
-Induction step:
-\begin{itemize}
-    \item Rule $EvaluateC$.
-    \begin{itemize}
-        \item There are two cases:
-        \begin{itemize}
-            \item $T_1 \neq T_2$.
-            By rule EvaluateC, $c \icos c'$.
-            By the induction hypothesis, $\erasec{c} \icos c'$.
-            As $\erasec{c}$ equals $\erasec{c} : T_1 \Rightarrow^l T_2\ ^{cl}$, then by rule EvaluateC, $\erasec{c} \icos c' : T_1 \Rightarrow T_2\ ^{cl}$.
-            \item $T_1 = T_2$.
-            By the induction hypothesis, as $c \icos cv'$, then $\erasec{c} \icos cv'$.
-            By rule EvaluateC, $c : T_1 \Rightarrow^l T_1\ ^{cl} \icos cv' : T_1 \Rightarrow^l T_1\ ^{cl}$.
-            However, as $cv' : T_1 \Rightarrow^l T_1\ ^{cl}$ is not a value, the rule IdentityC must be applied, therefore $c : T_1 \Rightarrow^l T_1\ ^{cl} \icos cv'$.
-            As $\erasec{c} \icos cv'$, then it is proved.
-        \end{itemize}
-        \item There are two cases:
-        \begin{itemize}
-            \item $T_1 \neq T_2$. As $c$ equals $c' : T_1 \Rightarrow^l T_2\ ^{cl}$ or may contain aditional identity casts, then $\erasec{c} = \erasec{c'} : T_1 \Rightarrow^l T_2\ ^{cl}$.
-            By rule EvaluateC, $\erasec{c'} : T_1 \Rightarrow^l T_2\ ^{cl} \icos c'' : T_1 \Rightarrow^l T_2\ ^{cl}$.
-            By rule EvaluateC, $\erasec{c'} \icos c''$, then by the induction hypothesis $c' \icos c''$.
-            Therefore, by rules EvaluateC and IdentityC, $c \icos c'' : T_1 \Rightarrow^l T_2\ ^cl$, then it is proved.
-            \item $T_1 = T_2$. As $c$ equals $c' : T_1 \Rightarrow^l T_1\ ^{cl}$ or may contain aditional identity casts, then $\erasec{c} = \erasec{c'}$.
-            By rule EvaluateC, $\erasec{c'} \icos c''$, then by the induction hypothesis $c' \icos c''$.
-            By rules EvaluateC and IdentityC, $c' : T_1 \Rightarrow^l T_1\ ^{cl} \icos c''$, then it is proved.
-        \end{itemize}
-    \end{itemize}
-\end{itemize}
-\end{proof}
-
-\begin{lemma}[Elimination of identity casts in e]
-\label{eliminationidentitycastse}
-Depends on Lemma \ref{eliminationidentitycastsc}.
-For any expression $e$, such that $\Gamma \iccts e : T$:
-\begin{enumerate}
-    \item $\Gamma \iccts \erasee{e} : T$.
-    \item If $\Gamma \iccts e' \leadsto e$ for some $e'$ then $e \gios v \iff \erasee{e} \gios v$.
-\end{enumerate}
-\end{lemma}
-\begin{proof}
-(1) We proceed by induction on the length of the derivation tree of $\Gamma \iccts e : T$.\\\\
-Base cases:
-\begin{itemize}
-    \item Rule $Var$.
-    As $x$ doesn't contain casts, then $\erasee{e} = x$.
-    Therefore it is proved.
-    \item Rule $Int$.
-    As $n$ doesn't contain casts, then $\erasee{e} = n$.
-    Therefore it is proved.
-    \item Rule $True$.
-    As $\true$ doesn't contain casts, then $\erasee{e} = \true$.
-    Therefore it is proved.
-    \item Rule $False$.
-    As $\false$ doesn't contain casts, then $\erasee{e} = \false$.
-    Therefore it is proved.
-    \item Rule $T{-}Blame$.
-    As $\blame{T}{l}$ doesn't contain casts, then $\erasee{e} = \blame{T}{l}$.
-    Therefore it is proved.
-\end{itemize}
-Induction step:
-\begin{itemize}
-    \item Rule ${\rightarrow} I$.
-    If $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$, then $\Gamma, x : T_1 \cap \ldots \cap T_n \iccts e : T$.
-    By the induction hypothesis, $\Gamma, x : T_1 \cap \ldots \cap T_n \iccts \erasee{e} : T$.
-    As $\erasee{e} = \lambda x : T_1 \cap \ldots \cap T_n\ .\ \erasee{e}$, then $\Gamma \iccts \erasee{e} : T_1 \cap \ldots \cap T_n \rightarrow T$.
-    \item Rule ${\rightarrow} I'$.
-    If $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T$, then $\Gamma, x : T_i \iccts e : T$.
-    By the induction hypothesis, $\Gamma, x : T_i \iccts \erasee{e} : T$.
-    As $\erasee{e} = \lambda x : T_1 \cap \ldots \cap T_n\ .\ \erasee{e}$, then $\Gamma \iccts \erasee{e} : T_i \rightarrow T$.
-    \item Rule ${\rightarrow} E$.
-    If $\Gamma \iccts e_1\ e_2 : T$, then $\Gamma \iccts e_1 : PM$, $PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T$, $\Gamma \iccts e_2 : T_1' \cap \ldots \cap T_n'$ and $T_1' \cap \ldots \cap T_n' \sim T_1 \cap \ldots \cap T_n$.
-    By the induction hypothesis, $\Gamma \iccts \erasee{e_1} : PM$ and $\Gamma \iccts \erasee{e_2} : T_1' \cap \ldots \cap T_n'$.
-    As $\erasee{e} = \erasee{e_1}\ \erasee{e_2}$, therefore $\Gamma \iccts \erasee{e} : T$.
-    \item Rule ${\cap} I$.
-    If $\Gamma \iccts e : T_1 \cap \ldots \cap T_n$, then $\Gamma \iccts e : T_1$ and ... and $\Gamma \iccts e : T_n$.
-    By the induction hypothesis, $\Gamma \iccts \erasee{e} : T_1$ and ... and $\Gamma \iccts \erasee{e} : T_n$.
-    Therefore $\Gamma \iccts \erasee{e} : T_1 \cap \ldots \cap T_n$.
-    \item Rule ${\cap} E$.
-    If $\Gamma \iccts e : T_i$, then $\Gamma \iccts e : T_1 \cap \ldots \cap T_n$, such that $T_i \in \{T_1, \ldots, T_n\}$.
-    By the induction hypothesis, $\Gamma \iccts \erasee{e} : T_1 \cap \ldots \cap T_n$.
-    Therefore $\Gamma \iccts \erasee{e} : T_i$.
-    \item Rule $T{-}App$.
-    If $\Gamma \iccts e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}$, then $\Gamma \iccts e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$ and $\Gamma \iccts e_2 : T_1' \cap \ldots \cap T_n'$ and $T_{11} \sim T_1' \ldots T_{n1} \sim T_n'$.
-    By the induction hypothesis, $\Gamma \iccts \erasee{e_1} : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$ and $\Gamma \iccts \erasee{e_2} : T_1' \cap \ldots \cap T_n'$.
-    As $\erasee{e} = \erasee{e_1}\ \erasee{e_2}$, therefore $\Gamma \iccts \erasee{e} : T_{12} \cap \ldots \cap T_{n2}$.
-    \item Rule $T{-}Cast$.
-    There are two possibilities:
-    \begin{itemize}
-        \item $T_1 \neq T_2$.
-        If $\Gamma \iccts e' : T_1 \Rightarrow^l T_2 : T_2$, then $\Gamma \iccts e' : T_1$.
-        By the induction hypothesis, $\Gamma \iccts \erasee{e'} : T_1$.
-        As $\erasee{e} = \erasee{e'} : T_1 \Rightarrow^l T_2$, then $\Gamma \iccts \erasee{e} : T_2$.
-        \item $T_1 = T_2$.
-        If $\Gamma \iccts e' : T_1 \Rightarrow^l T_1 : T_1$, then $\Gamma \iccts e' : T_1$.
-        By the induction hypothesis, $\Gamma \iccts \erasee{e'} : T_1$.
-        As $\erasee{e} = \erasee{e'}$, then $\Gamma \iccts \erasee{e} : T_1$.
-    \end{itemize}
-    \item Rule $T{-}IntersectionCast$.
-    If $\Gamma \iccts e' : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$, then $\Gamma \iccts e' : T$, $\icts c_1 : T_1$ and ... and $\icts c_n : T_n$ and $initialType(c_1) \cap \ldots \cap initialType(c_n) = T$.
-    By the induction hypothesis, $\Gamma \iccts \erasee{e'} : T$.
-    We now have 2 possibilities:
-    \begin{itemize}
-        \item $\neg(\forall i \in 1..n\ .\ isEmptyCast\ \erasec{c_i})$:
-        For all casts $c_i$, with $i \in 1..n$, that don't contain identity casts, then $\erasec{c_i} = c_i$, therefore $\icts \erasec{c_i} : T_i$ and $initialType(\erasec{c_i}) = initialType(c_i)$.
-        For the remaining casts, by Lemma \ref{eliminationidentitycastsc}, $\icts \erasec{c_i} : T_i$ and $initialType(\erasec{c_i}) = initialType(c_i)$.
-        Therefore, with $\erasee{e} = \erasee{e'} : \erasec{c_1} \cap \ldots \cap \erasec{c_n}$, $\Gamma \iccts \erasee{e} : T_1 \cap \ldots \cap T_n$.
-        \item $\forall i \in 1..n\ .\ isEmptyCast\ \erasec{c_i}$:
-        As all casts are empty casts, then for all casts $\erasec{c_i}$, by Lemma \ref{eliminationidentitycastsc} and by rule T-EmptyC, $\icts \erasec{c_i} : T_i$ and $initialType(\erasec{c_i}) = T_i$.
-        Therefore $\erasee{e} = \erasee{e'}$.
-        We now have two possibilities:
-        \begin{itemize}
-            \item If $T$ is not an intersection type, then $T_1 = \ldots = T_n = T$ and by idempotence of $\cap$, we have that $\Gamma \iccts \erasee{e} : T_1 \cap \ldots \cap T_n$.
-            \item If $T$ is an intersection type, then $T = T_1 \cap \ldots \cap T_n$.
-            Therefore $\Gamma \iccts \erasee{e} : T_1 \cap \ldots \cap T_n$.
-        \end{itemize}
-    \end{itemize}
-\end{itemize}
-(2) We proceed by induction on the length of the derivation tree of $\gios$.\\\\
-Base cases:
-\begin{itemize}
-    \item Rule $\beta{-}reduction$.
-    With $\erasee{e} = (\lambda x : T\ .\ \erasee{e'})\ v$.
-    \item Rule $SimulateArrow{\cap}$.
-    As $v_1 : cv_1 \cap \ldots \cap cv_n$ and $v_2$ are values, then $e$ doesn't contain identity casts.
-    As $\erasee{e} = e$, then it is proved.
-    \item Rule $MergeIC{\cap}$.
-    This case is not considered due to the fact that cast insertion doesn't introduce such expressions.
-    \item Rule $MergeCI{\cap}$.
-    This case is not considered due to the fact that cast insertion doesn't introduce such expressions.
-    \item Rule $MergeII{\cap}$.
-    This case is not considered due to the fact that cast insertion doesn't introduce such expressions.
-    \item Rule $EvaluateCasts{\cap}$.
-    \begin{itemize}
-        \item By rule EvaluateCasts$\cap$, $v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n$, with $c_1 \icos cv_1$ and ... and $c_n \icos cv_n$.
-        With $\erasee{e} = v : \erasec{c_1} \cap \ldots \cap \erasec{c_n}$, by Lemma \ref{eliminationidentitycastsc}, $\erasec{c_1} \icos cv_1$ and ... and $\erasec{c_n} \icos cv_n$.
-        Therefore, by rule EvaluateCasts$\cap$, $v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} \gios v : cv_1 \cap \ldots \cap cv_n$.
-        \item By rule EvaluateCasts$\cap$, $v : \erasec{c_1} \cap \ldots \cap \erasec{c_n} \gios v : cv_1 \cap \ldots \cap cv_n$, with $\erasec{c_1} \icos cv_1$ and ... and $\erasec{c_n} \icos cv_n$.
-        With $\erasee{e} = v : \erasec{c_1} \cap \ldots \cap \erasec{c_n}$, by Lemma \ref{eliminationidentitycastsc}, $c_1 \icos cv_1$ and ... and $c_n \icos cv_n$.
-        Therefore, by rule EvaluateCasts$\cap$, $v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n$.
-    \end{itemize}
-    \item Rule $PropagateBlame{\cap}$.
-    This case is not considered due to the fact that cast insertion doesn't introduce such expressions.
-    \item Rule $RemoveEmpty{\cap}$.
-    This case is not considered due to the fact that cast insertion doesn't introduce such expressions.
-\end{itemize}
-Induction step:
-\begin{itemize}
-    \item e =
-\end{itemize}
-\end{proof}
-
 \begin{theorem}[Conservative Extension]
 \label{conservative_extension_operationalsemantics}
-Depends on Lemmas \ref{staticcompilation} and \ref{eliminationidentitycastse}.
-If e is fully static, T is a static type and $\Gamma \iccts e \leadsto e' : T$, then $e \sios v \iff e' \gios v$.
+If e is fully static, then $e \sios e' \iff e \gios e'$.
 \end{theorem}
 \begin{proof}
-By Lemma \ref{staticcompilation}, we have that $\erasee{e'} = e$.
-By Lemma \ref{eliminationidentitycastse}, we have that $e' \gios v \iff \erasee{e'} \gios v$.
-As $\erasee{e'} = e$ and $e$ doesn't contain casts, then we can evaluate $e$ using just the reduction rules (of the gradual operational semantics) analogous to the static operational semantics' reduction rules.
-Therefore, we have that $e' \gios v \iff e \sios v$.
+We proceed by induction on the length of the derivation tree of $\sios$ and $\gios$ for the right and left direction of the implication, respectively.
+Base case:
+\begin{itemize}
+    \item Rule E-AppAbs.
+    If $(\lambda x : T_1 \cap \ldots \cap T_n\ .\ e)\ v \sios [x \mapsto v]e$ and $(\lambda x : T_1 \cap \ldots \cap T_n\ .\ e)\ v \gios [x \mapsto v]e$, then it is proved.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item Rule E-App1.
+    \begin{itemize}
+        \item If $e_1\ e_2 \sios e_1'\ e_2$ then $e_1 \sios e_1'$.
+        By the induction hypothesis, $e_1 \gios e_1'$.
+        Therefore, $e_1\ e_2 \gios e_1'\ e_2$
+        \item If $e_1\ e_2 \gios e_1'\ e_2$ then $e_1 \gios e_1'$.
+        By the induction hypothesis, $e_1 \sios e_1'$.
+        Therefore, $e_1\ e_2 \sios e_1'\ e_2$
+    \end{itemize}
+    \item Rule E-App2.
+    \begin{itemize}
+        \item If $v_1\ e_2 \sios v_1\ e_2'$ then $e_2 \sios e_2'$.
+        By the induction hypothesis, $e_2 \gios e_2'$.
+        Therefore, $v_1\ e_2 \gios v_1\ e_2'$
+        \item If $v_1\ e_2 \gios v_1\ e_2'$ then $e_2 \gios e_2'$.
+        By the induction hypothesis, $e_2 \sios e_2'$.
+        Therefore, $v_1\ e_2 \sios v_1\ e_2'$
+    \end{itemize}
+\end{itemize}
 \end{proof}
 
-\begin{lemma}[Subject reduction of $\beta{-}reduction$]
-\label{subjectreductionbeta}
-If $e$ is a redex and $e'$ is its contractum, then $\Gamma \iccts e : T \Rightarrow \Gamma \iccts e' : T$.
-\end{lemma}
-\begin{proof}
-Let $e = (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e_1)\ e_2$.
-There exists a type $T_1 \cap \ldots \cap T_n$ such that we can deduce $\Gamma \iccts e : T$ from $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e_1 : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2 : T_1 \cap \ldots \cap T_n$ ($x$ does not occur in $\Gamma$).
-Moreover, $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e_1 : T_1 \cap \ldots \cap T_n \rightarrow T$ only if $\Gamma, x : T_1 \cap \ldots \cap T_n \iccts e_1 : T$.
-By definition, $e' = [x \mapsto e_2]\ e_1$.
-To obtain $\Gamma \iccts [x \mapsto e_2]\ e_1 : T$, it is sufficient to replace, in the proof of $\Gamma, x : T_1 \cap \ldots \cap T_n \iccts e_1 : T$, the statements $x : T_i$ (introduzed by the rules $Var$ and ${\cap}E$) by the deductions of $\Gamma \iccts e_2 : T_i$ for $1 \leq i \leq n$.
-Proof adapted from \cite{coppo1980extension}.
-\end{proof}
-
-\begin{lemma}[Subject reduction of $\icos$]
-\label{subjectreductionIC}
-If $\icts c : T$ for some $T$ and $c \icos c'$ then $\icts c' : T$.
+\begin{lemma}[Type preservation of $\icos$]
+\label{typepreservationIC}
+If $c \icos c$ and
+\begin{itemize}
+    \item $\icts c : T$ then $\icts c' : T$.
+    \item $initialType(c) = T$ then $initialType(c') = T$.
+\end{itemize}
 \end{lemma}
 \begin{proof}
 We proceed by induction on the length of the derivation tree of $\icos$.\\\\
 Base cases:
 \begin{itemize}
-    \item Rule $PushBlameC$.
-    $\icts \blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} : T_2$ and by rule PushBlameC, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}$.
-    As $\icts \blamecast{T_I}{T_2}{l_1}{cl_1} : T_2$, then it is proved.
-    \item Rule $IdentityC$.
-    If $\icts c : T \Rightarrow^l T\ ^{cl} : T$, then $\icts c : T$.
-    By rule IdentityC, $c : T \Rightarrow^l T\ ^{cl} \icos c$.
-    Therefore it is proved.
-    \item Rule $SucceedC$.
-    If $\icts c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} : G$, then $\icts c : G$.
-    By rule SucceedC, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c$.
-    Therefore it is proved.
-    \item Rule $FailC$.
-    If $\icts c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} : G_2$, and by rule FailC, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$ and $\icts \blamecast{T_I}{G_2}{l_2}{cl_1} : G_2$, it is proved.
-    \item Rule $GroundC$.
-    If $\icts c : T \Rightarrow^l \Dyn\ ^{cl} : \Dyn$ then $\icts c : T$.
-    By rule GroundC, $c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$.
-    As $\icts c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl} : \Dyn$, it is proved.
-    \item Rule $ExpandC$.
-    If $\icts c : \Dyn \Rightarrow^l T\ ^{cl} : T$ then $\icts c : \Dyn$.
-    By rule ExpandC, $c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
-    As $\icts c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl} : T$, it is proved.
+    \item Rule E-PushBlameIC.
+    \begin{itemize}
+        \item $\icts \blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} : T_2$ and by rule E-PushBlameIC, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}$.
+        As $\icts \blamecast{T_I}{T_2}{l_1}{cl_1} : T_2$, then it is proved.
+        \item By the definition of $initialType$, $initialType(\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2}) = T_I$.
+        By rule E-PushBlameIC, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}$.
+        Since $initialType(\blamecast{T_I}{T_2}{l_1}{cl_1}) = T_I$, it is proved.
+    \end{itemize}
+    \item Rule E-IdentityIC.
+    \begin{itemize}
+        \item If $\icts c : T \Rightarrow^l T\ ^{cl} : T$, then $\icts c : T$.
+        By rule E-IdentityIC, $c : T \Rightarrow^l T\ ^{cl} \icos c$.
+        Therefore it is proved.
+        \item By the definitions of $initialType$, $initialType(c : T \Rightarrow^l T\ ^{cl}) = initialType(c)$.
+        By rule E-IdentityIC, $c : T \Rightarrow^l T\ ^{cl} \icos c$.
+        Therefore it is proved.
+    \end{itemize}
+    \item Rule E-SucceedIC.
+    \begin{itemize}
+        \item If $\icts c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} : G$, then $\icts c : G$.
+        By rule E-SucceedIC, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c$.
+        Therefore it is proved.
+        \item Rule E-SucceedIC.
+        By the definition of $initialType$, $initialType(c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}) = initialType(c)$.
+        By rule E-SucceedIC, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c$.
+        Therefore it is proved.
+    \end{itemize}
+    \item Rule E-FailIC.
+    \begin{itemize}
+        \item If $\icts c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} : G_2$, and by rule E-FailIC, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$ and $\icts \blamecast{T_I}{G_2}{l_2}{cl_1} : G_2$, it is proved.
+        \item By the definition of $initialType$, $initialType(c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}) = T_I$.
+        By rule E-FailIC, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$.
+        Since $initialType(\blamecast{T_I}{G_2}{l_2}{cl_1}) = T_I$, it is proved.
+    \end{itemize}
+    \item Rule E-GroundIC.
+    \begin{itemize}
+        \item If $\icts c : T \Rightarrow^l \Dyn\ ^{cl} : \Dyn$ then $\icts c : T$.
+        By rule E-GroundIC, $c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$.
+        As $\icts c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl} : \Dyn$, it is proved.
+        \item By the definition of $initialType$, $initialType(c : T \Rightarrow^l \Dyn\ ^{cl}) = initialType(c)$.
+        By rule E-GroundIC, $c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$.
+        Since $initialType(c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}) = initialType(c)$, it is proved.
+    \end{itemize}
+    \item Rule E-ExpandIC.
+    \begin{itemize}
+        \item If $\icts c : \Dyn \Rightarrow^l T\ ^{cl} : T$ then $\icts c : \Dyn$.
+        By rule E-ExpandIC, $c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
+        As $\icts c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl} : T$, it is proved.
+        \item By the definition of $initialType$, $initialType(c : \Dyn \Rightarrow^l T\ ^{cl}) = initialType(c)$.
+        By rule E-ExpandIC, $c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
+        Since $initialType(c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}) = initialType(c)$, it is proved.
+    \end{itemize}
 \end{itemize}
 Induction step:
 \begin{itemize}
-    \item Rule $EvaluateC$.
-    If $\icts c : T_1 \Rightarrow^l T_2\ ^{cl} : T_2$ then $\icts c : T_1$.
-    By rule EvaluateC, $c \icos c'$.
-    By the induction hypothesis, $\icts c' : T_1$.
-    By rule EvaluateC, $c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}$.
-    As $\icts c' : T_1 \Rightarrow^l T_2\ ^{cl} : T_2$ it is proved.
+    \item Rule E-EvaluateIC.
+    \begin{itemize}
+        \item If $\icts c : T_1 \Rightarrow^l T_2\ ^{cl} : T_2$ then $\icts c : T_1$.
+        By rule E-EvaluateIC, $c \icos c'$.
+        By the induction hypothesis, $\icts c' : T_1$.
+        By rule E-EvaluateIC, $c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}$.
+        As $\icts c' : T_1 \Rightarrow^l T_2\ ^{cl} : T_2$ it is proved.
+        \item By the definition of $initialType$, $initialType(c : T_1 \Rightarrow^l T_2\ ^{cl}) = initialType(c)$.
+        By rule E-EvaluateIC, $c \icos c'$.
+        By the induction hypothesis, $initialType(c') = initialType(c)$.
+        By rule E-EvaluateIC, $c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}$.
+        Since $initialType(c' : T_1 \Rightarrow^l T_2\ ^{cl}) = initialType(c')$, it is proved.
+    \end{itemize}
 \end{itemize}
 \end{proof}
 
-\begin{lemma}[Initial type preservation of $\icos$]
-\label{initialtypepreservationIC}
-If $initialType(c) = T$ for some $T$ and $c \icos c'$ then $initialType(c') = T$.
+\begin{lemma}[Progress of $\icos$]
+\label{progressIC}
+If $\Gamma \icts c : T$ and $initialType(c) = T_I$ then either $c$ is a cast value or there exists a $c'$ such that $c \icos c'$.
 \end{lemma}
 \begin{proof}
-We proceed by induction on the length of the derivation tree of $\icos$.\\\\
-Base cases:
+We proceed by induction on the length of the derivation tree of $\icts c : T$.\\\\
+Base case:
 \begin{itemize}
-    \item Rule $PushBlameC$.
-    By the definition of $initialType$, $initialType(\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2}) = T_I$.
-    By rule PushBlameC, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}$.
-    Since $initialType(\blamecast{T_I}{T_2}{l_1}{cl_1}) = T_I$, it is proved.
-    \item Rule $IdentityC$.
-    By the definitions of $initialType$, $initialType(c : T \Rightarrow^l T\ ^{cl}) = initialType(c)$.
-    By rule IdentityC, $c : T \Rightarrow^l T\ ^{cl} \icos c$.
-    Therefore it is proved.
-    \item Rule $SucceedC$.
-    By the definition of $initialType$, $initialType(c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}) = initialType(c)$.
-    By rule SucceedC, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c$.
-    Therefore it is proved.
-    \item Rule $FailC$.
-    By the definition of $initialType$, $initialType(c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}) = T_I$.
-    By rule FailC, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$.
-    Since $initialType(\blamecast{T_I}{G_2}{l_2}{cl_1}) = T_I$, it is proved.
-    \item Rule $GroundC$.
-    By the definition of $initialType$, $initialType(c : T \Rightarrow^l \Dyn\ ^{cl}) = initialType(c)$.
-    By rule GroundC, $c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$.
-    Since $initialType(c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}) = initialType(c)$, it is proved.
-    \item Rule $ExpandC$.
-    By the definition of $initialType$, $initialType(c : \Dyn \Rightarrow^l T\ ^{cl}) = initialType(c)$.
-    By rule ExpandC, $c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
-    Since $initialType(c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}) = initialType(c)$, it is proved.
+    \item Rule T-BlameIC.
+    As $\icts \blamecast{T_I}{T_F}{l}{cl} : T_F$, $initialType(\blamecast{T_I}{T_F}{l}{cl}) = T_I$ and $\blamecast{T_I}{T_F}{l}{cl}$ is a cast value, it is proved.
+    \item Rule T-EmptyIC.
+    As $\icts \emptycast{T}{cl} : T$, $initialType(\emptycast{T}{cl}) = T$ and $\emptycast{T}{cl}$ is a cast value, it is proved.
 \end{itemize}
 Induction step:
 \begin{itemize}
-    \item Rule $EvaluateC$.
-    By the definition of $initialType$, $initialType(c : T_1 \Rightarrow^l T_2\ ^{cl}) = initialType(c)$.
-    By rule EvaluateC, $c \icos c'$.
-    By the induction hypothesis, $initialType(c') = initialType(c)$.
-    By rule EvaluateC, $c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}$.
-    Since $initialType(c' : T_1 \Rightarrow^l T_2\ ^{cl}) = initialType(c')$, it is proved.
+    \item Rule T-SingleIC.
+    If $\icts c : T_1 \Rightarrow^l T_2\ ^cl : T_2$ and $initialType(c : T_1 \Rightarrow^l T_2\ ^cl) = T_I$ then $\icts c : T_1$ and $initialType(c) = T_I$.
+    By the induction hypothesis, either $c$ is a cast value or there is a $c'$ such that $c \icos c'$.
+    If $c$ is a cast value, then $c$ can either be of the form $\blamecast{T_I}{T_F}{l}{cl}$, in which case by rule E-PushBlameIC, $\blamecast{T_I}{T_F}{l}{cl} : T_1 \Rightarrow^l T_2\ ^cl \icos \blamecast{T_I}{T_2}{l}{cl}$ or $c$ is a cast value 1 or is an empty cast.
+    If $c$ is a cast value 1 or is an empty cast then $c : T_1 \Rightarrow^l T_2\ ^cl$ can be of one of the folowing forms:
+    \begin{itemize}
+        \item $c : T \Rightarrow^l T\ ^{cl}$. Then by rule E-IdentityIC, $c : T \Rightarrow^l T\ ^{cl} \icos c$.
+        \item $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}$. Then by rule E-SucceedIC, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c$.
+        \item $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}$. Then by rule E-FailIC, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$.
+        \item $c : T \Rightarrow^l \Dyn\ ^{cl}$. Then by rule E-GroundIC, $c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$.
+        \item $c : \Dyn \Rightarrow^l T\ ^{cl}$. Then by rule E-ExpandIC, $c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
+    \end{itemize}
+    If there is a $c'$ such that $c \icos c'$, then by rule E-EvaluateIC, $c : T_1 \Rightarrow^l T_2\ ^cl \icos c' : T_1 \Rightarrow^l T_2\ ^cl$.
 \end{itemize}
 \end{proof}
 
-\begin{theorem}[Subject reduction of $\gios$]
-\label{subjectreduction}
-Depends on Lemmas \ref{subjectreductionbeta}, \ref{subjectreductionIC} and \ref{initialtypepreservationIC}.
+\begin{lemma}[Type preservation of $\gios$]
+\label{typepreservation}
+Depends on Lemmas \ref{typepreservationIC} and \ref{progressIC}.
 If $\Gamma \iccts e : T$ and $e \gios e'$ then $\Gamma \iccts e' : T$.
-\end{theorem}
+\end{lemma}
 \begin{proof}
 We proceed by induction on the length of the derivation tree of $\gios$.\\\\
 Base case:
 \begin{itemize}
-    \item Rule $\beta{-}reduction$.
-    The proof of $\Gamma \iccts e' : T$ can be obtained from that of $\Gamma \iccts e : T$ by replacing any deduction of a type for $e$, by the corresponding deduction of the same type for $e'$ (by Lemma \ref{subjectreductionbeta}).
-    \item Rule $Simulate{\cap}$.
+    \item Rule E-AppAbs.
+    There exists a type $T_1 \cap \ldots \cap T_n$ such that we can deduce $\Gamma \iccts (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e)\ v : T$ from $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts v : T_1 \cap \ldots \cap T_n$ ($x$ does not occur in $\Gamma$).
+    Moreover, $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$ only if $\Gamma, x : T_1 \cap \ldots \cap T_n \iccts e : T$.
+    By rule E-AppAbs, $(\lambda x : T_1 \cap \ldots \cap T_n\ .\ e)\ v \gios [x \mapsto v] e$.
+    To obtain $\Gamma \iccts [x \mapsto v] e : T$, it is sufficient to replace, in the proof of $\Gamma, x : T_1 \cap \ldots \cap T_n \iccts e : T$, the statements $x : T_i$ (introduzed by the rules T-Var and T-Inst) by the deductions of $\Gamma \iccts v : T_i$ for $1 \leq i \leq n$.
+    (Proof adapted from \cite{coppo1980extension})
+    \item Rule E-SimulateArrow.
     If $\Gamma \iccts (v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 : T_{12} \cap \ldots \cap T_{n2}$, then $\Gamma \iccts v_1 : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_n$ with $\icts cv_1 : T_1$ and ... and $\icts cv_n : T_n$, such that $\exists i \in 1 .. n\ .\ T_i = T_{i1} \rightarrow T_{i2}$ and $\Gamma \iccts v_1 : T_1' \cap \ldots \cap T_l'$ and $I_1 = initialType(cv_1)$ and ... and $I_n = initialType(cv_n)$ such that either $T_1' \cap \ldots \cap T_l' = I_1 \cap \ldots \cap I_n$ or $\{I_1, \ldots, I_n\} \subset \{T_1', \ldots, T_l'\}$ and $\Gamma \iccts v_2 : T_{11} \cap \ldots \cap T_{n1}$.
     For the sake of simplicity lets elide cast labels and blame labels.
-    As $\icts cv_1' : T_{11} \rightarrow T_{12}$ and ... and $\icts cv_m' : T_{m1} \rightarrow T_{m2}$ then $cv_1' = cv_1'' : T_{11}' \rightarrow T_{12}' \Rightarrow T_{11} \rightarrow T_{12}$ and ... and $cv_m' = cv_m'' : T_{m1}' \rightarrow T_{m2}' \Rightarrow T_{m1} \rightarrow T_{m2}$.
-    By the definition of simulateArrow, $c_{11} : \emptycast{T_{11}}{} : T_{11} \Rightarrow T_{11}'$ and ... and $c_{m1} = \emptycast{T_{m1}}{} : T_{m1} \Rightarrow T_{m1}'$ and $c_{12} : \emptycast{T_{12}'}{} : T_{12}' \Rightarrow T_{12}$ and ... and $c_{m2} = \emptycast{T_{m2}'}{} : T_{m2}' \Rightarrow T_{m2}$ and $initialType(r_1) = I_1$ and ... and $initialType(r_m) = I_m$ and $\icts r_1 : T_{11}' \rightarrow T_{12}'$ and ... and $\icts r_m : T_{m1}' \rightarrow T_{m2}'$.
-    Therefore $\Gamma \iccts v_1 : r_1 \cap \ldots \cap r_m : T_{11}' \rightarrow T_{12}' \cap \ldots \cap T_{m1}' \rightarrow T_{m2}'$ and $\Gamma \iccts v_2 : c_{11} \cap \ldots \cap c_{m1} : T_{11}' \cap \ldots \cap T_{m1}'$ and therefore $\Gamma \iccts (v_1 : r_1 \cap \ldots \cap r_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : T_{12}' \cap \ldots \cap T_{m2}'$.
-    Therefore, $\Gamma \iccts (v_1 : r_1 \cap \ldots \cap r_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2} : T_{12} \cap \ldots \cap T_{m2}$, such that $\{T_{12}, \ldots, T_{m2}\} \subset \{T_{12}, \ldots, T_{n2}\}$.
-    By rule Simulate$\cap$, $(v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 \gios\\ (v_1 : r_1 \cap \ldots \cap r_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2}$, therefore it is proved.
-    \item Rule $MergeIC{\cap}$.
-    If $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 : T_2$ then $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : T_{11} \cap \ldots \cap T_{1n}$ and such that $\exists T_{1i}\ .\ T_{1i} = T_1$ and $\icts cv_1 : T_{11}$ and $I_1 = initialType(cv_1)$ and ... and $\icts cv_n : T_{1n}$ and $I_n = initialType(cv_n)$ and $\Gamma \iccts v : I_1 \cap \ldots \cap I_n$ and $m \leq n$.
-    By the definition of mergeIC, $\icts c_1' : T_2$ and $initialType(c_1') : I_1$ and ... and $\icts c_m' : T_2$ and $initialType(c_m') : I_m$.
-    As $\Gamma \iccts v : I_1 \cap \ldots \cap I_m$ and therefore $\Gamma \iccts v : c_1' \cap \ldots \cap c_m' : T_2 \cap \ldots \cap T_2$ and $T_2 \cap \ldots \cap T_2 = T_2$ and by rule MergeIC$\cap$, $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \gios v : c_1' \cap \ldots \cap c_m'$, then it is proved.
-    \item Rule $MergeCI{\cap}$.
-    If $\Gamma \iccts v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n : F_1 \cap \ldots \cap F_n$ then $\Gamma \iccts v : T_1 \Rightarrow T_2 : T_2$ and $\Gamma \iccts v : T_1$ and $\icts c_1 : F_1$ and $initialType(c_1) = T_2$ and ... and $\icts c_n : F_n$ and $initialType(c_n) = T_2$.
-    By the definition of mergeCI, $mergeCI(v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n) = v : c_1' \cap \ldots \cap c_n'$, such that $\icts c_1' : F_1$ and $initialType(c_1') : T_1$ and ... and $\icts c_n' : F_n$ and $initialType(c_n') : T_1$.
-    As $\Gamma \iccts v : c_1' \cap \ldots \cap c_n' : F_1 \cap \ldots \cap F_n$ and by rule MergeCI$\cap$, $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \gios v : c_1' \cap \ldots \cap c_n'$, then it is proved.
-    \item Rule $MergeII{\cap}$.
+    By the definition of SimulateArrow, we have that $c_1' = c_1'' : T_{11}' \rightarrow T_{12}' \Rightarrow T_{11} \rightarrow T_{12}$ and ... and $c_m' = c_m'' : T_{m1}' \rightarrow T_{m2}' \Rightarrow T_{m1} \rightarrow T_{m2}$.
+    Also, $c_{11} = \emptycast{T_{11}}{} : T_{11} \Rightarrow T_{11}'$ and ... and $c_{m1} = \emptycast{T_{m1}}{} : T_{m1} \Rightarrow T_{m1}'$ and $c_{12} : \emptycast{T_{12}'}{} : T_{12}' \Rightarrow T_{12}$ and ... and $c_{m2} = \emptycast{T_{m2}'}{} : T_{m2}' \Rightarrow T_{m2}$ and $initialType(c^s_1) = I_1$ and ... and $initialType(c^s_m) = I_m$ and $\icts c^s_1 : T_{11}' \rightarrow T_{12}'$ and ... and $\icts c^s_m : T_{m1}' \rightarrow T_{m2}'$.
+    Therefore $\Gamma \iccts v_1 : c^s_1 \cap \ldots \cap c^s_m : T_{11}' \rightarrow T_{12}' \cap \ldots \cap T_{m1}' \rightarrow T_{m2}'$ and $\Gamma \iccts v_2 : c_{11} \cap \ldots \cap c_{m1} : T_{11}' \cap \ldots \cap T_{m1}'$ and therefore $\Gamma \iccts (v_1 : c^s_1 \cap \ldots \cap c c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : T_{12}' \cap \ldots \cap T_{m2}'$.
+    Therefore, $\Gamma \iccts (v_1 : c^s_1 \cap \ldots \cap c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2} : T_{12} \cap \ldots \cap T_{m2}$, such that $\{T_{12}, \ldots, T_{m2}\} \subset \{T_{12}, \ldots, T_{n2}\}$.
+    By rule E-SimulateArrow, $(v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 \gios\\ (v_1 : c^s_1 \cap \ldots \cap c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2}$, therefore it is proved.
+%    \item Rule E-MergeIC.
+%    If $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 : T_2$ then $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : T_{11} \cap \ldots \cap T_{1n}$ and such that $\exists T_{1i}\ .\ T_{1i} = T_1$ and $\icts cv_1 : T_{11}$ and $I_1 = initialType(cv_1)$ and ... and $\icts cv_n : T_{1n}$ and $I_n = initialType(cv_n)$ and $\Gamma \iccts v : I_1 \cap \ldots \cap I_n$ and $m \leq n$.
+%    By the definition of mergeIC, $\icts c_1' : T_2$ and $initialType(c_1') : I_1$ and ... and $\icts c_m' : T_2$ and $initialType(c_m') : I_m$.
+%    As $\Gamma \iccts v : I_1 \cap \ldots \cap I_m$ and therefore $\Gamma \iccts v : c_1' \cap \ldots \cap c_m' : T_2 \cap \ldots \cap T_2$ and $T_2 \cap \ldots \cap T_2 = T_2$ and by rule E-MergeIC, $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \gios v : c_1' \cap \ldots \cap c_m'$, then it is proved.
+%    \item Rule E-MergeCI.
+%    If $\Gamma \iccts v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n : F_1 \cap \ldots \cap F_n$ then $\Gamma \iccts v : T_1 \Rightarrow T_2 : T_2$ and $\Gamma \iccts v : T_1$ and $\icts c_1 : F_1$ and $initialType(c_1) = T_2$ and ... and $\icts c_n : F_n$ and $initialType(c_n) = T_2$.
+%    By the definition of mergeCI, $mergeCI(v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n) = v : c_1' \cap \ldots \cap c_n'$, such that $\icts c_1' : F_1$ and $initialType(c_1') : T_1$ and ... and $\icts c_n' : F_n$ and $initialType(c_n') : T_1$.
+%    As $\Gamma \iccts v : c_1' \cap \ldots \cap c_n' : F_1 \cap \ldots \cap F_n$ and by rule E-MergeCI, $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \gios v : c_1' \cap \ldots \cap c_n'$, then it is proved.
+    \item Rule E-MergeCasts.
     If $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' : F_1' \cap \ldots \cap F_m'$ then $\icts c_1' : F_1'$ and $initialType(c_1') = I_1'$ and ... and $\icts c_m' : F_m'$ and $initialType(c_m') = I_m'$ and $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : F_1 \cap \ldots \cap F_n$ and $\icts cv_1 : F_1$ and $initialType(cv_1) = I_1$ and ... and $\icts cv_n : F_n$ and $initialType(cv_n) = I_n$ and $\Gamma \iccts v : T_1 \cap \ldots \cap T_l$ such that either $T_1 \cap \ldots \cap T_l = I_1 \cap \ldots \cap I_n$ or $\{I_1, \ldots, I_n\} \subset \{T_1, \ldots, T_l\}$.
     There are two possibilities:
     \begin{itemize}
         \item $F_1 \cap \ldots \cap F_n = I_1' \cap \ldots \cap I_m'$.
-        By the definition of mergeII, $\icts c_1'' : F_1''$ and ... and $\icts c_j'' : F_j''$ such that $F_1'' \cap \ldots \cap F_j'' = F_1' \cap \ldots \cap F_m'$ and $initialType(c_1'') = I_1''$ and ... and $initialType(c_j'') = I_j''$ such that $I_1'' \cap \ldots \cap I_j'' = I_1 \cap \ldots \cap I_n$.
+        By the definition of mergeCasts, $\icts c_1'' : F_1''$ and ... and $\icts c_j'' : F_j''$ such that $F_1'' \cap \ldots \cap F_j'' = F_1' \cap \ldots \cap F_m'$ and $initialType(c_1'') = I_1''$ and ... and $initialType(c_j'') = I_j''$ such that $I_1'' \cap \ldots \cap I_j'' = I_1 \cap \ldots \cap I_n$.
         Therefore $\Gamma \iccts v : c_1'' \cap \ldots \cap c_j'' : F_1'' \cap \ldots \cap F_j''$.
-        By rule MergeII$\cap$, $v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \gios v : c_1'' \cap \ldots \cap c_j''$.
+        By rule E-MergeCasts, $v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \gios v : c_1'' \cap \ldots \cap c_j''$.
         Therefore it is proved.
         \item $\{I_1', \ldots, I_m'\} \subset \{F_1, \ldots, F_n\}$.
-        By the definition of mergeII, $\icts c_1'' : F_1''$ and $initialType(c_1'') = I_1''$ and ... and $\icts c_j'' : F_j''$ and $initialType(c_j'') = I_j''$ such that $\{I_1'', \ldots, I_j''\} \subset \{I_1, \ldots, I_n\}$ and $\{F_1'', \ldots, F_j''\} \subset \{F_1', \ldots, F_m'\}$.
+        By the definition of mergeCasts, $\icts c_1'' : F_1''$ and $initialType(c_1'') = I_1''$ and ... and $\icts c_j'' : F_j''$ and $initialType(c_j'') = I_j''$ such that $\{I_1'', \ldots, I_j''\} \subset \{I_1, \ldots, I_n\}$ and $\{F_1'', \ldots, F_j''\} \subset \{F_1', \ldots, F_m'\}$.
         Therefore, $\Gamma \iccts v : c_1'' \cap \ldots \cap c_j'' : F_1'' \cap \ldots \cap F_j''$.
-        By rule MergeII$\cap$, $v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \gios v : c_1'' \cap \ldots \cap c_j''$.
+        By rule E-MergeCasts, $v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \gios v : c_1'' \cap \ldots \cap c_j''$.
         Therefore, it is proved.
     \end{itemize}
-    \item Rule $EvaluateCasts{\cap}$.
+    \item Rule E-EvaluateCasts.
     If $\Gamma \iccts v : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then $\icts c_1 : T_1$ and $I_1 = initialType(c_1)$ and ... and $\icts c_n : T_n$ and $I_n = initialType(c_n)$ and $\Gamma \iccts v : I_1 \cap \ldots \cap I_n$.
-    By rule EvaluateCasts$\cap$, $c_1 \icos cv_1$ and ... and $c_n \icos cv_n$.
-    By Lemmas \ref{subjectreductionIC} and \ref{initialtypepreservationIC}, $\icts cv_1 : T_1$ and $initialType(cv_1) = I_1$ and ... and $\icts cv_n : T_n$ and $initialType(cv_n) = I_n$.
+    By rule E-EvaluateCasts, $c_1 \icos cv_1$ and ... and $c_n \icos cv_n$.
+    By Lemmas \ref{typepreservationIC} and \ref{progressIC}, $\icts cv_1 : T_1$ and $initialType(cv_1) = I_1$ and ... and $\icts cv_n : T_n$ and $initialType(cv_n) = I_n$.
     Therefore $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_n$.
-    By rule EvaluateCasts$\cap$, $v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n$, then it is proved.
-    \item Rule $PropagateBlame{\cap}$.
-    If $\Gamma \iccts v : \blamecast{T_1'}{T_1}{l_1}{m_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{m_n} : T_1 \cap \ldots \cap T_n$ and by rule PropagateBlame$\cap$ $v : \blamecast{T_1'}{T_1}{l_1}{m_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{m_n} \gios \blame{(T_1 \cap \ldots \cap T_n)}{l_1}$, and $\Gamma \iccts \blame{(T_1 \cap \ldots \cap T_n)}{l_1} : T_1 \cap \ldots \cap T_n$, then it is proved.
-    \item Rule $RemoveEmpty{\cap}$..
+    By rule E-EvaluateCasts, $v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n$, then it is proved.
+    \item Rule E-PropagateBlame.
+    If $\Gamma \iccts v : \blamecast{T_1'}{T_1}{l_1}{m_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{m_n} : T_1 \cap \ldots \cap T_n$ and by rule E-PropagateBlame $v : \blamecast{T_1'}{T_1}{l_1}{m_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{m_n} \gios \blame{(T_1 \cap \ldots \cap T_n)}{l_1}$, and $\Gamma \iccts \blame{(T_1 \cap \ldots \cap T_n)}{l_1} : T_1 \cap \ldots \cap T_n$, then it is proved.
+    \item Rule E-RemoveEmpty.
     If $\Gamma \iccts v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n} : T_1 \cap \ldots \cap T_n$, then $\icts \emptycast{T_1}{m_1} : T_1$ and $initialType(\emptycast{T_1}{m_1}) = T_1$ and ... and $\icts \emptycast{T_n}{m_n} : T_n$ and $initialType(\emptycast{T_n}{m_n}) = T_n$ and $\Gamma \iccts v : T_1 \cap \ldots \cap T_n$.
-    By rule RemoveEmpty$\cap$, $v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n} \gios v$, therefore it is proved.
+    By rule E-RemoveEmpty, $v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n} \gios v$, therefore it is proved.
 \end{itemize}
 Induction step:
 \begin{itemize}
-    \item Rule $E{-}App1$. If $\Gamma \iccts e_1\ e_2 : T$, then either:
+    \item Rule E-App1. There are two possibilities:
     \begin{itemize}
-        \item $\Gamma \iccts e_1 : PM$, $PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T$, $\Gamma \iccts e_2 : T_1' \cap \ldots \cap T_n'$ and $T_1' \cap \ldots \cap T_n' \sim T_1 \cap \ldots \cap T_n$ or
-        \item $\Gamma \iccts e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$, $\Gamma \iccts e_2 : T_1' \cap \ldots \cap T_n'$ and $T_{11} \sim T_1' \ldots T_{n1} \sim T_n'$.
+        \item If $\Gamma \iccts e_1\ e_2 : T$, then $\Gamma \iccts e_1 : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2 : T_1 \cap \ldots \cap T_n$.
+        By rule E-App1, $e_1 \icos e_1'$, so by the induction hypothesis, $\Gamma \iccts e_1' : T_1 \cap \ldots \cap T_n \rightarrow T$.
+        Therefore, $\Gamma \iccts e_1'\ e_2 : T$.
+        As by rule E-App1, $e_1\ e_2 \icos e_1'\ e_2$, it is proved.
+        \item If $\Gamma \iccts e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}$, then $\Gamma \iccts e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$ and $\Gamma \iccts e_2 : T_{11} \cap \ldots \cap T_{n1}$.
+        By rule E-App1, $e_1 \icos e_1'$, so by the induction hypothesis, $\Gamma \iccts e_1' : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$.
+        Therefore, $\Gamma \iccts e_1'\ e_2 : T_{12} \cap \dots \cap T_{n2}$.
+        As by rule E-App1, $e_1\ e_2 \icos e_1'\ e_2$, it is proved.
     \end{itemize}
-    By rule E-App1, $e_1 \icos e_1'$, so by the induction hypothesis either:
+    \item Rule E-App2. There are two possibilities:
     \begin{itemize}
-        \item $\Gamma \iccts e_1' : PM$ or
-        \item $\Gamma \iccts e_1' : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$.
+        \item If $\Gamma \iccts v_1\ e_2 : T$, then $\Gamma \iccts v_1 : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2 : T_1 \cap \ldots \cap T_n$.
+        By rule E-App2, $e_2 \icos e_2'$, so by the induction hypothesis, $\Gamma \iccts e_2' : T_1 \cap \ldots \cap T_n$.
+        Therefore, $\Gamma \iccts v_1\ e_2' : T$.
+        As by rule E-App2, $v_1\ e_2 \icos v_1\ e_2'$, it is proved.
+        \item If $\Gamma \iccts v_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}$, then $\Gamma \iccts v_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$ and $\Gamma \iccts e_2 : T_{11} \cap \ldots \cap T_{n1}$.
+        By rule E-App2, $e_2 \icos e_2'$, so by the induction hypothesis, $\Gamma \iccts e_2' : T_{11} \cap \ldots \cap T_{n1}$.
+        Therefore, $\Gamma \iccts v_1\ e_2' : T_{12} \cap \dots \cap T_{n2}$.
+        As by rule E-App1, $v_1\ e_2 \icos v_1\ e_2'$, it is proved.
     \end{itemize}
-    Therefore, $\Gamma \iccts e_1'\ e_2 : T$.
-    As by rule E-App1, $e_1\ e_2 \icos e_1'\ e_2$, it is proved.
-    \item Rule $E{-}App2$. If $\Gamma \iccts v_1\ e_2 : T$, then either:
-    \begin{itemize}
-        \item $\Gamma \iccts v_1 : PM$, $PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T$, $\Gamma \iccts e_2 : T_1' \cap \ldots \cap T_n'$ and $T_1' \cap \ldots \cap T_n' \sim T_1 \cap \ldots \cap T_n$ or
-        \item $\Gamma \iccts v_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$, $\Gamma \iccts e_2 : T_1' \cap \ldots \cap T_n'$ and $T_{11} \sim T_1' \ldots T_{n1} \sim T_n'$.
-    \end{itemize}
-    By rule E-App2, $e_2 \icos e_2'$, so by the induction hypothesis, $\Gamma \iccts e_2' : T_1' \cap \ldots \cap T_n'$.
-    Therefore, $\Gamma \iccts v_1\ e_2' : T$.
-    As by rule E-App2, $v_1\ e_2 \icos v_1\ e_2'$, it is proved.
-    \item Rule $E{-}EvaluateCasts$. If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$, then $\Gamma \iccts e : T$, $\icts c_1 : T_1$ and ... and $\icts c_n : T_n$ and $initialType(c_1) \cap \ldots \cap initialType(c_n) = T$.
-    By rule E-EvaluateCasts, $e \icos e'$, so by the induction hypothesis, $\Gamma \iccts e' : T$.
+    \item Rule E-Evaluate. If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$, then $\Gamma \iccts e : T$, $\icts c_1 : T_1$ and ... and $\icts c_n : T_n$ and $initialType(c_1) \cap \ldots \cap initialType(c_n) = T$.
+    By rule E-Evaluate, $e \icos e'$, so by the induction hypothesis, $\Gamma \iccts e' : T$.
     Therefore, $\Gamma \iccts e' : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$.
-    As by rule E-EvaluateCasts, $e : c_1 \cap \ldots \cap c_n \icos e' : c_1 \cap \ldots \cap c_n$, it is proved.
+    As by rule E-Evaluate, $e : c_1 \cap \ldots \cap c_n \icos e' : c_1 \cap \ldots \cap c_n$, it is proved.
 \end{itemize}
 \end{proof}
 
-\begin{theorem}[Progress of $\gios$]
+\begin{lemma}[Progress of $\gios$]
 \label{progress}
-If $\Gamma \iccts e : T$ then $e \gios v$.
+If $\Gamma \iccts e : T$ then either $e$ is a value or there exists an $e'$ such that $e \gios e'$.
+\end{lemma}
+\begin{proof}
+We proceed by induction on the length of the derivation tree of $\Gamma \gits e : T$.\\\\
+Base case:
+\begin{itemize}
+    \item Rule T-Var.
+    If $\Gamma \iccts x : T$, then $x : T \in \Gamma$. As $x$ is a value, it is proved.
+    \item Rule T-Int.
+    As $\Gamma \iccts n : \Int$ and $n$ is a value, it is proved.
+    \item Rule T-True.
+    As $\Gamma \iccts \true : \Bool$ and $\true$ is a value, it is proved.
+    \item Rule T-False.
+    As $\Gamma \iccts \false : \Bool$ and $\false$ is a value, it is proved.
+\end{itemize}
+Induction step:
+\begin{itemize}
+    \item Rule T-Abs.
+    As $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e$ is a value, it is proved.
+    \item Rule T-Abs'.
+    As $\Gamma \iccts \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T$ such that $T_i \in \{T_1, \ldots, T_n\}$ and $\lambda x : T_1 \cap \ldots \cap T_n\ .\ e$ is a value, it is proved.
+    \item Rule T-App.
+    If $\Gamma \iccts e_1\ e_2 : T$, then $\Gamma \iccts e_1 : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2 : T_1 \cap \ldots \cap T_n$.
+    By the induction hypothesis, $e_1$ is either a value or there is a $e_1'$ such that $e_1 \gios e_1'$ and $e_2$ is either a value or there is a $e_2'$ such that $e_2 \gios e_2'$.
+    If $e_1$ is not a value, then by rule E-App1, $e_1\ e_2 \gios e_1'\ e_2$.
+    If $e_1$ is a value and $e_2$ is not a value, then by rule E-App2, $e_1\ e_2 \gios e_1\ e_2'$.
+    If both $e_1$ and $e_2$ are values then $e_1$ must be an abstraction $(\lambda x : T_1 \cap \ldots \cap T_n\ .\ e)$, and by rule E-AppAbs $(\lambda x : T_1 \cap \ldots \cap T_n\ .\ e)\ e_2 \gios [x \mapsto e_2]e$.
+    \item Rule T-Gen.
+    If $\Gamma \iccts e : T_1 \cap \ldots \cap T_n$, then $\Gamma \iccts e : T_1$ and ... and $\Gamma \iccts e : T_n$.
+    By the induction hypothesis, either $e$ is a value or there exists an $e'$ such that $e \gios e'$.
+    \item Rule T-Inst.
+    If $\Gamma \iccts e : T_i$, then $\Gamma \iccts e : T_1 \cap \ldots \cap T_n$, such that $T_i \in \{T_1, \ldots, T_n\}$.
+    By the induction hypothesis, either $e$ is a value or there exists an $e'$ such that $e \gios e'$.
+    \item Rule T-App'.
+    If $\Gamma \iccts e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}$, then $\Gamma \iccts e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$ and $\Gamma \iccts e_2 : T_{11} \cap \ldots \cap T_{n1}$.
+    By the induction hypothesis, $e_1$ is either a value or there is a $e_1'$ such that $e_1 \gios e_1'$ and $e_2$ is either a value or there is a $e_2'$ such that $e_2 \gios e_2'$.
+    If $e_1$ is not a value, then by rule E-App1, $e_1\ e_2 \gios e_1'\ e_2$.
+    If $e_1$ is a value and $e_2$ is not a value, then by rule E-App2, $e_1\ e_2 \gios e_1\ e_2'$.
+    If both $e_1$ and $e_2$ are values then $e_1$ must be an abstraction $(\lambda x : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2} .\ e)$, and by rule E-AppAbs $(\lambda x : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}\ .\ e)\ e_2 \gios [x \mapsto e_2]e$.
+    \item Rule T-IntersectionCast.
+    If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then $\Gamma \iccts e : T$.
+    By the induction hypothesis, $e$ is either a value, or there is an $e'$ such that $e \gios e'$.
+    If $e$ is a value, then by rule E-EvaluateCasts, $e : c_1 \cap \ldots \cap c_n \gios e : cv_1 \cap \ldots \cap cv_n$.
+    If there is an $e'$ such that $e \gios e'$, then by rule E-Evaluate, $e : c_1 \cap \ldots \cap c_n \gios e' : c_1 \cap \ldots \cap c_n$.
+    \item Rule T-Blame.
+    As $\Gamma \iccts \blame{T}{l} : T$ and $\blame{T}{l}$ is a value, it is proved.
+\end{itemize}
+\end{proof}
+
+\begin{theorem}[Type Safety]
+\label{typesafety}
+Depends on Lemmas \ref{typepreservation} and \ref{progress}.
+Both Type Preservation and Progress hold.
 \end{theorem}
+\begin{proof}
+By Lemma \ref{typepreservation} we have Type Preservation.
+By Lemma \ref{progress} we have Progress.
+\end{proof}
 
 \begin{theorem}[Blame Theorem]
 \label{blame_theorem}

@@ -30,7 +30,7 @@ example3fail = TypeInformation IntType (Application (TypeInformation (ArrowType 
 example4 = TypeInformation (IntType ) $ Application (TypeInformation (ArrowType (IntersectionType [IntType, DynType]) IntType) $ Abstraction "x" (IntersectionType [IntType, DynType]) $ TypeInformation IntType $ Addition (TypeInformation IntType $ Variable "x") (TypeInformation DynType $ Variable "x")) (TypeInformation IntType $ Int 1)
 
 -- (\x : Int /\ Dyn . x) 1 : Int
--- -->/\ 2
+-- -->/\ 1 : ((/) Int 0 /\ ((/) Int 0 : Int => Dyn 0))
 example6 = TypeInformation (IntType ) $ Application (TypeInformation (ArrowType (IntersectionType [IntType, DynType]) IntType) $ Abstraction "x" (IntersectionType [IntType, DynType]) $ (TypeInformation IntType $ Variable "x")) (TypeInformation IntType $ Int 1)
 
 t' = ArrowType (IntersectionType [ArrowType (IntersectionType [IntType, DynType]) IntType, DynType]) IntType
