@@ -22,8 +22,6 @@ Syntax
                           T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T \end{aligned}\\
 &Ground\ Types\ G\ ::=\ \Int\ |\ \Bool\ |\ \Dyn \rightarrow \Dyn\\
 &Casts\ \begin{aligned}[t] c\ ::=&\ c : T \Rightarrow^l T\ ^{cl}\ |\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}\\
-%&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\\
-%                                      |&\ e : T' \Rightarrow^l T'\ |\ e : c \cap \ldots \cap c\ |\ \blame{T}{l} \end{aligned}\\
 &Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : I\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\\
                                       |&\ e : c \cap \ldots \cap c\ |\ \blame{I}{l} \end{aligned}\\
 &Cast\ Values\ \begin{aligned}[t] cv\ ::=&\ cv1\ |\ cv2\\
@@ -34,8 +32,6 @@ Syntax
                                 cv2\ ::=&\ \blamecast{T}{T}{l}{cl}\\
                                        |&\ \emptycast{T}{cl} \end{aligned}\\
 &Values\ \begin{aligned}[t] v\ ::=&\ x\ |\ \lambda x : I\ .\ e\ |\ n\ |\ \true\ |\ \false\ |\ \blame{I}{l}\\
-%                                 |&\ v : G \Rightarrow^l \Dyn\\
-%                                 |&\ v : T'_1 \rightarrow T'_2 \Rightarrow^l T'_3 \rightarrow T'_4\\
                                  |&\ v : cv_1 \cap \ldots \cap cv_n\ such\ that\\
                                  &\neg(\forall_{i\in 1..n}\ .\ cv_i = \blamecast{T}{T}{l}{cl})\ \land\\
                                  &\neg(\forall_{i\in 1..n}\ .\ cv_i = \emptycast{T}{cl}) \end{aligned}
@@ -187,10 +183,6 @@ Syntax
 {\Gamma \iccts e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2} \\
  \Gamma \iccts e_2 : T_{11} \cap \ldots \cap T_{n1}}
 {\Gamma \iccts e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}}
-
-%\inferrule* [right=T-Cast]
-%{\Gamma \iccts e : T_1 \\ T_1 \sim T_2}
-%{\Gamma \iccts e : T_1 \Rightarrow^l T_2 : T_2}
 
 \inferrule* [right=T-IntersectionCast]
 {\Gamma \iccts e : T \\ \icts c_1 : T_1\ \ldots\ \icts c_n : T_n \\\\ initialType(c_1) \cap \ldots \cap initialType(c_n) = T}
@@ -346,15 +338,7 @@ Simulate\ casts\ on\ data\ types
 {is\ value\ (v_1 : cv_1 \cap \ldots \cap cv_n) \\ \exists i \in 1..n\ .\ isArrowCompatible(cv_i) \\\\ ((c_{11}, c_{12}, c_1^s), \ldots, (c_{m1}, c_{m2}, c_m^s)) = simulateArrow(cv_1, \ldots, cv_n)}
 {(v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 \gios\\ (v_1 : c_1^s \cap \ldots \cap c_m^s)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2}}\\
 
-Merge\ casts
-%
-%\inferrule* [right=E-MergeIC]
-%{is\ value\ v : cv_1 \cap \ldots \cap cv_n \\ v : c_1' \cap \ldots \cap c_m' = \mergeIC{v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2}}
-%{v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \gios v : c_1' \cap \ldots \cap c_m'}
-
-%\inferrule* [right=E-MergeCI]
-%{is\ value\ v : T_1 \Rightarrow^l T_2 \\ v : c_1' \cap \ldots \cap c_m' = \mergeCI{v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n}}
-%{v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \gios v : c_1' \cap \ldots \cap c_m'}\\
+Merge\ casts\\
 
 \inferrule* [right=E-MergeCasts]
 {is\ value\ (v : cv_1 \cap \ldots \cap cv_n) \\ v : c_1'' \cap \ldots \cap c_j'' = \mergeCasts{v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m'}}
@@ -486,22 +470,6 @@ Transition\ from\ cast\ values\ to\ values
 {}
 {getCastLabel(\emptycast{T}{cl}, c) = \assignCastLabel{c}{cl}}\\
 \end{mathpar}
-%
-%\framebox[1.2\width]{$\mergeIC{e} = e$}
-%\begin{mathpar}
-%\inferrule* []
-%{(c_1', \ldots, c_m') = filter\ (\lambda x\ .\ finalType\ x == T_1)\ (c_1, \ldots, c_n)\\
-% (cl_1, \ldots, cl_m) = map\ getCastLabel\ (c_1', \ldots, c_m')}
-%{\mergeIC{e : c_1 \cap \ldots \cap c_n : T_1 \Rightarrow^l T_2} = e : (c_1' : T_1 \Rightarrow^l T_2\ ^{cl_1}) \cap \ldots \cap (c_m' : T_1 \Rightarrow^l T_2\ ^{cl_m})}\\
-%\end{mathpar}
-%
-%\framebox[1.2\width]{$\mergeCI{e} = e$}
-%\begin{mathpar}
-%\inferrule* []
-%{(c_1', \ldots, c_m') = filter\ (\lambda x\ .\ initialType\ x == T_2)\ (c_1, \ldots, c_n)\\
-% (c_1'', \ldots, c_m'') = map\ (\lambda x\ .\ joinCasts\ x\ (\emptycast{T_1}{0} : T_1 \Rightarrow^l T_2\ ^0))\ (c_1', \ldots, c_m')}
-%{\mergeCI{e : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n} = e : c_1'' \cap \ldots \cap c_m''}\\
-%\end{mathpar}
 
 \framebox[1.2\width]{$\mergeCasts{e} = e$}
 \begin{mathpar}
@@ -577,74 +545,6 @@ Mediate\ the\ transition\ between\ the\ two\ disciplines
 \hrulefill
 \caption{Intersection Casts Semantics ($\icos$)}
 \label{intersection_casts_semantics}
-\end{figure}
-
-\begin{figure}[H]
-\framebox[1.2\width]{\erasee{e} = e} Erase identity casts
-\begin{mathpar}
-\inferrule* []
-{}
-{\erasee{x} = x}\\
-
-\inferrule* []
-{}
-{\erasee{\lambda x : T\ .\ e} = \lambda x : T\ .\ \erasee{e}}\\
-
-\inferrule* []
-{}
-{\erasee{e_1\ e_2} = \erasee{e_1}\ \erasee{e_2}}\\
-
-\inferrule* []
-{}
-{\erasee{n} = n}\\
-
-\inferrule* []
-{}
-{\erasee{\true} = \true}\\
-
-\inferrule* []
-{}
-{\erasee{\false} = \false}\\
-%
-%\inferrule* []
-%{}
-%{\erasee{e : T \Rightarrow^l T} = \erasee{e}}\\
-%
-%\inferrule* []
-%{}
-%{\erasee{e : T_1 \Rightarrow^l T_2} = \erasee{e} : T_1 \Rightarrow^l T_2}\\
-
-\inferrule* []
-{\erasec{c_1} = \emptycast{T_1}{cl_1}\ \ldots\ \erasec{c_n} = \emptycast{T_n}{cl_n}}
-{\erasee{e : c_1 \cap \ldots \cap c_n} = \erasee{e}}\\
-
-\inferrule* []
-{\erasec{c_1} = c_1'\ \ldots\ \erasec{c_n} = c_n'}
-{\erasee{e : c_1 \cap \ldots \cap c_n} = \erasee{e} : c_1' \cap \ldots \cap c_n'}\\
-
-\end{mathpar}
-
-\framebox[1.2\width]{\erasec{c} = c} Erase identity casts
-\begin{mathpar}
-\inferrule* []
-{}
-{\erasec{c : T \Rightarrow^l T\ ^{cl}} = \erasec{c}}\\
-
-\inferrule* []
-{}
-{\erasec{c : T_1 \Rightarrow^l T_2\ ^{cl}} = \erasec{c} : T_1 \Rightarrow^l T_2\ ^{cl}}\\
-
-\inferrule* []
-{}
-{\erasec{\blamecast{T_I}{T_F}{l}{cl}} = \blamecast{T_I}{T_F}{l}{cl}}\\
-
-\inferrule* []
-{}
-{\erasec{\emptycast{T}{cl}} = \emptycast{T}{cl}}
-\end{mathpar}
-\hrulefill
-\caption{Identity Cast Erasure}
-\label{identity_cast_erasure}
 \end{figure}
 
 \newpage
@@ -1048,14 +948,6 @@ Base case:
     Therefore $\Gamma \iccts v_1 : c^s_1 \cap \ldots \cap c^s_m : T_{11}' \rightarrow T_{12}' \cap \ldots \cap T_{m1}' \rightarrow T_{m2}'$ and $\Gamma \iccts v_2 : c_{11} \cap \ldots \cap c_{m1} : T_{11}' \cap \ldots \cap T_{m1}'$ and therefore $\Gamma \iccts (v_1 : c^s_1 \cap \ldots \cap c c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : T_{12}' \cap \ldots \cap T_{m2}'$.
     Therefore, $\Gamma \iccts (v_1 : c^s_1 \cap \ldots \cap c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2} : T_{12} \cap \ldots \cap T_{m2}$, such that $\{T_{12}, \ldots, T_{m2}\} \subset \{T_{12}, \ldots, T_{n2}\}$.
     By rule E-SimulateArrow, $(v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 \gios\\ (v_1 : c^s_1 \cap \ldots \cap c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2}$, therefore it is proved.
-%    \item Rule E-MergeIC.
-%    If $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 : T_2$ then $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : T_{11} \cap \ldots \cap T_{1n}$ and such that $\exists T_{1i}\ .\ T_{1i} = T_1$ and $\icts cv_1 : T_{11}$ and $I_1 = initialType(cv_1)$ and ... and $\icts cv_n : T_{1n}$ and $I_n = initialType(cv_n)$ and $\Gamma \iccts v : I_1 \cap \ldots \cap I_n$ and $m \leq n$.
-%    By the definition of mergeIC, $\icts c_1' : T_2$ and $initialType(c_1') : I_1$ and ... and $\icts c_m' : T_2$ and $initialType(c_m') : I_m$.
-%    As $\Gamma \iccts v : I_1 \cap \ldots \cap I_m$ and therefore $\Gamma \iccts v : c_1' \cap \ldots \cap c_m' : T_2 \cap \ldots \cap T_2$ and $T_2 \cap \ldots \cap T_2 = T_2$ and by rule E-MergeIC, $v : cv_1 \cap \ldots \cap cv_n : T_1 \Rightarrow^l T_2 \gios v : c_1' \cap \ldots \cap c_m'$, then it is proved.
-%    \item Rule E-MergeCI.
-%    If $\Gamma \iccts v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n : F_1 \cap \ldots \cap F_n$ then $\Gamma \iccts v : T_1 \Rightarrow T_2 : T_2$ and $\Gamma \iccts v : T_1$ and $\icts c_1 : F_1$ and $initialType(c_1) = T_2$ and ... and $\icts c_n : F_n$ and $initialType(c_n) = T_2$.
-%    By the definition of mergeCI, $mergeCI(v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n) = v : c_1' \cap \ldots \cap c_n'$, such that $\icts c_1' : F_1$ and $initialType(c_1') : T_1$ and ... and $\icts c_n' : F_n$ and $initialType(c_n') : T_1$.
-%    As $\Gamma \iccts v : c_1' \cap \ldots \cap c_n' : F_1 \cap \ldots \cap F_n$ and by rule E-MergeCI, $v : T_1 \Rightarrow^l T_2 : c_1 \cap \ldots \cap c_n \gios v : c_1' \cap \ldots \cap c_n'$, then it is proved.
     \item Rule E-MergeCasts.
     If $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' : F_1' \cap \ldots \cap F_m'$ then $\icts c_1' : F_1'$ and $initialType(c_1') = I_1'$ and ... and $\icts c_m' : F_m'$ and $initialType(c_m') = I_m'$ and $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : F_1 \cap \ldots \cap F_n$ and $\icts cv_1 : F_1$ and $initialType(cv_1) = I_1$ and ... and $\icts cv_n : F_n$ and $initialType(cv_n) = I_n$ and $\Gamma \iccts v : T_1 \cap \ldots \cap T_l$ such that either $T_1 \cap \ldots \cap T_l = I_1 \cap \ldots \cap I_n$ or $\{I_1, \ldots, I_n\} \subset \{T_1, \ldots, T_l\}$.
     There are two possibilities:
