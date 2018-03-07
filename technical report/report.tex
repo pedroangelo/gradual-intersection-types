@@ -19,30 +19,61 @@
 \begin{figure}[H]
 Syntax
 \begin{align*}
-&Types\ \begin{aligned}[t] I &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ I \rightarrow T\ |\ I \cap \ldots \cap I\\
-                          T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T \end{aligned}\\
-&Ground\ Types\ G\ ::=\ \Int\ |\ \Bool\ |\ \Dyn \rightarrow \Dyn\\
-&Casts\ \begin{aligned}[t] c\ ::=&\ c : T \Rightarrow^l T\ ^{cl}\ |\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}\\
-&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : I\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\\
-                                      |&\ e : c \cap \ldots \cap c\ |\ \blame{I}{l} \end{aligned}\\
-&Cast\ Values\ \begin{aligned}[t] cv\ ::=&\ cv1\ |\ cv2\\
-                                cv1\ ::=&\ \emptycast{T}{cl} : G \Rightarrow^l \Dyn\ ^{cl}\\
-                                       |&\ cv1 : G \Rightarrow^l \Dyn\ ^{cl}\\
-                                       |&\ \emptycast{T}{cl} : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}\\
-                                       |&\ cv1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}\\
-                                cv2\ ::=&\ \blamecast{T}{T}{l}{cl}\\
-                                       |&\ \emptycast{T}{cl} \end{aligned}\\
-&Values\ \begin{aligned}[t] v\ ::=&\ x\ |\ \lambda x : I\ .\ e\ |\ n\ |\ \true\ |\ \false\ |\ \blame{I}{l}\\
-                                 |&\ v : cv_1 \cap \ldots \cap cv_n\ such\ that\\
-                                 &\neg(\forall_{i\in 1..n}\ .\ cv_i = \blamecast{T}{T}{l}{cl})\ \land\\
-                                 &\neg(\forall_{i\in 1..n}\ .\ cv_i = \emptycast{T}{cl}) \end{aligned}
+&Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ T \rightarrow T\ |\ T \cap \ldots \cap T \end{aligned}\\
+&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false \end{aligned}
 \end{align*}
+
+\framebox[1.2\width]{$\Gamma \sits e : T$}\ Typing
+\begin{mathpar}
+\inferrule* [right=T-Var]
+{x : T \in \Gamma}
+{\Gamma \sits x : T}
+
+\inferrule* [right=T-Abs]
+{\Gamma, x : T_1 \cap \ldots \cap T_n \sits\ e : T}
+{\Gamma \sits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_1 \cap \ldots \cap T_n \rightarrow T}
+
+\inferrule* [right=T-Abs']
+{\Gamma, x : T_i \sits\ e : T}
+{\Gamma \sits \lambda x : T_1 \cap \ldots \cap T_n\ .\ e : T_i \rightarrow T}
+
+\inferrule* [right=T-App]
+{\Gamma \sits e_1 : T_1 \cap \ldots \cap T_n \rightarrow T \\
+ \Gamma \sits e_2 : T_1 \cap \ldots \cap T_n}
+{\Gamma \sits e_1\ e_2 : T}
+
+\inferrule* [right=T-Gen]
+{\Gamma \sits e : T_1\ \ldots\ \Gamma \sits e : T_n}
+{\Gamma \sits e : T_1 \cap \ldots \cap T_n}
+
+\inferrule* [right=T-Inst]
+{\Gamma \sits e : T_1 \cap \ldots \cap T_n}
+{\Gamma \sits e : T_i}
+
+\inferrule* [right=T-Int]
+{ }
+{\Gamma \sits n : \Int}
+
+\inferrule* [right=T-True]
+{ }
+{\Gamma \sits \true : \Bool}
+
+\inferrule* [right=T-False]
+{ }
+{\Gamma \sits \false : \Bool}
+\end{mathpar}
 \hrulefill
-\caption{Gradual Intersection System}
-\label{intersection_syntax}
+\caption{Static Intersection Type System ($\sits$)}
+\label{static_intersection_type_system}
 \end{figure}
 
 \begin{figure}[H]
+Syntax
+\begin{align*}
+&Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T\ |\ T \cap \ldots \cap T \end{aligned}\\
+&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false \end{aligned}
+\end{align*}
+
 \framebox[1.2\width]{$\Gamma \gits e : T$}\ Typing
 \begin{mathpar}
 \inferrule* [right=T-Var]
@@ -106,14 +137,6 @@ Syntax
 \inferrule* []
 {T_1 \sim T'_1\ \ldots\ T_n \sim T'_n}
 {T_1 \cap \ldots \cap T_n \sim T'_1 \cap \ldots \cap T'_n}
-
-\inferrule* []
-{T \sim T_1\ \ldots\ T \sim T_n}
-{T \sim T_1 \cap \ldots \cap T_n}
-
-\inferrule* []
-{T_1 \sim T\ \ldots\ T_n \sim T}
-{T_1 \cap \ldots \cap T_n \sim T}
 \end{mathpar}
 
 \framebox[1.2\width]{$T \rhd T$}\ Pattern Matching
@@ -128,7 +151,7 @@ Syntax
 \end{mathpar}
 \hrulefill
 \caption{Gradual Intersection Type System ($\gits$)}
-\label{intersection_type_system}
+\label{gradual_intersection_type_system}
 \end{figure}
 
 \begin{figure}[H]
@@ -230,11 +253,44 @@ Syntax
 \end{figure}
 
 \begin{figure}[H]
+Syntax
+\begin{align*}
+&Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T \end{aligned}\\
+&Casts\ \begin{aligned}[t] c\ ::=&\ c : T \Rightarrow^l T\ ^{cl}\ |\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}
+\end{align*}
+
+\framebox[1.2\width]{$\icts c : T$}\ Typing
+\begin{mathpar}
+
+\inferrule* [right=T-SingleIC]
+{\icts c : T_1 \\ T_1 \sim T_2}
+{\icts (c : T_1 \Rightarrow^l T_2\ ^{cl}) : T_2}
+
+\inferrule* [right=T-BlameIC]
+{ }
+{\icts \blamecast{T_I}{T_F}{l}{cl} : T_F}
+
+\inferrule* [right=T-EmptyIC]
+{ }
+{\icts \emptycast{T}{cl} : T}
+\end{mathpar}
+\hrulefill
+\caption{Intersection Casts Type System ($\icts$)}
+\label{intersection_casts_type_system}
+\end{figure}
+
+\begin{figure}[H]
+Syntax
+\begin{align*}
+&Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T\ |\ T \cap \ldots \cap T \end{aligned}\\
+&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\ |\ e : c \cap \ldots \cap c\ |\ \blame{T}{l} \end{aligned}
+\end{align*}
+
 \framebox[1.2\width]{$\Gamma \iccts e : T$}\ Typing
 \begin{mathpar}
 \inferrule* []
 {}
-{static\ type\ system\ ($$\Gamma \sits e : T$$)\ rules\ and}\\
+{Static\ Intersection\ Type\ System\ ($\sits$)\ rules\ and}\\
 
 \inferrule* [right=T-App']
 {\Gamma \iccts e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2} \\
@@ -250,6 +306,7 @@ Syntax
 {\Gamma \iccts \blame{T}{l} : T}
 \end{mathpar}
 
+\begin{minipage}[t]{.49\textwidth}
 \framebox[1.2\width]{initialType(c) = T}
 \begin{mathpar}
 \inferrule* []
@@ -264,7 +321,8 @@ Syntax
 {}
 {initialType(\blamecast{T_I}{T_F}{l}{cl}) = T_I}
 \end{mathpar}
-
+\end{minipage}
+\begin{minipage}[t]{.49\textwidth}
 \framebox[1.2\width]{finalType(c) = T}
 \begin{mathpar}
 \inferrule* []
@@ -279,6 +337,9 @@ Syntax
 {}
 {finalType(\blamecast{T_I}{T_F}{l}{cl}) = T_F}
 \end{mathpar}
+\end{minipage}
+\newline
+
 \hrulefill
 \caption{Intersection Cast Calculus ($\iccts$)}
 \label{intersection_cast_calculus}
@@ -300,7 +361,7 @@ Syntax
 {\Gamma \iccts (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e) \leadsto (\lambda x : T_1 \cap \ldots \cap T_n\ .\ e') : T_i \rightarrow T}
 
 \inferrule* [right=C-App]
-{\Gamma \iccts e_1 \leadsto e_1' : PM \\ PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T \\ \Gamma \iccts e_2 \leadsto e_2' : T'_1 \cap \ldots \cap T'_n \\ T'_1 \cap \ldots \cap T'_n \sim T_1 \cap \ldots \cap T_n \\ instances(PM) = S_1 \\ instances(T_1 \cap \ldots \cap T_n \rightarrow T) = S_2 \\ instances(T'_1 \cap \ldots \cap T'_n) = S_3 \\ instances(T_1 \cap \ldots \cap T_n) = S_4 \\ S_1,\ S_2,\ e_1' \hookrightarrow e_1'' \\ S_3,\ S_4,\ e_2' \hookrightarrow e_2''}
+{\Gamma \iccts e_1 \leadsto e_1' : PM \\ PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T \\ \Gamma \iccts e_2 \leadsto e_2' : T'_1 \cap \ldots \cap T'_n \\ T'_1 \cap \ldots \cap T'_n \sim T_1 \cap \ldots \cap T_n \\ PM \trianglelefteq S_1 \\ T_1 \cap \ldots \cap T_n \rightarrow T \trianglelefteq S_2 \\ T'_1 \cap \ldots \cap T'_n \trianglelefteq S_3 \\ T_1 \cap \ldots \cap T_n \trianglelefteq S_4 \\ S_1,\ S_2,\ e_1' \hookrightarrow e_1'' \\ S_3,\ S_4,\ e_2' \hookrightarrow e_2''}
 {\Gamma \iccts e_1\ e_2 \leadsto e_1''\ e_2'' : T}
 
 \inferrule* [right=C-Gen]
@@ -324,27 +385,27 @@ Syntax
 {\Gamma \iccts \false \leadsto \false : \Bool}
 \end{mathpar}
 
-\framebox[1.2\width]{instances(T) = \{T\}}
+\framebox[1.2\width]{T $\trianglelefteq$ \{T\}}\ Instances
 \begin{mathpar}
 \inferrule* []
 {}
-{instances(\Int) = \{\Int\}}\\
+{\Int \trianglelefteq \{\Int\}}
 
 \inferrule* []
 {}
-{instances(\Bool) = \{\Bool\}}\\
+{\Bool \trianglelefteq \{\Bool\}}
 
 \inferrule* []
 {}
-{instances(\Dyn) = \{\Dyn\}}\\
+{\Dyn \trianglelefteq \{\Dyn\}}\\
 
 \inferrule* []
-{instances(T_1) = \{T_{11}, \ldots, T_{1n}\}}
-{instances(T_1 \rightarrow T_2) = \{T_{11} \rightarrow T_2, \ldots, T_{1n} \rightarrow T_2\}}\\
+{T_1 \trianglelefteq \{T_{11}, \ldots, T_{1n}\}}
+{T_1 \rightarrow T_2 \trianglelefteq \{T_{11} \rightarrow T_2, \ldots, T_{1n} \rightarrow T_2\}}
 
 \inferrule* []
-{instances(T_1) = \{T_{11}, \ldots, T_{1m}\} \ldots instances(T_n) = \{T_{n1}, \ldots, T_{nj}\}}
-{instances(T_1 \cap \ldots \cap T_n) = \{T_{11}, \ldots, T_{1m}, \ldots, T_{n1}, \ldots, T_{nj}\}}
+{T_1 \trianglelefteq \{T_{11}, \ldots, T_{1m}\} \ldots T_n \trianglelefteq \{T_{n1}, \ldots, T_{nj}\}}
+{T_1 \cap \ldots \cap T_n \trianglelefteq \{T_{11}, \ldots, T_{1m}, \ldots, T_{n1}, \ldots, T_{nj}\}}
 \end{mathpar}
 
 \framebox[1.2\width]{$S,\ S,\ e \hookrightarrow e$}
@@ -371,6 +432,69 @@ Syntax
 \end{figure}
 
 \begin{figure}[H]
+Syntax
+\begin{align*}
+&Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T \end{aligned}\\
+&Ground\ Types\ G\ ::=\ \Int\ |\ \Bool\ |\ \Dyn \rightarrow \Dyn\\
+&Casts\ \begin{aligned}[t] c\ ::=&\ c : T \Rightarrow^l T\ ^{cl}\ |\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}\\
+&Cast\ Values\ \begin{aligned}[t] cv\ ::=&\ cv1\ |\ cv2\\
+                                cv1\ ::=&\ \emptycast{T}{cl} : G \Rightarrow^l \Dyn\ ^{cl}\ |\ \emptycast{T}{cl} : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}\\
+                                       |&\ cv1 : G \Rightarrow^l \Dyn\ ^{cl}\ |\ cv1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}\\
+                                cv2\ ::=&\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}\\
+\end{align*}
+
+\framebox[1.2\width]{$c \icos c$}\ Evaluation
+\begin{mathpar}
+Push\ blame\ to\ top\ level
+
+\inferrule* [right=E-PushBlameIC]
+{ }
+{\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}}
+
+Evaluate\ inside\ casts\\
+
+\inferrule* [right=E-EvaluateIC]
+{\neg(is\ cast\ value\ c) \\ c \icos c'}
+{c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}}\\
+
+Detect\ success\ or\ failure\ of\ casts\\
+
+\inferrule* [right=E-IdentityIC]
+{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c}
+{c : T \Rightarrow^l T\ ^{cl} \icos c}
+
+\inferrule* [right=E-SucceedIC]
+{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c}
+{c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c}
+
+\inferrule* [right=E-FailIC]
+{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ \neg(same\ ground\ G_1\ G_2) \\ initialType(c) = T_I}
+{c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}}\\
+
+Mediate\ the\ transition\ between\ the\ two\ disciplines
+
+\inferrule* [right=E-GroundIC]
+{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
+{c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}}
+
+\inferrule* [right=E-ExpandIC]
+{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
+{c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}}
+\end{mathpar}
+\hrulefill
+\caption{Intersection Casts Operational Semantics ($\icos$)}
+\label{intersection_casts_operational_semantics}
+\end{figure}
+
+\begin{figure}[H]
+Syntax
+\begin{align*}
+&Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T\ |\ T \cap \ldots \cap T \end{aligned}\\
+&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\ |\ e : c \cap \ldots \cap c\ |\ \blame{T}{l} \end{aligned}\\
+&Values\ \begin{aligned}[t] v\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ n\ |\ \true\ |\ \false\ |\ \blame{T}{l}\ |\ v : cv_1 \cap \ldots \cap cv_n\ such\ that\\
+                                 &\neg(\forall_{i\in 1..n}\ .\ cv_i = \blamecast{T}{T}{l}{cl})\ \land\ \neg(\forall_{i\in 1..n}\ .\ cv_i = \emptycast{T}{cl}) \end{aligned}
+\end{align*}
+
 \framebox[1.2\width]{$e \gios e$}\ Evaluation
 \begin{mathpar}
 Push\ blame\ to\ top\ level\\
@@ -405,7 +529,7 @@ Evaluate\ expressions\\
 {e \gios e'}
 {e : c_1 \cap \ldots \cap c_n \gios e' : c_1 \cap \ldots \cap c_n}\\
 
-Simulate\ casts\ on\ data\ types
+Simulate\ casts\ on\ data\ types\\
 
 \inferrule* [right=E-SimulateArrow]
 {is\ value\ (v_1 : cv_1 \cap \ldots \cap cv_n) \\ \exists i \in 1..n\ .\ isArrowCompatible(cv_i) \\\\ ((c_{11}, c_{12}, c_1^s), \ldots, (c_{m1}, c_{m2}, c_m^s)) = simulateArrow(cv_1, \ldots, cv_n)}
@@ -417,13 +541,13 @@ Merge\ casts\\
 {is\ value\ (v : cv_1 \cap \ldots \cap cv_n) \\ v : c_1'' \cap \ldots \cap c_j'' = \mergeCasts{v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m'}}
 {v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \gios v : c_1'' \cap \ldots \cap c_j''}\\
 
-Evaluate\ intersection\ casts
+Evaluate\ intersection\ casts\\
 
 \inferrule* [right=E-EvaluateCasts]
 {\neg(\forall i \in 1..n\ .\ is\ cast\ value\ c_i) \\ c_1 \icos cv_1\ \ldots\ c_n \icos cv_n}
 {v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n}\\
 
-Transition\ from\ cast\ values\ to\ values
+Transition\ from\ cast\ values\ to\ values\\
 
 \inferrule* [right=E-PropagateBlame]
 { }
@@ -553,71 +677,6 @@ Transition\ from\ cast\ values\ to\ values
 \hrulefill
 \caption{Definitions for auxiliary semantic functions}
 \label{definitions2}
-\end{figure}
-
-\begin{figure}[H]
-\framebox[1.2\width]{$\icts c : T$}\ Typing
-\begin{mathpar}
-
-\inferrule* [right=T-SingleIC]
-{\icts c : T_1 \\ T_1 \sim T_2}
-{\icts (c : T_1 \Rightarrow^l T_2\ ^{cl}) : T_2}
-
-\inferrule* [right=T-BlameIC]
-{ }
-{\icts \blamecast{T_I}{T_F}{l}{cl} : T_F}
-
-\inferrule* [right=T-EmptyIC]
-{ }
-{\icts \emptycast{T}{cl} : T}
-\end{mathpar}
-\hrulefill
-\caption{Intersection Casts Type System ($\icts$)}
-\label{intersection_casts_type_system}
-\end{figure}
-
-\begin{figure}[H]
-\framebox[1.2\width]{$c \icos c$}\ Evaluation
-\begin{mathpar}
-Push\ blame\ to\ top\ level
-
-\inferrule* [right=E-PushBlameIC]
-{ }
-{\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}}
-
-Evaluate\ inside\ casts\\
-
-\inferrule* [right=E-EvaluateIC]
-{\neg(is\ cast\ value\ c) \\ c \icos c'}
-{c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}}\\
-
-Detect\ success\ or\ failure\ of\ casts\\
-
-\inferrule* [right=E-IdentityIC]
-{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c}
-{c : T \Rightarrow^l T\ ^{cl} \icos c}
-
-\inferrule* [right=E-SucceedIC]
-{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c}
-{c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c}
-
-\inferrule* [right=E-FailIC]
-{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ \neg(same\ ground\ G_1\ G_2) \\ initialType(c) = T_I}
-{c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}}\\
-
-Mediate\ the\ transition\ between\ the\ two\ disciplines
-
-\inferrule* [right=E-GroundIC]
-{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
-{c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}}
-
-\inferrule* [right=E-ExpandIC]
-{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
-{c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}}
-\end{mathpar}
-\hrulefill
-\caption{Intersection Casts Operational Semantics ($\icos$)}
-\label{intersection_casts_operational_semantics}
 \end{figure}
 
 \newpage
@@ -832,7 +891,7 @@ Induction step:
     If $\Gamma \gits e_1\ e_2 : T$ then by rule T-App, $\Gamma \gits e_1 : PM$, $PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T$, $\Gamma \gits e_2 : T_1' \cap \ldots \cap T_n'$ and $T_1' \cap \ldots \cap T_n' \sim T_1 \cap \ldots \cap T_n$.
     By the induction hypothesis, $\Gamma \iccts e_1 \leadsto e_1' : PM$ and $\Gamma \iccts e_1' : PM$, and $\Gamma \iccts e_2 \leadsto e_2' : T_1' \cap \ldots \cap T_n'$ and $\Gamma \iccts e_2' : T_1' \cap \ldots \cap T_n'$.
     Therefore, by rule C-App, $\Gamma \iccts e_1\ e_2 \leadsto e_1''\ e_2'' : T$.
-    By the definition of $instances$ and $S,\ S,\ e \hookrightarrow e$, by rule T-IntersectionCast, $\Gamma \iccts e_1'' : T_1 \rightarrow T \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2'' : T_1 \cap \ldots \cap T_n$.
+    By the definition of $\trianglelefteq$ and $S,\ S,\ e \hookrightarrow e$, by rule T-IntersectionCast, $\Gamma \iccts e_1'' : T_1 \rightarrow T \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2'' : T_1 \cap \ldots \cap T_n$.
     By rule T-App', $\Gamma \iccts e_1''\ e_2'' : T \cap \ldots \cap T$ and then by the properties of intersection types (modulo repetitions), $\Gamma \iccts e_1''\ e_2'' : T$.
     \item Rule T-Gen.
     If $\Gamma \gits e : T_1 \cap \ldots \cap T_n$ then by rule T-Gen, $\Gamma \gits e : T_1$ and ... and $\Gamma \gits e : T_n$.
@@ -873,10 +932,10 @@ Induction step:
     By the induction hypothesis, $e_1' \sqsubseteq e_2'$ and $T_1 \sqsubseteq T_2$.
     Therefore, by the definition of $\sqsubseteq$, $\lambda x : T_{11} \cap \ldots \cap T_{1n}\ .\ e_1' \sqsubseteq \lambda x : T_{21} \cap \ldots \cap T_{2n}\ .\ e_2'$ and $T_{1i} \rightarrow T_1 \sqsubseteq T_{2i} \rightarrow T_2$.
     \item Rule C-App.
-    If $\Gamma \iccts e_{11}\ e_{12} \leadsto e_{11}''\ e_{12}'' : T_1$ and $\Gamma \iccts e_{21}\ e_{22} \leadsto e_{21}''\ e_{22}'' : T_2$ and $e_{11}\ e_{12} \sqsubseteq e_{21}\ e_{22}$ then by rule C-App, $\Gamma \iccts e_{11} \leadsto e_{11}' : PM_1$ and $PM_1 \rhd T_{11} \cap \ldots \cap T_{1n} \rightarrow T_1$ and $\Gamma \iccts e_{12} \leadsto e_{12}' : T_{11}' \cap \ldots \cap T_{1n}'$ and $T_{11}' \cap \ldots \cap T_{1n}' \sim T_{11} \cap \ldots \cap T_{1n}$ and $instances(PM_1) = S_{11}$ and $instances(T_{11} \cap \ldots \cap T_{1n} \rightarrow T_1) = S_{12}$ and $instances(T_{11}' \cap \ldots \cap T_{1n}') = S_{13}$ and $instances(T_{11} \cap \ldots \cap T_{1n}) = S_{14}$ and $S_{11},\ S_{12},\ e_{11}' \hookrightarrow e_{11}''$ and $S_{13},\ S_{14},\ e_{12}' \hookrightarrow e_{12}''$ and $\Gamma \iccts e_{21} \leadsto e_{21}' : PM_2$ and $PM_2 \rhd T_{21} \cap \ldots \cap T_{2n} \rightarrow T_2$ and $\Gamma \iccts e_{22} \leadsto e_{22}' : T_{21}' \cap \ldots \cap T_{2n}'$ and $T_{21}' \cap \ldots \cap T_{2n}' \sim T_{21} \cap \ldots \cap T_{2n}$ and $instances(PM_2) = S_{21}$ and $instances(T_{21} \cap \ldots \cap T_{2n} \rightarrow T_2) = S_{22}$ and $instances(T_{21}' \cap \ldots \cap T_{2n}') = S_{23}$ and $instances(T_{21} \cap \ldots \cap T_{2n}) = S_{24}$ and $S_{21},\ S_{22},\ e_{21}' \hookrightarrow e_{21}''$ and $S_{23},\ S_{24},\ e_{22}' \hookrightarrow e_{22}''$.
+    If $\Gamma \iccts e_{11}\ e_{12} \leadsto e_{11}''\ e_{12}'' : T_1$ and $\Gamma \iccts e_{21}\ e_{22} \leadsto e_{21}''\ e_{22}'' : T_2$ and $e_{11}\ e_{12} \sqsubseteq e_{21}\ e_{22}$ then by rule C-App, $\Gamma \iccts e_{11} \leadsto e_{11}' : PM_1$ and $PM_1 \rhd T_{11} \cap \ldots \cap T_{1n} \rightarrow T_1$ and $\Gamma \iccts e_{12} \leadsto e_{12}' : T_{11}' \cap \ldots \cap T_{1n}'$ and $T_{11}' \cap \ldots \cap T_{1n}' \sim T_{11} \cap \ldots \cap T_{1n}$ and $PM_1 \trianglelefteq S_{11}$ and $T_{11} \cap \ldots \cap T_{1n} \rightarrow T_1 \trianglelefteq S_{12}$ and $T_{11}' \cap \ldots \cap T_{1n}' \trianglelefteq S_{13}$ and $T_{11} \cap \ldots \cap T_{1n} \trianglelefteq S_{14}$ and $S_{11},\ S_{12},\ e_{11}' \hookrightarrow e_{11}''$ and $S_{13},\ S_{14},\ e_{12}' \hookrightarrow e_{12}''$ and $\Gamma \iccts e_{21} \leadsto e_{21}' : PM_2$ and $PM_2 \rhd T_{21} \cap \ldots \cap T_{2n} \rightarrow T_2$ and $\Gamma \iccts e_{22} \leadsto e_{22}' : T_{21}' \cap \ldots \cap T_{2n}'$ and $T_{21}' \cap \ldots \cap T_{2n}' \sim T_{21} \cap \ldots \cap T_{2n}$ and $PM_2 \trianglelefteq S_{21}$ and $T_{21} \cap \ldots \cap T_{2n} \rightarrow T_2 \trianglelefteq S_{22}$ and $T_{21}' \cap \ldots \cap T_{2n}' \trianglelefteq S_{23}$ and $T_{21} \cap \ldots \cap T_{2n} \trianglelefteq S_{24}$ and $S_{21},\ S_{22},\ e_{21}' \hookrightarrow e_{21}''$ and $S_{23},\ S_{24},\ e_{22}' \hookrightarrow e_{22}''$.
     As, by the definition of $\sqsubseteq$, $e_{11} \sqsubseteq e_{21}$ and $e_{12} \sqsubseteq e_{22}$ then by the induction hypothesis, $e_{11}' \sqsubseteq e_{21}'$ and $PM_1 \sqsubseteq PM_2$ and $e_{12}' \sqsubseteq e_{22}'$ and $T_{11}' \cap \ldots \cap T_{1n}' \sqsubseteq T_{21}' \cap \ldots \cap T_{2n}'$.
     By the definition of $\rhd$, we have that $PM_1 = T_{11} \cap \ldots \cap T_{1n} \rightarrow T_1$ and $PM_2 = T_{21} \cap \ldots \cap T_{2n} \rightarrow T_2$ and so $T_{11} \cap \ldots \cap T_{1n} \rightarrow T_1 \sqsubseteq T_{21} \cap \ldots \cap T_{2n} \rightarrow T_2$ and therefore by the definition of $\sqsubseteq$, $T_1 \sqsubseteq T_2$.
-    As by the definition of $instances$, $S,\ S,\ e \hookrightarrow e$ and $\sqsubseteq$, $e_{11}'' \sqsubseteq e_{21}''$ and $e_{12}'' \sqsubseteq e_{22}''$, then by the definition of $\sqsubseteq$, $e_{11}''\ e_{12}'' \sqsubseteq e_{21}''\ e_{22}''$ and $T_1 \sqsubseteq T_2$.
+    As by the definition of $\trianglelefteq$, $S,\ S,\ e \hookrightarrow e$ and $\sqsubseteq$, $e_{11}'' \sqsubseteq e_{21}''$ and $e_{12}'' \sqsubseteq e_{22}''$, then by the definition of $\sqsubseteq$, $e_{11}''\ e_{12}'' \sqsubseteq e_{21}''\ e_{22}''$ and $T_1 \sqsubseteq T_2$.
     \item Rule C-Gen.
     If $\Gamma \iccts e_1 \leadsto e_1' : T_{11} \cap \ldots \cap T_{1n}$ and $\Gamma \iccts e_2 \leadsto e_2' : T_{21} \cap \ldots \cap T_{2n}$ and $e_1 \sqsubseteq e_2$ then by rule C-Gen, $\Gamma \iccts e_1 \leadsto e_1' : T_{11}$ and ... and $\Gamma \iccts e_1 \leadsto e_1' : T_{1n}$ and $\Gamma \iccts e_2 \leadsto e_2' : T_{21}$ and ... and $\Gamma \iccts e_2 \leadsto e_2' : T_{2n}$.
     By the induction hypothesis, $e_1' \sqsubseteq e_2'$ and $T_{11} \sqsubseteq T_{21}$ and ... and $T_{1n} \sqsubseteq T_{2n}$, and therefore by the definition of $\sqsubseteq$, $T_{11} \cap \ldots \cap T_{1n} \sqsubseteq T_{21} \cap \ldots \cap T_{2n}$.
