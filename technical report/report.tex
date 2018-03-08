@@ -120,7 +120,7 @@ Syntax
 \begin{mathpar}
 \inferrule* []
 {}
-{B \sim B}
+{T \sim T}
 
 \inferrule* []
 {}
@@ -163,7 +163,7 @@ Syntax
 
 \inferrule* []
 {}
-{B \sqsubseteq B}
+{T \sqsubseteq T}
 
 \inferrule* []
 {T_1 \sqsubseteq T_3 \\ T_2 \sqsubseteq T_4}
@@ -298,7 +298,7 @@ Syntax
 {\Gamma \iccts e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}}
 
 \inferrule* [right=T-IntersectionCast]
-{\Gamma \iccts e : T \\ \icts c_1 : T_1\ \ldots\ \icts c_n : T_n \\\\ initialType(c_1) \cap \ldots \cap initialType(c_n) = T}
+{\Gamma \iccts e : T_1' \cap \ldots \cap T_n' \\ \icts c_1 : T_1\ \ldots\ \icts c_n : T_n \\\\  T_1' \cap \ldots \cap T_n' = initialType(c_1) \cap \ldots \cap initialType(c_n)}
 {\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n}
 
 \inferrule* [right=T-Blame]
@@ -513,6 +513,10 @@ Push\ blame\ to\ top\ level\\
 
 Evaluate\ expressions\\
 
+\inferrule* [right=E-AppAbs]
+{ }
+{(\lambda x : T_1 \cap \ldots \cap T_n\ .\ e)\ v \gios\ [x \mapsto v] e}
+
 \inferrule* [right=E-App1]
 {e_1 \gios e_1'}
 {e_1\ e_2 \gios\ e_1'\ e_2}
@@ -520,10 +524,6 @@ Evaluate\ expressions\\
 \inferrule* [right=E-App2]
 {e_2 \gios e_2'}
 {v_1\ e_2 \gios\ v_1\ e_2'}
-
-\inferrule* [right=E-AppAbs]
-{ }
-{(\lambda x : T_1 \cap \ldots \cap T_n\ .\ e)\ v \gios\ [x \mapsto v] e}
 
 \inferrule* [right=E-Evaluate]
 {e \gios e'}
@@ -1124,7 +1124,7 @@ Base cases:
     By rule E-SimulateArrow, $(v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 \gios\\ (v_1 : c^s_1 \cap \ldots \cap c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2}$, therefore it is proved.
     \item Rule E-MergeCasts.
     If $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' : F_1' \cap \ldots \cap F_m'$ then by rule T-IntersectionCasts, $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : F_1 \cap \ldots \cap F_n$ and $\icts c_1' : F_1'$ and ... and $\icts c_m' : F_m'$ and $initialType(c_1') = I_1'$ and $initialType(c_m') = I_m'$ such that $\{I_1', \ldots, I_m'\} \subseteq \{F_1, \ldots, F_n\}$ and $I_1' \cap \ldots \cap I_m' = F_1 \cap \ldots \cap F_m$ and $m \leq n$.
-    As $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : F_1 \cap \ldots \cap F_n$ then by rule T-IntersectionCast, $\Gamma \iccts v : T_1 \cap \ldots \cap T_l$ and $\icts cv_1 : F_1$ and ... and $\icts cv_n : F_n$ and $initialType(cv_1) : I_1$ and ... and $initialType(cv_n) : I_n$ such that $\{I_1, \ldots, I_n\} \subseteq \{T_1, \ldots, T_l\}$ and $I_1 \cap \ldots \cap I_n \subseteq T_1 \cap \ldots \cap T_n$ and $n \leq l$.
+    As $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : F_1 \cap \ldots \cap F_n$ then by rule T-IntersectionCast, $\Gamma \iccts v : T_1 \cap \ldots \cap T_l$ and $\icts cv_1 : F_1$ and ... and $\icts cv_n : F_n$ and $initialType(cv_1) : I_1$ and ... and $initialType(cv_n) : I_n$ such that $\{I_1, \ldots, I_n\} \subseteq \{T_1, \ldots, T_l\}$ and $I_1 \cap \ldots \cap I_n = T_1 \cap \ldots \cap T_n$ and $n \leq l$.
     By the definition of mergeCasts, $\icts c_1'' : F_1''$ and ... and $\icts c_j'' : F_j''$ and $initialType(c_1'') = I_1''$ and ... and $initialType(c_j'') = I_j''$ such that $\{I_1'', \ldots, I_j''\} \subseteq \{T_1, \ldots, T_l\}$ and $I_1'' \cap \ldots \cap I_j'' = T_1 \cap \ldots \cap T_j$ and $\{F_1'', \ldots, F_j''\} \subseteq \{F_1', \ldots, F_m'\}$ and $F_1'' \cap \ldots \cap F_j'' = F_1' \cap \ldots \cap F_j'$ and $j \leq l$ and $j \leq m$.
     By rule T-Gen and T-Inst, $\Gamma \iccts v : T_1 \cap \ldots \cap T_j$ and therefore by rule T-IntersectionCast, $\Gamma \iccts v : c_1'' \cap \ldots \cap c_j'' : F_1'' \cap \ldots \cap F_j''$.
     By rule E-MergeCasts, $v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \gios v : c_1'' \cap \ldots \cap c_j''$.
@@ -1160,7 +1160,7 @@ Induction step:
         By rule E-App2, $e_2 \icos e_2'$, so by the induction hypothesis, $\Gamma \iccts e_2' : T_{11} \cap \ldots \cap T_{n1}$.
         As by rule E-App1, $v_1\ e_2 \icos v_1\ e_2'$, then by rule T-App', $\Gamma \iccts v_1\ e_2' : T_{12} \cap \dots \cap T_{n2}$..
     \end{itemize}
-    \item Rule E-Evaluate. If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$, then by rule T-IntersectionCast, $\Gamma \iccts e : T$, $\icts c_1 : T_1$ and ... and $\icts c_n : T_n$ and $initialType(c_1) \cap \ldots \cap initialType(c_n) = T$.
+    \item Rule E-Evaluate. If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$, then by rule T-IntersectionCast, $\Gamma \iccts e : T_1' \cap \ldots \cap T_n'$, $\icts c_1 : T_1$ and ... and $\icts c_n : T_n$ and $initialType(c_1) \cap \ldots \cap initialType(c_n) = T_1' \cap \ldots \cap T_n'$.
     By rule E-Evaluate, $e \icos e'$, so by the induction hypothesis, $\Gamma \iccts e' : T$.
     As by rule E-Evaluate, $e : c_1 \cap \ldots \cap c_n \icos e' : c_1 \cap \ldots \cap c_n$, then by rule T-IntersectionCast, $\Gamma \iccts e' : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$.
 \end{itemize}
@@ -1212,9 +1212,9 @@ Induction step:
     If $e_1$ is a value and $e_2$ is not a value, then by rule E-App2, $v_1\ e_2 \gios v_1\ e_2'$.
     If both $e_1$ and $e_2$ are values then $e_1$ must be an abstraction $(\lambda x : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2} .\ e)$, and by rule E-AppAbs $(\lambda x : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}\ .\ e)\ v_2 \gios [x \mapsto v_2]e$.
     \item Rule T-IntersectionCast.
-    If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then by rule T-IntersectionCast, $\Gamma \iccts e : T$.
+    If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then by rule T-IntersectionCast, $\Gamma \iccts e : T_1' \cap \ldots \cap T_n'$.
     By the induction hypothesis, $e$ is either a value, or there is an $e'$ such that $e \gios e'$.
-    If $e$ is a value, then either by rule E-EvaluateCasts, $v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n$, or by rule E-PushBlameCast, $\blame{T}{l} : c_1 \cap \ldots \cap c_n \gios \blame{T_1 \cap \ldots \cap T_n}{l}$.
+    If $e$ is a value, then either by rule E-EvaluateCasts, $v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n$, or by rule E-PushBlameCast, $\blame{T_1' \cap \ldots \cap T_n'}{l} : c_1 \cap \ldots \cap c_n \gios \blame{T_1 \cap \ldots \cap T_n}{l}$.
     If there is an $e'$ such that $e \gios e'$, then by rule E-Evaluate, $e : c_1 \cap \ldots \cap c_n \gios e' : c_1 \cap \ldots \cap c_n$.
     \item Rule T-Blame.
     If $\Gamma \iccts \blame{T}{l} : T$ then $\blame{T}{l}$ is a value.
