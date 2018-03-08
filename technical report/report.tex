@@ -274,37 +274,6 @@ Syntax
 { }
 {\icts \emptycast{T}{cl} : T}
 \end{mathpar}
-\hrulefill
-\caption{Intersection Casts Type System ($\icts$)}
-\label{intersection_casts_type_system}
-\end{figure}
-
-\begin{figure}[H]
-Syntax
-\begin{align*}
-&Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T\ |\ T \cap \ldots \cap T \end{aligned}\\
-&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\ |\ e : c \cap \ldots \cap c\ |\ \blame{T}{l} \end{aligned}
-\end{align*}
-
-\framebox[1.2\width]{$\Gamma \iccts e : T$}\ Typing
-\begin{mathpar}
-\inferrule* []
-{}
-{Static\ Intersection\ Type\ System\ ($\sits$)\ rules\ and}\\
-
-\inferrule* [right=T-App']
-{\Gamma \iccts e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2} \\
- \Gamma \iccts e_2 : T_{11} \cap \ldots \cap T_{n1}}
-{\Gamma \iccts e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}}
-
-\inferrule* [right=T-IntersectionCast]
-{\Gamma \iccts e : T_1' \cap \ldots \cap T_n' \\ \icts c_1 : T_1\ \ldots\ \icts c_n : T_n \\\\  T_1' \cap \ldots \cap T_n' = initialType(c_1) \cap \ldots \cap initialType(c_n)}
-{\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n}
-
-\inferrule* [right=T-Blame]
-{ }
-{\Gamma \iccts \blame{T}{l} : T}
-\end{mathpar}
 
 \begin{minipage}[t]{.49\textwidth}
 \framebox[1.2\width]{initialType(c) = T}
@@ -340,6 +309,37 @@ Syntax
 \end{minipage}
 \newline
 
+\hrulefill
+\caption{Intersection Casts Type System ($\icts$)}
+\label{intersection_casts_type_system}
+\end{figure}
+
+\begin{figure}[H]
+Syntax
+\begin{align*}
+&Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T\ |\ T \cap \ldots \cap T \end{aligned}\\
+&Expressions\ \begin{aligned}[t] e\ ::=&\ x\ |\ \lambda x : T\ .\ e\ |\ e\ e\ |\ n\ |\ \true\ |\ \false\ |\ e : c \cap \ldots \cap c\ |\ \blame{T}{l} \end{aligned}
+\end{align*}
+
+\framebox[1.2\width]{$\Gamma \iccts e : T$}\ Typing
+\begin{mathpar}
+\inferrule* []
+{}
+{Static\ Intersection\ Type\ System\ ($\sits$)\ rules\ and}\\
+
+\inferrule* [right=T-App']
+{\Gamma \iccts e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2} \\
+ \Gamma \iccts e_2 : T_{11} \cap \ldots \cap T_{n1}}
+{\Gamma \iccts e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}}
+
+\inferrule* [right=T-IntersectionCast]
+{\Gamma \iccts e : T_1' \cap \ldots \cap T_n' \\ \icts c_1 : T_1\ \ldots\ \icts c_n : T_n \\\\  T_1' \cap \ldots \cap T_n' = initialType(c_1) \cap \ldots \cap initialType(c_n)}
+{\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n}
+
+\inferrule* [right=T-Blame]
+{ }
+{\Gamma \iccts \blame{T}{l} : T}
+\end{mathpar}
 \hrulefill
 \caption{Intersection Cast Calculus ($\iccts$)}
 \label{intersection_cast_calculus}
