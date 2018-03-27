@@ -437,10 +437,8 @@ Syntax
 &Types\ \begin{aligned}[t] T &::=\ \Int\ |\ \Bool\ |\ \Dyn\ |\ T \rightarrow T \end{aligned}\\
 &Ground\ Types\ G\ ::=\ \Int\ |\ \Bool\ |\ \Dyn \rightarrow \Dyn\\
 &Casts\ \begin{aligned}[t] c\ ::=&\ c : T \Rightarrow^l T\ ^{cl}\ |\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}\\
-&Cast\ Values\ \begin{aligned}[t] cv\ ::=&\ cv1\ |\ cv2\\
-                                cv1\ ::=&\ \emptycast{T}{cl} : G \Rightarrow^l \Dyn\ ^{cl}\ |\ \emptycast{T}{cl} : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}\\
-                                       |&\ cv1 : G \Rightarrow^l \Dyn\ ^{cl}\ |\ cv1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}\\
-                                cv2\ ::=&\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}\\
+&Cast\ Values\ \begin{aligned}[t] cv\ ::=&\ cv1\ |\ \blamecast{T}{T}{l}{cl}\\
+                                cv1\ ::=&\ \emptycast{T}{cl}\ |\ cv1 : G \Rightarrow^l \Dyn\ ^{cl}\ |\ cv1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl} \end{aligned}\\
 \end{align*}
 
 \framebox[1.2\width]{$c \cios c$}\ Evaluation
@@ -460,26 +458,26 @@ Evaluate\ inside\ casts\\
 Detect\ success\ or\ failure\ of\ casts\\
 
 \inferrule* [right=E-IdentityCI]
-{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c}
-{c : T \Rightarrow^l T\ ^{cl} \cios c}
+{ }
+{cv1 : T \Rightarrow^l T\ ^{cl} \cios cv1}
 
 \inferrule* [right=E-SucceedCI]
-{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c}
-{c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios c}
+{ }
+{cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios cv1}
 
 \inferrule* [right=E-FailCI]
-{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ \neg(same\ ground\ G_1\ G_2) \\ initialType(c) = T_I}
-{c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}}\\
+{\neg(same\ ground\ G_1\ G_2) \\ initialType(c) = T_I}
+{cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}}\\
 
 Mediate\ the\ transition\ between\ the\ two\ disciplines
 
 \inferrule* [right=E-GroundCI]
-{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
-{c : T \Rightarrow^l \Dyn\ ^{cl} \cios c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}}
+{G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
+{cv1 : T \Rightarrow^l \Dyn\ ^{cl} \cios cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}}
 
 \inferrule* [right=E-ExpandCI]
-{is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
-{c : \Dyn \Rightarrow^l T\ ^{cl} \cios c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}}
+{G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
+{cv1 : \Dyn \Rightarrow^l T\ ^{cl} \cios cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}}
 \end{mathpar}
 \hrulefill
 \caption{Cast Intersection Operational Semantics ($\cios$)}
@@ -1140,24 +1138,24 @@ Induction step:
             By rule E-Evaluate, $v_1 : T_1 \Rightarrow^l T_2 \longrightarrow_{CC} v_1' : T_1 \Rightarrow^l T_2$.
             As $v_1' =_c v_2 : c'$, then by definition of $=_c$, $v_1' : T_1 \Rightarrow^l T_2 =_c v_2 : (c' : T_1 \Rightarrow^l T_2)$.
             \item E-IdentityCI.
-            If $v_1 : T \Rightarrow^l T =_c v_2 : (c : T \Rightarrow^l T)$ and $v_2 : (c : T \Rightarrow^l T) \gios v_2 : c$ and $v_1 =_c v_2 : c$.
-            By rule ID-BASE or ID-STAR, $v_1 : T \rightarrow^l T \longrightarrow_{CC} v_1$ and $v_1 =_c v_2 : c$.
+            If $v_1 : T \Rightarrow^l T =_c v_2 : (cv1 : T \Rightarrow^l T)$ and $v_2 : (cv1 : T \Rightarrow^l T) \gios v_2 : cv1$ then by the definition of $=_c$, $v_1 =_c v_2 : cv1$.
+            By rule ID-BASE or ID-STAR, $v_1 : T \rightarrow^l T \longrightarrow_{CC} v_1$ and $v_1 =_c v_2 : cv1$.
             \item E-SucceedCI.
-            If $v_1 : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G =_c v_2 : (c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2})$ and $v_2 : (c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}) \gios v_2 : c$ and $v_1 =_c v_2 : c$.
-            By rule SUCCEED, $v_1 : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G \longrightarrow_{CC} v_1$ and $v_1 =_c v_2 : c$.
+            If $v_1 : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G =_c v_2 : (cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2})$ and $v_2 : (cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}) \gios v_2 : cv1$ then by the definition of $=_c$, $v_1 =_c v_2 : cv1$.
+            By rule SUCCEED, $v_1 : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G \longrightarrow_{CC} v_1$ and $v_1 =_c v_2 : cv1$.
             \item E-FailCI.
-            If $v_1 : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 =_c v_2 : (c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2})$ and $v_2 : (c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}) \gios v_2 : \blamecast{T'}{G_2}{l_2}{cl_1}$ and $v_1 =_c v_2 : c$.
+            If $v_1 : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 =_c v_2 : (cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2})$ and $v_2 : (cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}) \gios v_2 : \blamecast{T'}{G_2}{l_2}{cl_1}$ then by the definition of $=_c$, $v_1 =_c v_2 : cv1$.
             By rule FAIL, $v_1 : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 \longrightarrow_{CC} \blame{G_2}{l_2}$ and by the definition of $=_c$, $\blame{G_2}{l_2} =_c v_2 : \blamecast{T'}{G_2}{l_2}{cl_1}$.
             \item E-GroundCI.
-            If $v_1 : T \Rightarrow^l \Dyn =_c v_2 : (c : T \Rightarrow^l \Dyn\ ^{cl})$ and $v_2 : (c : T \Rightarrow^l \Dyn\ ^{cl}) \gios v_2 : (c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$ then by the definition of $=_c$, $v_1 =_c v_2 : c$.
+            If $v_1 : T \Rightarrow^l \Dyn =_c v_2 : (cv1 : T \Rightarrow^l \Dyn\ ^{cl})$ and $v_2 : (cv1 : T \Rightarrow^l \Dyn\ ^{cl}) \gios v_2 : (cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$ then by the definition of $=_c$, $v_1 =_c v_2 : cv1$.
             By rule GROUND, $v_1 : T \Rightarrow^l \Dyn \longrightarrow_{CC} v_1 : T \Rightarrow^l G : G \Rightarrow^l \Dyn$.
-            As $v_1 =_c v_2 : c$, then by the definition of $=_c$, $v_1 : T \Rightarrow^l G =_c v_2 : (c : T \Rightarrow^l G\ ^{cl})$.
-            As $v_1 : T \Rightarrow^l G =_c v_2 : (c : T \Rightarrow^l G\ ^{cl})$, then by the definition of $=_c$, $v_1 : T \Rightarrow^l G : G \Rightarrow^l \Dyn =_c v_2 : (c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
+            As $v_1 =_c v_2 : cv1$, then by the definition of $=_c$, $v_1 : T \Rightarrow^l G =_c v_2 : (cv1 : T \Rightarrow^l G\ ^{cl})$.
+            As $v_1 : T \Rightarrow^l G =_c v_2 : (cv1 : T \Rightarrow^l G\ ^{cl})$, then by the definition of $=_c$, $v_1 : T \Rightarrow^l G : G \Rightarrow^l \Dyn =_c v_2 : (cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
             \item E-ExpandCI.
-            If $v_1 : \Dyn \Rightarrow^l T =_c v_2 : (c : \Dyn \Rightarrow^l T\ ^{cl})$ and $v_2 : (c : \Dyn \Rightarrow^l T\ ^{cl}) \gios v_2 : (c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$ then by the definition of $=_c$, $v_1 =_c v_2 : c$.
+            If $v_1 : \Dyn \Rightarrow^l T =_c v_2 : (cv1 : \Dyn \Rightarrow^l T\ ^{cl})$ and $v_2 : (cv1 : \Dyn \Rightarrow^l T\ ^{cl}) \gios v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$ then by the definition of $=_c$, $v_1 =_c v_2 : cv1$.
             By rule EXPAND, $v_1 : \Dyn \Rightarrow^l T \longrightarrow_{CC} v_1 : \Dyn \Rightarrow^l G : G \Rightarrow^l T$.
-            As $v_1 =_c v_2 : c$, then by the definition of $=_c$, $v_1 : \Dyn \Rightarrow^l G =_c v_2 : (c : \Dyn \Rightarrow^l G\ ^{cl})$.
-            As $v_1 : \Dyn \Rightarrow^l G =_c v_2 : (c : \Dyn \Rightarrow^l G\ ^{cl})$, then by the definition of $=_c$, $v_1 : \Dyn \Rightarrow^l G : G \Rightarrow^l T =_c v_2 : (c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$.
+            As $v_1 =_c v_2 : cv1$, then by the definition of $=_c$, $v_1 : \Dyn \Rightarrow^l G =_c v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl})$.
+            As $v_1 : \Dyn \Rightarrow^l G =_c v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl})$, then by the definition of $=_c$, $v_1 : \Dyn \Rightarrow^l G : G \Rightarrow^l T =_c v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$.
         \end{itemize}
     \end{itemize}
 \end{itemize}
@@ -1468,7 +1466,7 @@ Induction step:
 \end{proof}
 
 \begin{lemma}[Type preservation of $\cios$]
-\label{type_preservationIC}
+\label{type_preservationCI}
 If $c \cios c$ and
 \begin{itemize}
     \item $\cits c : T$ then $\cits c' : T$.
@@ -1488,40 +1486,39 @@ Base cases:
     \end{itemize}
     \item Rule E-IdentityCI.
     \begin{itemize}
-        \item If $\cits c : T \Rightarrow^l T\ ^{cl} : T$, then by rule T-SingleCI, $\cits c : T$.
-        By rule E-IdentityCI, $c : T \Rightarrow^l T\ ^{cl} \cios c$.
-        \item By the definitions of $initialType$, $initialType(c : T \Rightarrow^l T\ ^{cl}) = initialType(c)$.
-        By rule E-IdentityCI, $c : T \Rightarrow^l T\ ^{cl} \cios c$.
+        \item If $\cits cv1 : T \Rightarrow^l T\ ^{cl} : T$, then by rule T-SingleCI, $\cits cv1 : T$.
+        By rule E-IdentityCI, $cv1 : T \Rightarrow^l T\ ^{cl} \cios cv1$.
+        \item By the definitions of $initialType$, $initialType(cv1 : T \Rightarrow^l T\ ^{cl}) = initialType(cv1)$.
+        By rule E-IdentityCI, $cv1 : T \Rightarrow^l T\ ^{cl} \cios cv1$.
     \end{itemize}
     \item Rule E-SucceedCI.
     \begin{itemize}
-        \item If $\cits c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} : G$, then by rule T-SingleCI, $\cits c : G$.
-        By rule E-SucceedCI, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios c$.
-        \item Rule E-SucceedCI.
-        By the definition of $initialType$, $initialType(c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}) = initialType(c)$.
-        By rule E-SucceedCI, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios c$.
+        \item If $\cits cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} : G$, then by rule T-SingleCI, $\cits cv1 : G$.
+        By rule E-SucceedCI, $cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios cv1$.
+        \item By the definition of $initialType$, $initialType(cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}) = initialType(cv1)$.
+        By rule E-SucceedCI, $cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios cv1$.
         Therefore it is proved.
     \end{itemize}
     \item Rule E-FailCI.
     \begin{itemize}
-        \item If $\cits c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} : G_2$, and by rule E-FailCI, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}$ then by rule T-BlameCI, $\cits \blamecast{T_I}{G_2}{l_2}{cl_1} : G_2$.
-        \item By the definition of $initialType$, $initialType(c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}) = T_I$.
-        By rule E-FailCI, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}$, then $initialType(\blamecast{T_I}{G_2}{l_2}{cl_1}) = T_I$.
+        \item If $\cits cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} : G_2$, and by rule E-FailCI, $cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}$ then by rule T-BlameCI, $\cits \blamecast{T_I}{G_2}{l_2}{cl_1} : G_2$.
+        \item By the definition of $initialType$, $initialType(cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}) = T_I$.
+        By rule E-FailCI, $cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}$, then $initialType(\blamecast{T_I}{G_2}{l_2}{cl_1}) = T_I$.
     \end{itemize}
     \item Rule E-GroundCI.
     \begin{itemize}
-        \item If $\cits c : T \Rightarrow^l \Dyn\ ^{cl} : \Dyn$ then by rule T-SingleCI, $\cits c : T$.
-        By rule E-GroundCI, $c : T \Rightarrow^l \Dyn\ ^{cl} \cios c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$, then by rule T-SingleCI, $\cits c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl} : \Dyn$.
-        \item By the definition of $initialType$, $initialType(c : T \Rightarrow^l \Dyn\ ^{cl}) = initialType(c)$.
-        By rule E-GroundCI, $c : T \Rightarrow^l \Dyn\ ^{cl} \cios c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$, then $initialType(c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}) = initialType(c)$.
+        \item If $\cits cv1 : T \Rightarrow^l \Dyn\ ^{cl} : \Dyn$ then by rule T-SingleCI, $\cits cv1 : T$.
+        By rule E-GroundCI, $cv1 : T \Rightarrow^l \Dyn\ ^{cl} \cios cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$, then by rule T-SingleCI, $\cits cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl} : \Dyn$.
+        \item By the definition of $initialType$, $initialType(cv1 : T \Rightarrow^l \Dyn\ ^{cl}) = initialType(cv1)$.
+        By rule E-GroundCI, $cv1 : T \Rightarrow^l \Dyn\ ^{cl} \cios cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$, then $initialType(cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}) = initialType(cv1)$.
     \end{itemize}
     \item Rule E-ExpandCI.
     \begin{itemize}
-        \item If $\cits c : \Dyn \Rightarrow^l T\ ^{cl} : T$ then by rule T-SingleCI, $\cits c : \Dyn$.
-        By rule E-ExpandCI, $c : \Dyn \Rightarrow^l T\ ^{cl} \cios c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$, then by rule T-SingleCI, $\cits c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl} : T$.
-        \item By the definition of $initialType$, $initialType(c : \Dyn \Rightarrow^l T\ ^{cl}) = initialType(c)$.
-        By rule E-ExpandCI, $c : \Dyn \Rightarrow^l T\ ^{cl} \cios c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
-        Since $initialType(c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}) = initialType(c)$, it is proved.
+        \item If $\cits cv1 : \Dyn \Rightarrow^l T\ ^{cl} : T$ then by rule T-SingleCI, $\cits cv1 : \Dyn$.
+        By rule E-ExpandCI, $cv1 : \Dyn \Rightarrow^l T\ ^{cl} \cios cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$, then by rule T-SingleCI, $\cits cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl} : T$.
+        \item By the definition of $initialType$, $initialType(cv1 : \Dyn \Rightarrow^l T\ ^{cl}) = initialType(cv1)$.
+        By rule E-ExpandCI, $cv1 : \Dyn \Rightarrow^l T\ ^{cl} \cios cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
+        Since $initialType(cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}) = initialType(cv1)$, it is proved.
     \end{itemize}
 \end{itemize}
 Induction step:
@@ -1542,7 +1539,7 @@ Induction step:
 \end{proof}
 
 \begin{lemma}[Progress of $\cios$]
-\label{progressIC}
+\label{progressCI}
 If $\Gamma \cits c : T$ and $initialType(c) = T_I$ then either $c$ is a cast value or there exists a $c'$ such that $c \cios c'$.
 \end{lemma}
 \begin{proof}
@@ -1559,14 +1556,14 @@ Induction step:
     \item Rule T-SingleCI.
     If $\cits c : T_1 \Rightarrow^l T_2\ ^cl : T_2$ and $initialType(c : T_1 \Rightarrow^l T_2\ ^cl) = T_I$ then by rule T-SingleCI, $\cits c : T_1$ and $initialType(c) = T_I$.
     By the induction hypothesis, either $c$ is a cast value or there is a $c'$ such that $c \cios c'$.
-    If $c$ is a cast value, then $c$ can either be of the form $\blamecast{T_I}{T_F}{l}{cl}$, in which case by rule E-PushBlameCI, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \cios \blamecast{T_I}{T_2}{l_1}{cl_1}$ or $c$ is a cast value 1 or is an empty cast.
-    If $c$ is a cast value 1 or is an empty cast then $c : T_1 \Rightarrow^l T_2\ ^cl$ can be of one of the folowing forms:
+    If $c$ is a cast value, then $c$ can either be of the form $\blamecast{T_I}{T_F}{l}{cl}$, in which case by rule E-PushBlameCI, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \cios \blamecast{T_I}{T_2}{l_1}{cl_1}$ or $c$ is a cast value 1.
+    If $c$ is a cast value 1 then $c : T_1 \Rightarrow^l T_2\ ^cl$ can be of one of the folowing forms:
     \begin{itemize}
-        \item $c : T \Rightarrow^l T\ ^{cl}$. Then by rule E-IdentityCI, $c : T \Rightarrow^l T\ ^{cl} \cios c$.
-        \item $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}$. Then by rule E-SucceedCI, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios c$.
-        \item $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}$. Then by rule E-FailCI, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}$.
-        \item $c : T \Rightarrow^l \Dyn\ ^{cl}$. Then by rule E-GroundCI, $c : T \Rightarrow^l \Dyn\ ^{cl} \cios c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$.
-        \item $c : \Dyn \Rightarrow^l T\ ^{cl}$. Then by rule E-ExpandCI, $c : \Dyn \Rightarrow^l T\ ^{cl} \cios c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
+        \item $cv1 : T \Rightarrow^l T\ ^{cl}$. Then by rule E-IdentityCI, $cv1 : T \Rightarrow^l T\ ^{cl} \cios cv1$.
+        \item $cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}$. Then by rule E-SucceedCI, $cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios cv1$.
+        \item $cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}$. Then by rule E-FailCI, $cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}$.
+        \item $cv1 : T \Rightarrow^l \Dyn\ ^{cl}$. Then by rule E-GroundCI, $cv1 : T \Rightarrow^l \Dyn\ ^{cl} \cios cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$.
+        \item $cv1 : \Dyn \Rightarrow^l T\ ^{cl}$. Then by rule E-ExpandCI, $cv1 : \Dyn \Rightarrow^l T\ ^{cl} \cios cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
     \end{itemize}
     If there is a $c'$ such that $c \cios c'$, then by rule E-EvaluateCI, $c : T_1 \Rightarrow^l T_2\ ^cl \cios c' : T_1 \Rightarrow^l T_2\ ^cl$.
 \end{itemize}
@@ -1574,7 +1571,7 @@ Induction step:
 
 \begin{lemma}[Type preservation of $\gios$]
 \label{type_preservation}
-Depends on Lemmas \ref{type_preservationIC} and \ref{progressIC}.
+Depends on Lemmas \ref{type_preservationCI} and \ref{progressCI}.
 If $\Gamma \iccts e : T_1 \cap \ldots \cap T_n$ and $e \gios e'$ then $\Gamma \iccts e' : T_1 \cap \ldots \cap T_m$ such that $m \leq n$.
 \end{lemma}
 \begin{proof}
@@ -1613,7 +1610,7 @@ Base cases:
     \item Rule E-EvaluateCasts.
     If $\Gamma \iccts v : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then by rule T-CastIntersection, $\Gamma \iccts v : T_1' \cap \ldots \cap T_n'$ and $\cits c_1 : T_1$ and ... and $\cits c_n : T_n$ and $I_1 = initialType(c_1)$ and ... and $I_n = initialType(c_n)$ and $I_1 \cap \ldots \cap I_n = T_1' \cap \ldots \cap T_n'$.
     By rule E-EvaluateCasts, $c_1 \cios cv_1$ and ... and $c_n \cios cv_n$.
-    By Lemmas \ref{type_preservationIC} and \ref{progressIC}, $\cits cv_1 : T_1$ and $initialType(cv_1) = I_1$ and ... and $\cits cv_n : T_n$ and $initialType(cv_n) = I_n$.
+    By Lemmas \ref{type_preservationCI} and \ref{progressCI}, $\cits cv_1 : T_1$ and $initialType(cv_1) = I_1$ and ... and $\cits cv_n : T_n$ and $initialType(cv_n) = I_n$.
     Therefore by rule T-CastIntersection, $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_n$.
     By rule E-EvaluateCasts, $v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n$.
     \item Rule E-PropagateBlame.
