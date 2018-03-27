@@ -189,11 +189,11 @@ Syntax
 {c : T_1 \Rightarrow^l T_2\ ^{cl} \sqsubseteq c' : T_1' \Rightarrow^{l'} T_2'\ ^{cl'}}
 
 \inferrule* []
-{c \sqsubseteq c' \\ \icts c' : T \\ T_1 \sqsubseteq T \\ T_2 \sqsubseteq T }
+{c \sqsubseteq c' \\ \cits c' : T \\ T_1 \sqsubseteq T \\ T_2 \sqsubseteq T }
 {c : T_1 \Rightarrow^l T_2\ ^{cl} \sqsubseteq c'}
 
 \inferrule* []
-{c \sqsubseteq c' \\ \icts c : T \\ T \sqsubseteq T_1 \\ T \sqsubseteq T_2}
+{c \sqsubseteq c' \\ \cits c : T \\ T \sqsubseteq T_1 \\ T \sqsubseteq T_2}
 {c \sqsubseteq c' : T_1 \Rightarrow^l T_2\ ^{cl}}
 
 \inferrule* []
@@ -236,11 +236,11 @@ Syntax
 {e : c_1 \cap \ldots \cap c_n \sqsubseteq e' : c_1' \cap \ldots \cap c_n'}
 
 \inferrule* []
-{e \sqsubseteq e' \\ \Gamma \iccts e' : T \\ \icts c_1 : T_1 \ldots \icts c_n : T_n \\ T_1 \cap \ldots \cap T_n \sqsubseteq T}
+{e \sqsubseteq e' \\ \Gamma \iccts e' : T \\ \cits c_1 : T_1 \ldots \cits c_n : T_n \\ T_1 \cap \ldots \cap T_n \sqsubseteq T}
 {e : c_1 \cap \ldots \cap c_n \sqsubseteq e'}
 
 \inferrule* []
-{e \sqsubseteq e' \\ \Gamma \iccts e : T \\ \icts c_1 : T_1 \ldots \icts c_n : T_n \\ T \sqsubseteq T_1 \cap \ldots \cap T_n}
+{e \sqsubseteq e' \\ \Gamma \iccts e : T \\ \cits c_1 : T_1 \ldots \cits c_n : T_n \\ T \sqsubseteq T_1 \cap \ldots \cap T_n}
 {e \sqsubseteq e' : c_1 \cap \ldots \cap c_n}
 
 \inferrule* []
@@ -259,20 +259,20 @@ Syntax
 &Casts\ \begin{aligned}[t] c\ ::=&\ c : T \Rightarrow^l T\ ^{cl}\ |\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}
 \end{align*}
 
-\framebox[1.2\width]{$\icts c : T$}\ Typing
+\framebox[1.2\width]{$\cits c : T$}\ Typing
 \begin{mathpar}
 
-\inferrule* [right=T-SingleIC]
-{\icts c : T_1 \\ T_1 \sim T_2}
-{\icts (c : T_1 \Rightarrow^l T_2\ ^{cl}) : T_2}
+\inferrule* [right=T-SingleCI]
+{\cits c : T_1 \\ T_1 \sim T_2}
+{\cits (c : T_1 \Rightarrow^l T_2\ ^{cl}) : T_2}
 
-\inferrule* [right=T-BlameIC]
+\inferrule* [right=T-BlameCI]
 { }
-{\icts \blamecast{T_I}{T_F}{l}{cl} : T_F}
+{\cits \blamecast{T_I}{T_F}{l}{cl} : T_F}
 
-\inferrule* [right=T-EmptyIC]
+\inferrule* [right=T-EmptyCI]
 { }
-{\icts \emptycast{T}{cl} : T}
+{\cits \emptycast{T}{cl} : T}
 \end{mathpar}
 
 \begin{minipage}[t]{.49\textwidth}
@@ -310,8 +310,8 @@ Syntax
 \newline
 
 \hrulefill
-\caption{Intersection Casts Type System ($\icts$)}
-\label{intersection_casts_type_system}
+\caption{Cast Intersection Type System ($\cits$)}
+\label{cast_intersection_type_system}
 \end{figure}
 
 \begin{figure}[H]
@@ -332,8 +332,8 @@ Syntax
  \Gamma \iccts e_2 : T_{11} \cap \ldots \cap T_{n1}}
 {\Gamma \iccts e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}}
 
-\inferrule* [right=T-IntersectionCast]
-{\Gamma \iccts e : T_1' \cap \ldots \cap T_n' \\ \icts c_1 : T_1\ \ldots\ \icts c_n : T_n \\\\  T_1' \cap \ldots \cap T_n' = initialType(c_1) \cap \ldots \cap initialType(c_n)}
+\inferrule* [right=T-CastIntersection]
+{\Gamma \iccts e : T_1' \cap \ldots \cap T_n' \\ \cits c_1 : T_1\ \ldots\ \cits c_n : T_n \\\\  T_1' \cap \ldots \cap T_n' = initialType(c_1) \cap \ldots \cap initialType(c_n)}
 {\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n}
 
 \inferrule* [right=T-Blame]
@@ -443,47 +443,47 @@ Syntax
                                 cv2\ ::=&\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}\\
 \end{align*}
 
-\framebox[1.2\width]{$c \icos c$}\ Evaluation
+\framebox[1.2\width]{$c \cios c$}\ Evaluation
 \begin{mathpar}
 Push\ blame\ to\ top\ level
 
-\inferrule* [right=E-PushBlameIC]
+\inferrule* [right=E-PushBlameCI]
 { }
-{\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}}
+{\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \cios \blamecast{T_I}{T_2}{l_1}{cl_1}}
 
 Evaluate\ inside\ casts\\
 
-\inferrule* [right=E-EvaluateIC]
-{\neg(is\ cast\ value\ c) \\ c \icos c'}
-{c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}}\\
+\inferrule* [right=E-EvaluateCI]
+{\neg(is\ cast\ value\ c) \\ c \cios c'}
+{c : T_1 \Rightarrow^l T_2\ ^{cl} \cios c' : T_1 \Rightarrow^l T_2\ ^{cl}}\\
 
 Detect\ success\ or\ failure\ of\ casts\\
 
-\inferrule* [right=E-IdentityIC]
+\inferrule* [right=E-IdentityCI]
 {is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c}
-{c : T \Rightarrow^l T\ ^{cl} \icos c}
+{c : T \Rightarrow^l T\ ^{cl} \cios c}
 
-\inferrule* [right=E-SucceedIC]
+\inferrule* [right=E-SucceedCI]
 {is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c}
-{c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c}
+{c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios c}
 
-\inferrule* [right=E-FailIC]
+\inferrule* [right=E-FailCI]
 {is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ \neg(same\ ground\ G_1\ G_2) \\ initialType(c) = T_I}
-{c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}}\\
+{c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}}\\
 
 Mediate\ the\ transition\ between\ the\ two\ disciplines
 
-\inferrule* [right=E-GroundIC]
+\inferrule* [right=E-GroundCI]
 {is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
-{c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}}
+{c : T \Rightarrow^l \Dyn\ ^{cl} \cios c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}}
 
-\inferrule* [right=E-ExpandIC]
+\inferrule* [right=E-ExpandCI]
 {is\ cast\ value\ 1\ c \lor is\ empty\ cast\ c \\ G\ is\ ground\ type\ of\ T \\ \neg(ground\ T)}
-{c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}}
+{c : \Dyn \Rightarrow^l T\ ^{cl} \cios c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}}
 \end{mathpar}
 \hrulefill
-\caption{Intersection Casts Operational Semantics ($\icos$)}
-\label{intersection_casts_operational_semantics}
+\caption{Cast Intersection Operational Semantics ($\cios$)}
+\label{cast_intersection_operational_semantics}
 \end{figure}
 
 \begin{figure}[H]
@@ -508,7 +508,7 @@ Push\ blame\ to\ top\ level\\
 {e_1\ (\blame{T_2}{l}) \gios \blame{T_1}{l}}
 
 \inferrule* [right=E-PushBlameCast]
-{\icts c_1 : T_1 \ldots \icts c_n : T_n}
+{\cits c_1 : T_1 \ldots \cits c_n : T_n}
 {\blame{T}{l} : c_1 \cap \ldots \cap c_n \gios \blame{T_1 \cap \ldots \cap T_n}{l}}\\
 
 Evaluate\ expressions\\
@@ -541,10 +541,10 @@ Merge\ casts\\
 {is\ value\ (v : cv_1 \cap \ldots \cap cv_n) \\ v : c_1'' \cap \ldots \cap c_j'' = \mergeCasts{v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m'}}
 {v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \gios v : c_1'' \cap \ldots \cap c_j''}\\
 
-Evaluate\ intersection\ casts\\
+Evaluate\ casts\\
 
 \inferrule* [right=E-EvaluateCasts]
-{\neg(\forall i \in 1..n\ .\ is\ cast\ value\ c_i) \\ c_1 \icos cv_1\ \ldots\ c_n \icos cv_n}
+{\neg(\forall i \in 1..n\ .\ is\ cast\ value\ c_i) \\ c_1 \cios cv_1\ \ldots\ c_n \cios cv_n}
 {v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n}\\
 
 Transition\ from\ cast\ values\ to\ values\\
@@ -559,7 +559,7 @@ Transition\ from\ cast\ values\ to\ values\\
 \end{mathpar}
 \hrulefill
 \caption{Intersection Cast Calculus Operational Semantics ($\gios$)}
-\label{casts_calculus_operational_semantics}
+\label{intersection_cast_calculus_operational_semantics}
 \end{figure}
 
 \begin{figure}[H]
@@ -665,7 +665,7 @@ Transition\ from\ cast\ values\ to\ values\\
 
 \inferrule* []
 {}
-{getCastLabel(\emptycast{T}{cl}, c) = \assignCastLabel{c}{cl}}\\
+{joinCasts(\emptycast{T}{cl}, c) = \assignCastLabel{c}{cl}}\\
 \end{mathpar}
 
 \framebox[1.2\width]{$\mergeCasts{e} = e$}
@@ -828,7 +828,7 @@ Induction step:
 
 \begin{theorem}[Conservative Extension]
 \label{conservative_extension_intersection_cast_insertion}
-If $e$ is annotated with only simple types and $T$ is a simple type then $\Gamma \vdash_{CC} e \leadsto e_1 : T \iff \Gamma \iccts e \leadsto e_2 : T$ and $e_1 =_{c} e_2$, with $e : T_1 \Rightarrow^l T_2 =_{c} e : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
+If $e$ is annotated with only simple types and $T$ is a simple type then $\Gamma \vdash_{CC} e \leadsto e_1 : T \iff \Gamma \iccts e \leadsto e_2 : T$ and $e_1 =_{c} e_2$.
 \end{theorem}
 \begin{proof}
 We will first prove the right direction of the implication, that if $\Gamma \vdash_{CC} e \leadsto e_1 : T$ then $\Gamma \iccts e \leadsto e_2 : T$ and $e_1 =_{c} e_2$.
@@ -1001,17 +1001,17 @@ Induction step:
             By rule E-PushBlameCast, $\blame{T_1}{l} : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios \blame{T_2}{l}$ and $\blame{T_2}{l} =_c \blame{T_2}{l}$.
             \item $e \gios^* e' : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
             By repeated application of rule E-Evaluate and by Lemma \ref{progress}, $e' : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios^* v : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
-            By rule E-EvaluateCasts and by rule E-PushBlameIC, $v : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios^* v : (\blamecast{T'}{T_2}{l}{cl})$.
+            By rule E-EvaluateCasts and by rule E-PushBlameCI, $v : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios^* v : (\blamecast{T'}{T_2}{l}{cl})$.
             By rule E-PropagateBlame, $v : (\blamecast{T'}{T_2}{l}{cl}) \gios^* \blame{T_2}{l})$ and $\blame{T_2}{l} =_c \blame{T_2}{l}$.
             \item $e \gios^* e' : (\blamecast{T'}{T_1}{l}{cl}) : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
             By repeated application of rule E-Evaluate and by Lemma \ref{progress}, $e' : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios^* v : (\blamecast{T'}{T_1}{l}{cl}) : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
             By rule E-MergeCasts, $v : (\blamecast{T'}{T_1}{l}{cl}) : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios v : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
-            By rule E-EvaluateCasts and by rule E-PushBlameIC, $v : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios^* v : (\blamecast{T'}{T_2}{l}{cl})$.
+            By rule E-EvaluateCasts and by rule E-PushBlameCI, $v : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios^* v : (\blamecast{T'}{T_2}{l}{cl})$.
             By rule E-PropagateBlame, $v : (\blamecast{T'}{T_2}{l}{cl}) \gios^* \blame{T_2}{l})$ and $\blame{T_2}{l} =_c \blame{T_2}{l}$.
         \end{itemize}
         \item Rule ID-BASE and Rule ID-STAR.
         If $v : T \Rightarrow^l T =_c e$ and $v : T \Rightarrow^l T \longrightarrow_{CC} v$, then by the definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, $e \gios^* v' : (cv : T \Rightarrow^l T\ ^{cl})$, such that $v =_c v' : cv$.
-        By rule E-EvaluateCasts and by rule E-IdentityIC, $v' : (cv : T \Rightarrow^l T\ ^{cl}) \gios v' : cv$ and $v =_c v' : cv$.
+        By rule E-EvaluateCasts and by rule E-IdentityCI, $v' : (cv : T \Rightarrow^l T\ ^{cl}) \gios v' : cv$ and $v =_c v' : cv$.
         \item Rule SUCCEED.
         If $v : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G =_c e$ and $v : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G \longrightarrow_{CC} v$ then there are two possibilities.
         By definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, either
@@ -1021,7 +1021,7 @@ Induction step:
         \end{itemize}
         such that $v =_c v' : cv$.
         As, by rule E-MergeCasts, $v' : (cv : G \Rightarrow^{l_1} \Dyn\ ^{cl}) : (\emptycast{\Dyn}{cl} : \Dyn \Rightarrow^{l_2} G\ ^{cl}) \gios v' : (cv : G \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G\ ^{cl})$, we only need to address the first case.
-        By rule E-EvaluateCasts and by rule E-SucceedIC, $v' : (cv : G \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G\ ^{cl}) \gios v' : cv$ and $v =_c v' : cv$.
+        By rule E-EvaluateCasts and by rule E-SucceedCI, $v' : (cv : G \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G\ ^{cl}) \gios v' : cv$ and $v =_c v' : cv$.
         \item Rule FAIL.
         If $v : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 =_c e$ and $v : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 \longrightarrow_{CC} \blame{G_2}{l_2}$ then there are two possibilities.
         By definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, either
@@ -1031,15 +1031,15 @@ Induction step:
         \end{itemize}
         such that $v =_c v' : cv$.
         As, by rule E-MergeCasts, $v' : (cv : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl}) : (\emptycast{\Dyn}{cl} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl}) \gios v' : (cv : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl})$, we only need to address the first case.
-        By rule E-EvaluateCasts and by rule E-FailIC, $v' : (cv : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl}) \gios v' : \blamecast{T_I}{G_2}{l_2}{cl}$.
+        By rule E-EvaluateCasts and by rule E-FailCI, $v' : (cv : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl}) \gios v' : \blamecast{T_I}{G_2}{l_2}{cl}$.
         By rule E-PropagateBlame, $v' : \blamecast{T_I}{G_2}{l_2}{cl} \gios \blame{G_2}{l_2}$ and $\blame{G_2}{l_2} =_c \blame{G_2}{l_2}$.
         \item Rule GROUND.
         If $v : T \Rightarrow^l \Dyn =_c e$ and $v : T \Rightarrow^l \Dyn \longrightarrow_{CC} v : T \Rightarrow^l G : G \Rightarrow^l \Dyn$ then by definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, $e \gios^* v' : (cv : T \Rightarrow^l \Dyn\ ^{cl})$ such that $v =_c v' : cv$.
-        By rule E-EvaluateCasts and by rule E-GroundIC, $v' : (cv : T \Rightarrow^l \Dyn\ ^{cl}) \gios v' : (cv : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
+        By rule E-EvaluateCasts and by rule E-GroundCI, $v' : (cv : T \Rightarrow^l \Dyn\ ^{cl}) \gios v' : (cv : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
         As $v =_c v' : cv$, then by definition of $=_c$, $v : T \Rightarrow^l G : G \Rightarrow^l \Dyn =_c v' : (cv : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
         \item Rule EXPAND.
         If $v : \Dyn \Rightarrow^l T =_c e$ and $v : \Dyn \Rightarrow^l T \longrightarrow_{CC} v : \Dyn \Rightarrow^l G : G \Rightarrow^l T$ then by definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, $e \gios^* v' : (cv : \Dyn \Rightarrow^l T\ ^{cl})$ such that $v =_c v' : cv$.
-        By rule E-EvaluateCasts and by rule E-ExpandIC, $v' : (cv : \Dyn \Rightarrow^l T\ ^{cl}) \gios v' : (cv : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$.
+        By rule E-EvaluateCasts and by rule E-ExpandCI, $v' : (cv : \Dyn \Rightarrow^l T\ ^{cl}) \gios v' : (cv : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$.
         As $v =_c v' : cv$, then by definition of $=_c$, $v : \Dyn \Rightarrow^l G : G \Rightarrow^l T =_c v' : (cv : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$.
     \end{itemize}
 \end{itemize}
@@ -1132,28 +1132,28 @@ Induction step:
         \item Rule E-EvaluateCasts.
         There are seven possibilities:
         \begin{itemize}
-            \item Rule E-PushBlameIC.
+            \item Rule E-PushBlameCI.
             If $\blame{T_1}{l_1} : T_1 \Rightarrow^{l_2} T_2 =_c v : (\blamecast{T'}{T_1}{l_1}{cl} : T_1 \Rightarrow^{l_2} T_2\ ^{cl})$ and $v : (\blamecast{T'}{T_1}{l_1}{cl} : T_1 \Rightarrow^{l_2} T_2\ ^{cl}) \gios v : \blamecast{T'}{T_2}{l_1}{cl}$ then by rule CTX-BLAME $\blame{T_1}{l_1} : T_1 \Rightarrow^{l_2} T_2 \longrightarrow_{CC} \blame{T_2}{l_1}$ and $\blame{T_2}{l_1} =_c v : \blamecast{T'}{T_2}{l_1}{cl}$.
-            \item Rule E-EvaluateIC.
+            \item Rule E-EvaluateCI.
             If $v_1 : T_1 \Rightarrow^l T_2 =_c v_2 : (c : T_1 \Rightarrow^l T_2)$ and $v_2 : (c : T_1 \Rightarrow^l T_2) \gios v_2 : (c' : T_1 \Rightarrow^l T_2)$ then $v_1 =_c v_2 : c$ and by rule E-EvaluateCasts, $v_2 : c \gios v_2 : c'$.
             By the induction hypothesis, $v_1 \longrightarrow_{CC} v_1'$ and $v_1' =_c v_2 : c'$.
             By rule E-Evaluate, $v_1 : T_1 \Rightarrow^l T_2 \longrightarrow_{CC} v_1' : T_1 \Rightarrow^l T_2$.
             As $v_1' =_c v_2 : c'$, then by definition of $=_c$, $v_1' : T_1 \Rightarrow^l T_2 =_c v_2 : (c' : T_1 \Rightarrow^l T_2)$.
-            \item E-IdentityIC.
+            \item E-IdentityCI.
             If $v_1 : T \Rightarrow^l T =_c v_2 : (c : T \Rightarrow^l T)$ and $v_2 : (c : T \Rightarrow^l T) \gios v_2 : c$ and $v_1 =_c v_2 : c$.
             By rule ID-BASE or ID-STAR, $v_1 : T \rightarrow^l T \longrightarrow_{CC} v_1$ and $v_1 =_c v_2 : c$.
-            \item E-SucceedIC.
+            \item E-SucceedCI.
             If $v_1 : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G =_c v_2 : (c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2})$ and $v_2 : (c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}) \gios v_2 : c$ and $v_1 =_c v_2 : c$.
             By rule SUCCEED, $v_1 : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G \longrightarrow_{CC} v_1$ and $v_1 =_c v_2 : c$.
-            \item E-FailIC.
+            \item E-FailCI.
             If $v_1 : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 =_c v_2 : (c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2})$ and $v_2 : (c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}) \gios v_2 : \blamecast{T'}{G_2}{l_2}{cl_1}$ and $v_1 =_c v_2 : c$.
             By rule FAIL, $v_1 : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 \longrightarrow_{CC} \blame{G_2}{l_2}$ and by the definition of $=_c$, $\blame{G_2}{l_2} =_c v_2 : \blamecast{T'}{G_2}{l_2}{cl_1}$.
-            \item E-GroundIC.
+            \item E-GroundCI.
             If $v_1 : T \Rightarrow^l \Dyn =_c v_2 : (c : T \Rightarrow^l \Dyn\ ^{cl})$ and $v_2 : (c : T \Rightarrow^l \Dyn\ ^{cl}) \gios v_2 : (c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$ then by the definition of $=_c$, $v_1 =_c v_2 : c$.
             By rule GROUND, $v_1 : T \Rightarrow^l \Dyn \longrightarrow_{CC} v_1 : T \Rightarrow^l G : G \Rightarrow^l \Dyn$.
             As $v_1 =_c v_2 : c$, then by the definition of $=_c$, $v_1 : T \Rightarrow^l G =_c v_2 : (c : T \Rightarrow^l G\ ^{cl})$.
             As $v_1 : T \Rightarrow^l G =_c v_2 : (c : T \Rightarrow^l G\ ^{cl})$, then by the definition of $=_c$, $v_1 : T \Rightarrow^l G : G \Rightarrow^l \Dyn =_c v_2 : (c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
-            \item E-ExpandIC.
+            \item E-ExpandCI.
             If $v_1 : \Dyn \Rightarrow^l T =_c v_2 : (c : \Dyn \Rightarrow^l T\ ^{cl})$ and $v_2 : (c : \Dyn \Rightarrow^l T\ ^{cl}) \gios v_2 : (c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$ then by the definition of $=_c$, $v_1 =_c v_2 : c$.
             By rule EXPAND, $v_1 : \Dyn \Rightarrow^l T \longrightarrow_{CC} v_1 : \Dyn \Rightarrow^l G : G \Rightarrow^l T$.
             As $v_1 =_c v_2 : c$, then by the definition of $=_c$, $v_1 : \Dyn \Rightarrow^l G =_c v_2 : (c : \Dyn \Rightarrow^l G\ ^{cl})$.
@@ -1373,7 +1373,7 @@ Induction step:
     If $\Gamma \gits e_1\ e_2 : T$ then by rule T-App, $\Gamma \gits e_1 : PM$, $PM \rhd T_1 \cap \ldots \cap T_n \rightarrow T$, $\Gamma \gits e_2 : T_1' \cap \ldots \cap T_n'$ and $T_1' \cap \ldots \cap T_n' \sim T_1 \cap \ldots \cap T_n$.
     By the induction hypothesis, $\Gamma \iccts e_1 \leadsto e_1' : PM$ and $\Gamma \iccts e_1' : PM$, and $\Gamma \iccts e_2 \leadsto e_2' : T_1' \cap \ldots \cap T_n'$ and $\Gamma \iccts e_2' : T_1' \cap \ldots \cap T_n'$.
     Therefore, by rule C-App, $\Gamma \iccts e_1\ e_2 \leadsto e_1''\ e_2'' : T$.
-    By the definition of $\trianglelefteq$ and $S,\ S,\ e \hookrightarrow e$, by rule T-IntersectionCast, $\Gamma \iccts e_1'' : T_1 \rightarrow T \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2'' : T_1 \cap \ldots \cap T_n$.
+    By the definition of $\trianglelefteq$ and $S,\ S,\ e \hookrightarrow e$, by rule T-CastIntersection, $\Gamma \iccts e_1'' : T_1 \rightarrow T \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2'' : T_1 \cap \ldots \cap T_n$.
     By rule T-App', $\Gamma \iccts e_1''\ e_2'' : T \cap \ldots \cap T$ and then by the properties of intersection types (modulo repetitions), $\Gamma \iccts e_1''\ e_2'' : T$.
     \item Rule T-Gen.
     If $\Gamma \gits e : T_1 \cap \ldots \cap T_n$ then by rule T-Gen, $\Gamma \gits e : T_1$ and ... and $\Gamma \gits e : T_n$.
@@ -1467,108 +1467,108 @@ Induction step:
 \end{itemize}
 \end{proof}
 
-\begin{lemma}[Type preservation of $\icos$]
+\begin{lemma}[Type preservation of $\cios$]
 \label{type_preservationIC}
-If $c \icos c$ and
+If $c \cios c$ and
 \begin{itemize}
-    \item $\icts c : T$ then $\icts c' : T$.
+    \item $\cits c : T$ then $\cits c' : T$.
     \item $initialType(c) = T$ then $initialType(c') = T$.
 \end{itemize}
 \end{lemma}
 \begin{proof}
-We proceed by induction on the length of the derivation tree of $\icos$.\\\\
+We proceed by induction on the length of the derivation tree of $\cios$.\\\\
 Base cases:
 \begin{itemize}
-    \item Rule E-PushBlameIC.
+    \item Rule E-PushBlameCI.
     \begin{itemize}
-        \item If $\icts \blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} : T_2$ and by rule E-PushBlameIC, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}$, then by rule T-BlameIC, $\icts \blamecast{T_I}{T_2}{l_1}{cl_1} : T_2$, then it is proved.
+        \item If $\cits \blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} : T_2$ and by rule E-PushBlameCI, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \cios \blamecast{T_I}{T_2}{l_1}{cl_1}$, then by rule T-BlameCI, $\cits \blamecast{T_I}{T_2}{l_1}{cl_1} : T_2$, then it is proved.
         \item By the definition of $initialType$, $initialType(\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2}) = T_I$.
-        By rule E-PushBlameIC, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}$.
+        By rule E-PushBlameCI, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \cios \blamecast{T_I}{T_2}{l_1}{cl_1}$.
         Since $initialType(\blamecast{T_I}{T_2}{l_1}{cl_1}) = T_I$, it is proved.
     \end{itemize}
-    \item Rule E-IdentityIC.
+    \item Rule E-IdentityCI.
     \begin{itemize}
-        \item If $\icts c : T \Rightarrow^l T\ ^{cl} : T$, then by rule T-SingleIC, $\icts c : T$.
-        By rule E-IdentityIC, $c : T \Rightarrow^l T\ ^{cl} \icos c$.
+        \item If $\cits c : T \Rightarrow^l T\ ^{cl} : T$, then by rule T-SingleCI, $\cits c : T$.
+        By rule E-IdentityCI, $c : T \Rightarrow^l T\ ^{cl} \cios c$.
         \item By the definitions of $initialType$, $initialType(c : T \Rightarrow^l T\ ^{cl}) = initialType(c)$.
-        By rule E-IdentityIC, $c : T \Rightarrow^l T\ ^{cl} \icos c$.
+        By rule E-IdentityCI, $c : T \Rightarrow^l T\ ^{cl} \cios c$.
     \end{itemize}
-    \item Rule E-SucceedIC.
+    \item Rule E-SucceedCI.
     \begin{itemize}
-        \item If $\icts c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} : G$, then by rule T-SingleIC, $\icts c : G$.
-        By rule E-SucceedIC, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c$.
-        \item Rule E-SucceedIC.
+        \item If $\cits c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} : G$, then by rule T-SingleCI, $\cits c : G$.
+        By rule E-SucceedCI, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios c$.
+        \item Rule E-SucceedCI.
         By the definition of $initialType$, $initialType(c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}) = initialType(c)$.
-        By rule E-SucceedIC, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c$.
+        By rule E-SucceedCI, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios c$.
         Therefore it is proved.
     \end{itemize}
-    \item Rule E-FailIC.
+    \item Rule E-FailCI.
     \begin{itemize}
-        \item If $\icts c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} : G_2$, and by rule E-FailIC, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$ then by rule T-BlameIC, $\icts \blamecast{T_I}{G_2}{l_2}{cl_1} : G_2$.
+        \item If $\cits c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} : G_2$, and by rule E-FailCI, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}$ then by rule T-BlameCI, $\cits \blamecast{T_I}{G_2}{l_2}{cl_1} : G_2$.
         \item By the definition of $initialType$, $initialType(c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}) = T_I$.
-        By rule E-FailIC, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$, then $initialType(\blamecast{T_I}{G_2}{l_2}{cl_1}) = T_I$.
+        By rule E-FailCI, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}$, then $initialType(\blamecast{T_I}{G_2}{l_2}{cl_1}) = T_I$.
     \end{itemize}
-    \item Rule E-GroundIC.
+    \item Rule E-GroundCI.
     \begin{itemize}
-        \item If $\icts c : T \Rightarrow^l \Dyn\ ^{cl} : \Dyn$ then by rule T-SingleIC, $\icts c : T$.
-        By rule E-GroundIC, $c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$, then by rule T-SingleIC, $\icts c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl} : \Dyn$.
+        \item If $\cits c : T \Rightarrow^l \Dyn\ ^{cl} : \Dyn$ then by rule T-SingleCI, $\cits c : T$.
+        By rule E-GroundCI, $c : T \Rightarrow^l \Dyn\ ^{cl} \cios c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$, then by rule T-SingleCI, $\cits c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl} : \Dyn$.
         \item By the definition of $initialType$, $initialType(c : T \Rightarrow^l \Dyn\ ^{cl}) = initialType(c)$.
-        By rule E-GroundIC, $c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$, then $initialType(c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}) = initialType(c)$.
+        By rule E-GroundCI, $c : T \Rightarrow^l \Dyn\ ^{cl} \cios c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$, then $initialType(c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}) = initialType(c)$.
     \end{itemize}
-    \item Rule E-ExpandIC.
+    \item Rule E-ExpandCI.
     \begin{itemize}
-        \item If $\icts c : \Dyn \Rightarrow^l T\ ^{cl} : T$ then by rule T-SingleIC, $\icts c : \Dyn$.
-        By rule E-ExpandIC, $c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$, then by rule T-SingleIC, $\icts c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl} : T$.
+        \item If $\cits c : \Dyn \Rightarrow^l T\ ^{cl} : T$ then by rule T-SingleCI, $\cits c : \Dyn$.
+        By rule E-ExpandCI, $c : \Dyn \Rightarrow^l T\ ^{cl} \cios c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$, then by rule T-SingleCI, $\cits c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl} : T$.
         \item By the definition of $initialType$, $initialType(c : \Dyn \Rightarrow^l T\ ^{cl}) = initialType(c)$.
-        By rule E-ExpandIC, $c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
+        By rule E-ExpandCI, $c : \Dyn \Rightarrow^l T\ ^{cl} \cios c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
         Since $initialType(c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}) = initialType(c)$, it is proved.
     \end{itemize}
 \end{itemize}
 Induction step:
 \begin{itemize}
-    \item Rule E-EvaluateIC.
+    \item Rule E-EvaluateCI.
     \begin{itemize}
-        \item If $\icts c : T_1 \Rightarrow^l T_2\ ^{cl} : T_2$ then by rule T-SingleIC, $\icts c : T_1$.
-        By rule E-EvaluateIC, $c \icos c'$.
-        By the induction hypothesis, $\icts c' : T_1$.
-        By rule E-EvaluateIC, $c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}$, then by rule T-SingleIC, $\icts c' : T_1 \Rightarrow^l T_2\ ^{cl} : T_2$.
+        \item If $\cits c : T_1 \Rightarrow^l T_2\ ^{cl} : T_2$ then by rule T-SingleCI, $\cits c : T_1$.
+        By rule E-EvaluateCI, $c \cios c'$.
+        By the induction hypothesis, $\cits c' : T_1$.
+        By rule E-EvaluateCI, $c : T_1 \Rightarrow^l T_2\ ^{cl} \cios c' : T_1 \Rightarrow^l T_2\ ^{cl}$, then by rule T-SingleCI, $\cits c' : T_1 \Rightarrow^l T_2\ ^{cl} : T_2$.
         \item By the definition of $initialType$, $initialType(c : T_1 \Rightarrow^l T_2\ ^{cl}) = initialType(c)$.
-        By rule E-EvaluateIC, $c \icos c'$.
+        By rule E-EvaluateCI, $c \cios c'$.
         By the induction hypothesis, $initialType(c') = initialType(c)$.
-        By rule E-EvaluateIC, $c : T_1 \Rightarrow^l T_2\ ^{cl} \icos c' : T_1 \Rightarrow^l T_2\ ^{cl}$.
+        By rule E-EvaluateCI, $c : T_1 \Rightarrow^l T_2\ ^{cl} \cios c' : T_1 \Rightarrow^l T_2\ ^{cl}$.
         Since $initialType(c' : T_1 \Rightarrow^l T_2\ ^{cl}) = initialType(c')$, it is proved.
     \end{itemize}
 \end{itemize}
 \end{proof}
 
-\begin{lemma}[Progress of $\icos$]
+\begin{lemma}[Progress of $\cios$]
 \label{progressIC}
-If $\Gamma \icts c : T$ and $initialType(c) = T_I$ then either $c$ is a cast value or there exists a $c'$ such that $c \icos c'$.
+If $\Gamma \cits c : T$ and $initialType(c) = T_I$ then either $c$ is a cast value or there exists a $c'$ such that $c \cios c'$.
 \end{lemma}
 \begin{proof}
-We proceed by induction on the length of the derivation tree of $\icts c : T$.\\\\
+We proceed by induction on the length of the derivation tree of $\cits c : T$.\\\\
 Base cases:
 \begin{itemize}
-    \item Rule T-BlameIC.
-    As $\icts \blamecast{T_I}{T_F}{l}{cl} : T_F$, $initialType(\blamecast{T_I}{T_F}{l}{cl}) = T_I$ and $\blamecast{T_I}{T_F}{l}{cl}$ is a cast value, it is proved.
-    \item Rule T-EmptyIC.
-    As $\icts \emptycast{T}{cl} : T$, $initialType(\emptycast{T}{cl}) = T$ and $\emptycast{T}{cl}$ is a cast value, it is proved.
+    \item Rule T-BlameCI.
+    As $\cits \blamecast{T_I}{T_F}{l}{cl} : T_F$, $initialType(\blamecast{T_I}{T_F}{l}{cl}) = T_I$ and $\blamecast{T_I}{T_F}{l}{cl}$ is a cast value, it is proved.
+    \item Rule T-EmptyCI.
+    As $\cits \emptycast{T}{cl} : T$, $initialType(\emptycast{T}{cl}) = T$ and $\emptycast{T}{cl}$ is a cast value, it is proved.
 \end{itemize}
 Induction step:
 \begin{itemize}
-    \item Rule T-SingleIC.
-    If $\icts c : T_1 \Rightarrow^l T_2\ ^cl : T_2$ and $initialType(c : T_1 \Rightarrow^l T_2\ ^cl) = T_I$ then by rule T-SingleIC, $\icts c : T_1$ and $initialType(c) = T_I$.
-    By the induction hypothesis, either $c$ is a cast value or there is a $c'$ such that $c \icos c'$.
-    If $c$ is a cast value, then $c$ can either be of the form $\blamecast{T_I}{T_F}{l}{cl}$, in which case by rule E-PushBlameIC, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \icos \blamecast{T_I}{T_2}{l_1}{cl_1}$ or $c$ is a cast value 1 or is an empty cast.
+    \item Rule T-SingleCI.
+    If $\cits c : T_1 \Rightarrow^l T_2\ ^cl : T_2$ and $initialType(c : T_1 \Rightarrow^l T_2\ ^cl) = T_I$ then by rule T-SingleCI, $\cits c : T_1$ and $initialType(c) = T_I$.
+    By the induction hypothesis, either $c$ is a cast value or there is a $c'$ such that $c \cios c'$.
+    If $c$ is a cast value, then $c$ can either be of the form $\blamecast{T_I}{T_F}{l}{cl}$, in which case by rule E-PushBlameCI, $\blamecast{T_I}{T_F}{l_1}{cl_1} : T_1 \Rightarrow^{l_2} T_2\ ^{cl_2} \cios \blamecast{T_I}{T_2}{l_1}{cl_1}$ or $c$ is a cast value 1 or is an empty cast.
     If $c$ is a cast value 1 or is an empty cast then $c : T_1 \Rightarrow^l T_2\ ^cl$ can be of one of the folowing forms:
     \begin{itemize}
-        \item $c : T \Rightarrow^l T\ ^{cl}$. Then by rule E-IdentityIC, $c : T \Rightarrow^l T\ ^{cl} \icos c$.
-        \item $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}$. Then by rule E-SucceedIC, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \icos c$.
-        \item $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}$. Then by rule E-FailIC, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \icos \blamecast{T_I}{G_2}{l_2}{cl_1}$.
-        \item $c : T \Rightarrow^l \Dyn\ ^{cl}$. Then by rule E-GroundIC, $c : T \Rightarrow^l \Dyn\ ^{cl} \icos c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$.
-        \item $c : \Dyn \Rightarrow^l T\ ^{cl}$. Then by rule E-ExpandIC, $c : \Dyn \Rightarrow^l T\ ^{cl} \icos c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
+        \item $c : T \Rightarrow^l T\ ^{cl}$. Then by rule E-IdentityCI, $c : T \Rightarrow^l T\ ^{cl} \cios c$.
+        \item $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}$. Then by rule E-SucceedCI, $c : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2} \cios c$.
+        \item $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}$. Then by rule E-FailCI, $c : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2} \cios \blamecast{T_I}{G_2}{l_2}{cl_1}$.
+        \item $c : T \Rightarrow^l \Dyn\ ^{cl}$. Then by rule E-GroundCI, $c : T \Rightarrow^l \Dyn\ ^{cl} \cios c : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl}$.
+        \item $c : \Dyn \Rightarrow^l T\ ^{cl}$. Then by rule E-ExpandCI, $c : \Dyn \Rightarrow^l T\ ^{cl} \cios c : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl}$.
     \end{itemize}
-    If there is a $c'$ such that $c \icos c'$, then by rule E-EvaluateIC, $c : T_1 \Rightarrow^l T_2\ ^cl \icos c' : T_1 \Rightarrow^l T_2\ ^cl$.
+    If there is a $c'$ such that $c \cios c'$, then by rule E-EvaluateCI, $c : T_1 \Rightarrow^l T_2\ ^cl \cios c' : T_1 \Rightarrow^l T_2\ ^cl$.
 \end{itemize}
 \end{proof}
 
@@ -1595,31 +1595,31 @@ Base cases:
     (Proof adapted from \cite{coppo1980extension})
     \item Rule E-SimulateArrow.
     If $\Gamma \iccts (v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 : T_{12} \cap \ldots \cap T_{n2}$, then by rule T-App', $\Gamma \iccts v_1 : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_n$ such that $\exists i \in 1 .. n\ .\ T_i = T_{i1} \rightarrow T_{i2}$ and $\Gamma \iccts v_2 : T_{11} \cap \ldots \cap T_{n1}$.
-    As $\Gamma \iccts v_1 : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_n$, then by rule T-IntersectionCast, $\Gamma \iccts v_1 : T_1'' \cap \ldots \cap T_l''$ and $\icts cv_1 : T_1$ and ... and $\icts cv_n : T_n$ and $I_1 = initialType(cv_1)$ and ... and $I_n = initialType(cv_n)$ such that $\{I_1, \ldots, I_n\} \subseteq \{T_1'', \ldots, T_l''\}$ and $I_1 \cap \ldots \cap I_n = T_1'' \cap \ldots \cap T_n''$ and $n \leq l$.
+    As $\Gamma \iccts v_1 : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_n$, then by rule T-CastIntersection, $\Gamma \iccts v_1 : T_1'' \cap \ldots \cap T_l''$ and $\cits cv_1 : T_1$ and ... and $\cits cv_n : T_n$ and $I_1 = initialType(cv_1)$ and ... and $I_n = initialType(cv_n)$ such that $\{I_1, \ldots, I_n\} \subseteq \{T_1'', \ldots, T_l''\}$ and $I_1 \cap \ldots \cap I_n = T_1'' \cap \ldots \cap T_n''$ and $n \leq l$.
     For the sake of simplicity lets elide cast labels and blame labels.
     By the definition of SimulateArrow, we have that $c_1' = c_1'' : T_{11}' \rightarrow T_{12}' \Rightarrow T_{11} \rightarrow T_{12}$ and ... and $c_m' = c_m'' : T_{m1}' \rightarrow T_{m2}' \Rightarrow T_{m1} \rightarrow T_{m2}$, for some $m \leq n$.
-    Also, $c_{11} = \emptycast{T_{11}}{} : T_{11} \Rightarrow T_{11}'$ and ... and $c_{m1} = \emptycast{T_{m1}}{} : T_{m1} \Rightarrow T_{m1}'$ and $c_{12} : \emptycast{T_{12}'}{} : T_{12}' \Rightarrow T_{12}$ and ... and $c_{m2} = \emptycast{T_{m2}'}{} : T_{m2}' \Rightarrow T_{m2}$ and $initialType(c^s_1) = I_1$ and ... and $initialType(c^s_m) = I_m$ and $\icts c^s_1 : T_{11}' \rightarrow T_{12}'$ and ... and $\icts c^s_m : T_{m1}' \rightarrow T_{m2}'$.
-    As by rule T-Gen and T-Inst $\Gamma \iccts v_1 : T_1'' \cap \ldots \cap T_m''$ and $I_1 \cap \ldots \cap I_m = T_1'' \cap \ldots \cap T_m''$, then by rule T-IntersectionCast, $\Gamma \iccts v_1 : c^s_1 \cap \ldots \cap c^s_m : T_{11}' \rightarrow T_{12}' \cap \ldots \cap T_{m1}' \rightarrow T_{m2}'$.
-    As by rule T-Gen and T-Inst $\Gamma \iccts v_2 : T_{11} \cap \ldots \cap T_{m1}$ and $\icts c_{11} : T_{11}'$ and ... and $\icts c_{m1} : T_{m1}'$ and $initialType(c_{11}) = T_{11}$ and ... and $initialType(c_{m1}) = T_{m1}$, then by rule T-IntersectionCast, $\Gamma \iccts v_2 : c_{11} \cap \ldots \cap c_{m1} : T_{11}' \cap \ldots \cap T_{m1}'$.
+    Also, $c_{11} = \emptycast{T_{11}}{} : T_{11} \Rightarrow T_{11}'$ and ... and $c_{m1} = \emptycast{T_{m1}}{} : T_{m1} \Rightarrow T_{m1}'$ and $c_{12} : \emptycast{T_{12}'}{} : T_{12}' \Rightarrow T_{12}$ and ... and $c_{m2} = \emptycast{T_{m2}'}{} : T_{m2}' \Rightarrow T_{m2}$ and $initialType(c^s_1) = I_1$ and ... and $initialType(c^s_m) = I_m$ and $\cits c^s_1 : T_{11}' \rightarrow T_{12}'$ and ... and $\cits c^s_m : T_{m1}' \rightarrow T_{m2}'$.
+    As by rule T-Gen and T-Inst $\Gamma \iccts v_1 : T_1'' \cap \ldots \cap T_m''$ and $I_1 \cap \ldots \cap I_m = T_1'' \cap \ldots \cap T_m''$, then by rule T-CastIntersection, $\Gamma \iccts v_1 : c^s_1 \cap \ldots \cap c^s_m : T_{11}' \rightarrow T_{12}' \cap \ldots \cap T_{m1}' \rightarrow T_{m2}'$.
+    As by rule T-Gen and T-Inst $\Gamma \iccts v_2 : T_{11} \cap \ldots \cap T_{m1}$ and $\cits c_{11} : T_{11}'$ and ... and $\cits c_{m1} : T_{m1}'$ and $initialType(c_{11}) = T_{11}$ and ... and $initialType(c_{m1}) = T_{m1}$, then by rule T-CastIntersection, $\Gamma \iccts v_2 : c_{11} \cap \ldots \cap c_{m1} : T_{11}' \cap \ldots \cap T_{m1}'$.
     Therefore, by rule T-App', $\Gamma \iccts (v_1 : c^s_1 \cap \ldots \cap c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : T_{12}' \cap \ldots \cap T_{m2}'$.
-    As $\icts c_{12} : T_{12}$ and ... and $\icts c_{m2} : T_{m2}$ and $initialType(c_{12}) = T_{12}'$ and ... and $initialType(c_{m2}) = T_{m2}'$, then by rule T-IntersectionCast, $\Gamma \iccts (v_1 : c^s_1 \cap \ldots \cap c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2} : T_{12} \cap \ldots \cap T_{m2}$.
+    As $\cits c_{12} : T_{12}$ and ... and $\cits c_{m2} : T_{m2}$ and $initialType(c_{12}) = T_{12}'$ and ... and $initialType(c_{m2}) = T_{m2}'$, then by rule T-CastIntersection, $\Gamma \iccts (v_1 : c^s_1 \cap \ldots \cap c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2} : T_{12} \cap \ldots \cap T_{m2}$.
     By rule E-SimulateArrow, $(v_1 : cv_1 \cap \ldots \cap cv_n)\ v_2 \gios\\ (v_1 : c^s_1 \cap \ldots \cap c^s_m)\ (v_2 : c_{11} \cap \ldots \cap c_{m1}) : c_{12} \cap \ldots \cap c_{m2}$, therefore it is proved.
     \item Rule E-MergeCasts.
-    If $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' : F_1' \cap \ldots \cap F_m'$ then by rule T-IntersectionCasts, $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : F_1 \cap \ldots \cap F_n$ and $\icts c_1' : F_1'$ and ... and $\icts c_m' : F_m'$ and $initialType(c_1') = I_1'$ and $initialType(c_m') = I_m'$ such that $\{I_1', \ldots, I_m'\} \subseteq \{F_1, \ldots, F_n\}$ and $I_1' \cap \ldots \cap I_m' = F_1 \cap \ldots \cap F_m$ and $m \leq n$.
-    As $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : F_1 \cap \ldots \cap F_n$ then by rule T-IntersectionCast, $\Gamma \iccts v : T_1 \cap \ldots \cap T_l$ and $\icts cv_1 : F_1$ and ... and $\icts cv_n : F_n$ and $initialType(cv_1) : I_1$ and ... and $initialType(cv_n) : I_n$ such that $\{I_1, \ldots, I_n\} \subseteq \{T_1, \ldots, T_l\}$ and $I_1 \cap \ldots \cap I_n = T_1 \cap \ldots \cap T_n$ and $n \leq l$.
-    By the definition of mergeCasts, $\icts c_1'' : F_1''$ and ... and $\icts c_j'' : F_j''$ and $initialType(c_1'') = I_1''$ and ... and $initialType(c_j'') = I_j''$ such that $\{I_1'', \ldots, I_j''\} \subseteq \{T_1, \ldots, T_l\}$ and $I_1'' \cap \ldots \cap I_j'' = T_1 \cap \ldots \cap T_j$ and $\{F_1'', \ldots, F_j''\} \subseteq \{F_1', \ldots, F_m'\}$ and $F_1'' \cap \ldots \cap F_j'' = F_1' \cap \ldots \cap F_j'$ and $j \leq l$ and $j \leq m$.
-    By rule T-Gen and T-Inst, $\Gamma \iccts v : T_1 \cap \ldots \cap T_j$ and therefore by rule T-IntersectionCast, $\Gamma \iccts v : c_1'' \cap \ldots \cap c_j'' : F_1'' \cap \ldots \cap F_j''$.
+    If $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' : F_1' \cap \ldots \cap F_m'$ then by rule T-CastIntersections, $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : F_1 \cap \ldots \cap F_n$ and $\cits c_1' : F_1'$ and ... and $\cits c_m' : F_m'$ and $initialType(c_1') = I_1'$ and $initialType(c_m') = I_m'$ such that $\{I_1', \ldots, I_m'\} \subseteq \{F_1, \ldots, F_n\}$ and $I_1' \cap \ldots \cap I_m' = F_1 \cap \ldots \cap F_m$ and $m \leq n$.
+    As $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : F_1 \cap \ldots \cap F_n$ then by rule T-CastIntersection, $\Gamma \iccts v : T_1 \cap \ldots \cap T_l$ and $\cits cv_1 : F_1$ and ... and $\cits cv_n : F_n$ and $initialType(cv_1) : I_1$ and ... and $initialType(cv_n) : I_n$ such that $\{I_1, \ldots, I_n\} \subseteq \{T_1, \ldots, T_l\}$ and $I_1 \cap \ldots \cap I_n = T_1 \cap \ldots \cap T_n$ and $n \leq l$.
+    By the definition of mergeCasts, $\cits c_1'' : F_1''$ and ... and $\cits c_j'' : F_j''$ and $initialType(c_1'') = I_1''$ and ... and $initialType(c_j'') = I_j''$ such that $\{I_1'', \ldots, I_j''\} \subseteq \{T_1, \ldots, T_l\}$ and $I_1'' \cap \ldots \cap I_j'' = T_1 \cap \ldots \cap T_j$ and $\{F_1'', \ldots, F_j''\} \subseteq \{F_1', \ldots, F_m'\}$ and $F_1'' \cap \ldots \cap F_j'' = F_1' \cap \ldots \cap F_j'$ and $j \leq l$ and $j \leq m$.
+    By rule T-Gen and T-Inst, $\Gamma \iccts v : T_1 \cap \ldots \cap T_j$ and therefore by rule T-CastIntersection, $\Gamma \iccts v : c_1'' \cap \ldots \cap c_j'' : F_1'' \cap \ldots \cap F_j''$.
     By rule E-MergeCasts, $v : cv_1 \cap \ldots \cap cv_n : c_1' \cap \ldots \cap c_m' \gios v : c_1'' \cap \ldots \cap c_j''$.
     \item Rule E-EvaluateCasts.
-    If $\Gamma \iccts v : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then by rule T-IntersectionCast, $\Gamma \iccts v : T_1' \cap \ldots \cap T_n'$ and $\icts c_1 : T_1$ and ... and $\icts c_n : T_n$ and $I_1 = initialType(c_1)$ and ... and $I_n = initialType(c_n)$ and $I_1 \cap \ldots \cap I_n = T_1' \cap \ldots \cap T_n'$.
-    By rule E-EvaluateCasts, $c_1 \icos cv_1$ and ... and $c_n \icos cv_n$.
-    By Lemmas \ref{type_preservationIC} and \ref{progressIC}, $\icts cv_1 : T_1$ and $initialType(cv_1) = I_1$ and ... and $\icts cv_n : T_n$ and $initialType(cv_n) = I_n$.
-    Therefore by rule T-IntersectionCast, $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_n$.
+    If $\Gamma \iccts v : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then by rule T-CastIntersection, $\Gamma \iccts v : T_1' \cap \ldots \cap T_n'$ and $\cits c_1 : T_1$ and ... and $\cits c_n : T_n$ and $I_1 = initialType(c_1)$ and ... and $I_n = initialType(c_n)$ and $I_1 \cap \ldots \cap I_n = T_1' \cap \ldots \cap T_n'$.
+    By rule E-EvaluateCasts, $c_1 \cios cv_1$ and ... and $c_n \cios cv_n$.
+    By Lemmas \ref{type_preservationIC} and \ref{progressIC}, $\cits cv_1 : T_1$ and $initialType(cv_1) = I_1$ and ... and $\cits cv_n : T_n$ and $initialType(cv_n) = I_n$.
+    Therefore by rule T-CastIntersection, $\Gamma \iccts v : cv_1 \cap \ldots \cap cv_n : T_1 \cap \ldots \cap T_n$.
     By rule E-EvaluateCasts, $v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n$.
     \item Rule E-PropagateBlame.
     If $\Gamma \iccts v : \blamecast{T_1'}{T_1}{l_1}{m_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{m_n} : T_1 \cap \ldots \cap T_n$ and by rule E-PropagateBlame $v : \blamecast{T_1'}{T_1}{l_1}{m_1} \cap \ldots \cap \blamecast{T_n'}{T_n}{l_n}{m_n} \gios \blame{(T_1 \cap \ldots \cap T_n)}{l_1}$, then by rule T-Blame, $\Gamma \iccts \blame{(T_1 \cap \ldots \cap T_n)}{l_1} : T_1 \cap \ldots \cap T_n$.
     \item Rule E-RemoveEmpty.
-    If $\Gamma \iccts v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n} : T_1 \cap \ldots \cap T_n$, then by rule T-IntersectionCast, $\Gamma \iccts v : T_1 \cap \ldots \cap T_n$ and $\icts \emptycast{T_1}{m_1} : T_1$ and ... and $\icts \emptycast{T_n}{m_n} : T_n$ and $initialType(\emptycast{T_1}{m_1}) = T_1$ and ... and $initialType(\emptycast{T_n}{m_n}) = T_n$.
+    If $\Gamma \iccts v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n} : T_1 \cap \ldots \cap T_n$, then by rule T-CastIntersection, $\Gamma \iccts v : T_1 \cap \ldots \cap T_n$ and $\cits \emptycast{T_1}{m_1} : T_1$ and ... and $\cits \emptycast{T_n}{m_n} : T_n$ and $initialType(\emptycast{T_1}{m_1}) = T_1$ and ... and $initialType(\emptycast{T_n}{m_n}) = T_n$.
     Therefore, by rule E-RemoveEmpty, $v : \emptycast{T_1}{m_1} \cap \ldots \cap \emptycast{T_n}{m_n} \gios v$.
 \end{itemize}
 Induction step:
@@ -1627,24 +1627,24 @@ Induction step:
     \item Rule E-App1. There are two possibilities:
     \begin{itemize}
         \item If $\Gamma \iccts e_1\ e_2 : T$, then by rule T-App, $\Gamma \iccts e_1 : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2 : T_1 \cap \ldots \cap T_n$.
-        By rule E-App1, $e_1 \icos e_1'$, so by the induction hypothesis, $\Gamma \iccts e_1' : T_1 \cap \ldots \cap T_n \rightarrow T$.
-        As by rule E-App1, $e_1\ e_2 \icos e_1'\ e_2$, then by rule T-App, $\Gamma \iccts e_1'\ e_2 : T$.
+        By rule E-App1, $e_1 \cios e_1'$, so by the induction hypothesis, $\Gamma \iccts e_1' : T_1 \cap \ldots \cap T_n \rightarrow T$.
+        As by rule E-App1, $e_1\ e_2 \cios e_1'\ e_2$, then by rule T-App, $\Gamma \iccts e_1'\ e_2 : T$.
         \item If $\Gamma \iccts e_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}$, then by rule T-App', $\Gamma \iccts e_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$ and $\Gamma \iccts e_2 : T_{11} \cap \ldots \cap T_{n1}$.
-        By rule E-App1, $e_1 \icos e_1'$, so by the induction hypothesis, $\Gamma \iccts e_1' : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$.
-        As by rule E-App1, $e_1\ e_2 \icos e_1'\ e_2$, then by rule T-App', $\Gamma \iccts e_1'\ e_2 : T_{12} \cap \dots \cap T_{n2}$.
+        By rule E-App1, $e_1 \cios e_1'$, so by the induction hypothesis, $\Gamma \iccts e_1' : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$.
+        As by rule E-App1, $e_1\ e_2 \cios e_1'\ e_2$, then by rule T-App', $\Gamma \iccts e_1'\ e_2 : T_{12} \cap \dots \cap T_{n2}$.
     \end{itemize}
     \item Rule E-App2. There are two possibilities:
     \begin{itemize}
         \item If $\Gamma \iccts v_1\ e_2 : T$, then by rule T-App, $\Gamma \iccts v_1 : T_1 \cap \ldots \cap T_n \rightarrow T$ and $\Gamma \iccts e_2 : T_1 \cap \ldots \cap T_n$.
-        By rule E-App2, $e_2 \icos e_2'$, so by the induction hypothesis, $\Gamma \iccts e_2' : T_1 \cap \ldots \cap T_n$.
-        As by rule E-App2, $v_1\ e_2 \icos v_1\ e_2'$, then by rule T-App, $\Gamma \iccts v_1\ e_2' : T$.
+        By rule E-App2, $e_2 \cios e_2'$, so by the induction hypothesis, $\Gamma \iccts e_2' : T_1 \cap \ldots \cap T_n$.
+        As by rule E-App2, $v_1\ e_2 \cios v_1\ e_2'$, then by rule T-App, $\Gamma \iccts v_1\ e_2' : T$.
         \item If $\Gamma \iccts v_1\ e_2 : T_{12} \cap \ldots \cap T_{n2}$, then by rule T-App', $\Gamma \iccts v_1 : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}$ and $\Gamma \iccts e_2 : T_{11} \cap \ldots \cap T_{n1}$.
-        By rule E-App2, $e_2 \icos e_2'$, so by the induction hypothesis, $\Gamma \iccts e_2' : T_{11} \cap \ldots \cap T_{n1}$.
-        As by rule E-App1, $v_1\ e_2 \icos v_1\ e_2'$, then by rule T-App', $\Gamma \iccts v_1\ e_2' : T_{12} \cap \dots \cap T_{n2}$..
+        By rule E-App2, $e_2 \cios e_2'$, so by the induction hypothesis, $\Gamma \iccts e_2' : T_{11} \cap \ldots \cap T_{n1}$.
+        As by rule E-App1, $v_1\ e_2 \cios v_1\ e_2'$, then by rule T-App', $\Gamma \iccts v_1\ e_2' : T_{12} \cap \dots \cap T_{n2}$..
     \end{itemize}
-    \item Rule E-Evaluate. If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$, then by rule T-IntersectionCast, $\Gamma \iccts e : T_1' \cap \ldots \cap T_n'$, $\icts c_1 : T_1$ and ... and $\icts c_n : T_n$ and $initialType(c_1) \cap \ldots \cap initialType(c_n) = T_1' \cap \ldots \cap T_n'$.
-    By rule E-Evaluate, $e \icos e'$, so by the induction hypothesis, $\Gamma \iccts e' : T$.
-    As by rule E-Evaluate, $e : c_1 \cap \ldots \cap c_n \icos e' : c_1 \cap \ldots \cap c_n$, then by rule T-IntersectionCast, $\Gamma \iccts e' : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$.
+    \item Rule E-Evaluate. If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$, then by rule T-CastIntersection, $\Gamma \iccts e : T_1' \cap \ldots \cap T_n'$, $\cits c_1 : T_1$ and ... and $\cits c_n : T_n$ and $initialType(c_1) \cap \ldots \cap initialType(c_n) = T_1' \cap \ldots \cap T_n'$.
+    By rule E-Evaluate, $e \cios e'$, so by the induction hypothesis, $\Gamma \iccts e' : T$.
+    As by rule E-Evaluate, $e : c_1 \cap \ldots \cap c_n \cios e' : c_1 \cap \ldots \cap c_n$, then by rule T-CastIntersection, $\Gamma \iccts e' : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$.
 \end{itemize}
 \end{proof}
 
@@ -1693,8 +1693,8 @@ Induction step:
     If $e_1$ is not a value, then by rule E-App1, $e_1\ e_2 \gios e_1'\ e_2$.
     If $e_1$ is a value and $e_2$ is not a value, then by rule E-App2, $v_1\ e_2 \gios v_1\ e_2'$.
     If both $e_1$ and $e_2$ are values then $e_1$ must be an abstraction $(\lambda x : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2} .\ e)$, and by rule E-AppAbs $(\lambda x : T_{11} \rightarrow T_{12} \cap \ldots \cap T_{n1} \rightarrow T_{n2}\ .\ e)\ v_2 \gios [x \mapsto v_2]e$.
-    \item Rule T-IntersectionCast.
-    If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then by rule T-IntersectionCast, $\Gamma \iccts e : T_1' \cap \ldots \cap T_n'$.
+    \item Rule T-CastIntersection.
+    If $\Gamma \iccts e : c_1 \cap \ldots \cap c_n : T_1 \cap \ldots \cap T_n$ then by rule T-CastIntersection, $\Gamma \iccts e : T_1' \cap \ldots \cap T_n'$.
     By the induction hypothesis, $e$ is either a value, or there is an $e'$ such that $e \gios e'$.
     If $e$ is a value, then either by rule E-EvaluateCasts, $v : c_1 \cap \ldots \cap c_n \gios v : cv_1 \cap \ldots \cap cv_n$, or by rule E-PushBlameCast, $\blame{T_1' \cap \ldots \cap T_n'}{l} : c_1 \cap \ldots \cap c_n \gios \blame{T_1 \cap \ldots \cap T_n}{l}$.
     If there is an $e'$ such that $e \gios e'$, then by rule E-Evaluate, $e : c_1 \cap \ldots \cap c_n \gios e' : c_1 \cap \ldots \cap c_n$.
