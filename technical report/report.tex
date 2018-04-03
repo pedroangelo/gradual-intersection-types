@@ -412,10 +412,6 @@ Syntax
 \begin{mathpar}
 \inferrule* []
 {}
-{\{T_1\},\ \{T_2\},\ e \hookrightarrow e : (\emptycast{T_1}{0} : T_1 \Rightarrow^l T_2\ ^{0})}\\
-
-\inferrule* []
-{}
 {\{T_{11}, \ldots, T_{1n}\},\ \{T_{21}, \ldots, T_{2n}\},\ e \hookrightarrow e : (\emptycast{T_{11}}{0} : T_{11} \Rightarrow^{l_1} T_{21}\ ^{0}) \cap \ldots \cap (\emptycast{T_{1n}}{0} : T_{1n} \Rightarrow^{l_n} T_{2n}\ ^{0})}\\
 
 \inferrule* []
@@ -438,7 +434,7 @@ Syntax
 &Ground\ Types\ G\ ::=\ \Int\ |\ \Bool\ |\ \Dyn \rightarrow \Dyn\\
 &Casts\ \begin{aligned}[t] c\ ::=&\ c : T \Rightarrow^l T\ ^{cl}\ |\ \blamecast{T}{T}{l}{cl}\ |\ \emptycast{T}{cl} \end{aligned}\\
 &Cast\ Values\ \begin{aligned}[t] cv\ ::=&\ cv1\ |\ \blamecast{T}{T}{l}{cl}\\
-                                cv1\ ::=&\ \emptycast{T}{cl}\ |\ cv1 : G \Rightarrow^l \Dyn\ ^{cl}\ |\ cv1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl} \end{aligned}\\
+                                cv1\ ::=&\ \emptycast{T}{cl}\ |\ cv1 : G \Rightarrow^l \Dyn\ ^{cl}\ |\ cv1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl} \end{aligned}
 \end{align*}
 
 \framebox[1.2\width]{$c \cios c$}\ Evaluation
@@ -678,47 +674,47 @@ Transition\ from\ cast\ values\ to\ values\\
 \end{figure}
 
 \begin{figure}[H]
-\framebox[1.2\width]{$e =_c e$}\ Equality of Casts
+\framebox[1.2\width]{$e \equalityCasts e$}\ Equality of Casts
 \begin{mathpar}
 \inferrule* []
 {}
-{x =_c x}
+{x \equalityCasts x}
 
 \inferrule* []
 {}
-{n =_c n}
+{n \equalityCasts n}
 
 \inferrule* []
 {}
-{\true =_c \true}
+{\true \equalityCasts \true}
 
 \inferrule* []
 {}
-{\false =_c \false}
+{\false \equalityCasts \false}
 
 \inferrule* []
 {}
-{\blame{T}{l} =_c \blame{T}{l}}
+{\blame{T}{l} \equalityCasts \blame{T}{l}}
 
 \inferrule* []
-{e =_c e'}
-{\lambda x : T\ .\ e =_c \lambda x : T\ .\ e'}
+{e \equalityCasts e'}
+{\lambda x : T\ .\ e \equalityCasts \lambda x : T\ .\ e'}
 
 \inferrule* []
-{e_1 =_c e_1' \\ e_2 =_c e_2'}
-{e_1\ e_2 =_c e_1'\ e_2'}
+{e_1 \equalityCasts e_1' \\ e_2 \equalityCasts e_2'}
+{e_1\ e_2 \equalityCasts e_1'\ e_2'}
 
 \inferrule* []
-{e =_c e'}
-{e =_c e' : (\emptycast{T}{cl})}
+{e \equalityCasts e'}
+{e \equalityCasts e' : (\emptycast{T}{cl})}
 
 \inferrule* []
 {}
-{\blame{T}{l} =_c e : (\blamecast{T'}{T}{l}{cl})}
+{\blame{T}{l} \equalityCasts e : (\blamecast{T'}{T}{l}{cl})}
 
 \inferrule* []
-{e =_c e' : c}
-{e : T_1 \Rightarrow^l T_2 =_c e' : (c : T_1 \Rightarrow^l T_2\ ^{cl})}
+{e \equalityCasts e' : c}
+{e : T_1 \Rightarrow^l T_2 \equalityCasts e' : (c : T_1 \Rightarrow^l T_2\ ^{cl})}
 \end{mathpar}
 \hrulefill
 \caption{Equality of Casts}
@@ -727,10 +723,10 @@ Transition\ from\ cast\ values\ to\ values\\
 
 \newpage
 
-\section{Gradual Intersection Lambda Calculus as an extension of the GTLC}
+\section{Conservative Extension to the GTLC}
 \begin{theorem}[Instances of Intersection Types]
 \label{instances_intersection_types}
-If $T \trianglelefteq \{T_1, \ldots, T_n\}$ then $\{T_1, \ldots, T_n\}$ is the set of all the instances of $T$ and for each $i \in 1 .. n$, $T_i$ is a simple type.
+If $T \trianglelefteq \{T_1, \ldots, T_n\}$ then $\{T_1, \ldots, T_n\}$ is the set of all the instances of $T$, such that for each $i \in 1 .. n$, $T_i$ is a simple type.
 \end{theorem}
 \begin{proof}
 We proceed by structural induction on $T$.
@@ -757,7 +753,7 @@ Induction step:
 \end{itemize}
 \end{proof}
 
-\begin{theorem}[Conservative Extension]
+\begin{theorem}[Conservative Extension to the GTLC]
 \label{conservative_extension_intersection_type_system}
 If $e$ is annotated with only simple types and $T$ is a simple type, then $\Gamma \vdash_{G} e : T \iff \Gamma \gits e : T$.
 \end{theorem}
@@ -824,7 +820,7 @@ Induction step:
 \end{itemize}
 \end{proof}
 
-\begin{theorem}[Conservative Extension]
+\begin{theorem}[Conservative Extension to the GTLC]
 \label{conservative_extension_intersection_cast_insertion}
 If $e$ is annotated with only simple types and $T$ is a simple type then $\Gamma \vdash_{CC} e \leadsto e_1 : T \iff \Gamma \iccts e \leadsto e_2 : T$ and $e_1 =_{c} e_2$.
 \end{theorem}
@@ -855,8 +851,8 @@ Induction step:
     By definition of $\trianglelefteq$, $PM \trianglelefteq \{PM\}$, $T_1 \rightarrow T_2 \trianglelefteq \{T_1 \rightarrow T_2\}$, $T_1' \trianglelefteq \{T_1'\}$ and $T_1 \trianglelefteq \{T_1\}$.
     By the definition of $\hookrightarrow$, $\{PM\},\ \{T_1 \rightarrow T_2\},\ e_1' \hookrightarrow e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0$ and $\{T_1'\},\ \{T_1\},\ e_2' \hookrightarrow e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0$.
     Therefore, $\Gamma \iccts e_1\ e_2 \leadsto (e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0)\ (e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0) : T_2$.
-    By the definition of $=_c$, $(e_1' : PM \Rightarrow^l T_1 \rightarrow T_2) =_c (e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0)$ and $(e_2' : T_1' \Rightarrow^l T_1) =_c (e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0)$.
-    Therefore, $(e_1' : PM \Rightarrow^l T_1 \rightarrow T_2)\ (e_2' : T_1' \Rightarrow^l T_1) =_c (e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0)\ (e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0)$.
+    By the definition of $\equalityCasts$, $(e_1' : PM \Rightarrow^l T_1 \rightarrow T_2) \equalityCasts (e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0)$ and $(e_2' : T_1' \Rightarrow^l T_1) \equalityCasts (e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0)$.
+    Therefore, $(e_1' : PM \Rightarrow^l T_1 \rightarrow T_2)\ (e_2' : T_1' \Rightarrow^l T_1) \equalityCasts (e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0)\ (e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0)$.
 \end{itemize}
 We will now prove the left direction of the implication, that if $\Gamma \iccts e \leadsto e_2 : T$ then $\Gamma \vdash_{CC} e \leadsto e_1 : T$ and $e_1 =_{c} e_2$.
 We proceed by induction on the length of the derivation tree of $\Gamma \iccts e \leadsto e_2 : T$.
@@ -887,8 +883,8 @@ Induction step:
     Since $e_1\ e_2$ is annotated with only simple types, then by the definition of $\trianglelefteq$, $e_1'' = (e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0)$ and $e_2'' = (e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0)$.
     By the induction hypothesis, $\Gamma \vdash_{CC} e_1 \leadsto e_1' : PM$ and $\Gamma \vdash_{CC} e_2 \leadsto e_2' : T'_1$.
     Therefore, by rule C-App, $\Gamma \vdash_{CC} e_1\ e_2 \leadsto (e_1' : PM \Rightarrow^l T_1 \rightarrow T_2)\ (e_2' : T_1' \Rightarrow^l T_1) : T_2$.
-    By the definition of $=_c$, $(e_1' : PM \Rightarrow^l T_1 \rightarrow T_2) =_c (e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0)$ and $(e_2' : T_1' \Rightarrow^l T_1) =_c (e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0)$.
-    Therefore, $(e_1' : PM \Rightarrow^l T_1 \rightarrow T_2)\ (e_2' : T_1' \Rightarrow^l T_1) =_c (e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0)\ (e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0)$.
+    By the definition of $\equalityCasts$, $(e_1' : PM \Rightarrow^l T_1 \rightarrow T_2) \equalityCasts (e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0)$ and $(e_2' : T_1' \Rightarrow^l T_1) \equalityCasts (e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0)$.
+    Therefore, $(e_1' : PM \Rightarrow^l T_1 \rightarrow T_2)\ (e_2' : T_1' \Rightarrow^l T_1) \equalityCasts (e_1' : \emptycast{PM}{0} : PM \Rightarrow^l T_1 \rightarrow T_2\ ^0)\ (e_2' : \emptycast{T_1'}{0} : T_1' \Rightarrow^l T_1\ ^0)$.
     \item Rule C-Gen.
     If $\Gamma \iccts e \leadsto e' : T$ then by rule C-Gen, $\Gamma \iccts e \leadsto e' : T$.
     By the induction hypothesis, $\Gamma \vdash_{CC} e \leadsto e' : T$.
@@ -898,264 +894,264 @@ Induction step:
 \end{itemize}
 \end{proof}
 
-\begin{theorem}[Conservative Extension]
+\begin{theorem}[Conservative Extension to the GTLC]
 \label{conservative_extension_intersection_cast_insertion}
 Depends on Lemma \ref{progress}.
 If $e_2$ are annotated with only simple types, $T$ is a simple type, $\Gamma \vdash_{CC} e_1 : T$, $\Gamma \iccts e_2 : T$ and $e_1 =_{c} e_2$ then $e_1 \longrightarrow_{CC} e_1' \iff e_2 \gios e_2'$, and $e_1' =_{c} e_2'$.
 \end{theorem}
 \begin{proof}
 We will first prove the right direction of the implication, that if $e_1 \longrightarrow_{CC} e_1'$ then $e_2 \gios^* e_2'$ and $e_1 =_{c} e_2$.
-We proceed by induction on the length of the derivation tree of $e_1 =_c e_2$.
+We proceed by induction on the length of the derivation tree of $e_1 \equalityCasts e_2$.
 Base cases:
 \begin{itemize}
-    \item $x =_c x$.
+    \item $x \equalityCasts x$.
     As $x$ doesn't reduce by $\longrightarrow_{CC}$, this case is not considered.
-    \item $n =_c n$.
+    \item $n \equalityCasts n$.
     As $n$ doesn't reduce by $\longrightarrow_{CC}$, this case is not considered.
-    \item $\true =_c \true$.
+    \item $\true \equalityCasts \true$.
     As $\true$ doesn't reduce by $\longrightarrow_{CC}$, this case is not considered.
-    \item $\false =_c \false$.
+    \item $\false \equalityCasts \false$.
     As $\false$ doesn't reduce by $\longrightarrow_{CC}$, this case is not considered.
-    \item $\blame{T}{l} =_c \blame{T}{l}$.
+    \item $\blame{T}{l} \equalityCasts \blame{T}{l}$.
     As $\blame{T}{l}$ doesn't reduce by $\longrightarrow_{CC}$, this case is not considered.
-    \item $\blame{T}{l} =_c e : (\blamecast{T'}{T}{l}{cl})$.
+    \item $\blame{T}{l} \equalityCasts e : (\blamecast{T'}{T}{l}{cl})$.
     As $\blame{T}{l}$ doesn't reduce by $\longrightarrow_{CC}$, this case is not considered.
 \end{itemize}
 Induction step:
 \begin{itemize}
-    \item $\lambda x : T\ .\ e =_c \lambda x : T\ .\ e'$.
+    \item $\lambda x : T\ .\ e \equalityCasts \lambda x : T\ .\ e'$.
     As $\lambda x : T\ .\ e$ doesn't reduce by $\longrightarrow_{CC}$, this case is not considered.
-    \item $e_1\ e_2 =_c e_3\ e_4$.
+    \item $e_1\ e_2 \equalityCasts e_3\ e_4$.
     There are six possibilities:
     \begin{itemize}
         \item Rule E-PushBlame1.
-        If $\blame{T' \rightarrow T}{l}\ e_2 = e_3\ e_4$ and $\blame{T' \rightarrow T}{l}\ e_2 \longrightarrow_{CC} \blame{T}{l}$ then by the definition of $=_c$, $\blame{T' \rightarrow T}{l} =_c e_3$.
+        If $\blame{T' \rightarrow T}{l}\ e_2 = e_3\ e_4$ and $\blame{T' \rightarrow T}{l}\ e_2 \longrightarrow_{CC} \blame{T}{l}$ then by the definition of $\equalityCasts$, $\blame{T' \rightarrow T}{l} \equalityCasts e_3$.
         There are two possibilities.
-        By the definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, either
+        By the definition of $\equalityCasts$ and by applying rule E-RemoveEmpty zero or more times, either
         \begin{itemize}
             \item $e_3 \gios^* \blame{T' \rightarrow T}{l}$.
             By rule E-App1, $e_3\ e_4 \gios^* \blame{T' \rightarrow T}{l}\ e_4$.
-            By rule E-PushBlame1, $\blame{T' \rightarrow T}{l}\ e_4 \gios^* \blame{T}{l}$ and $\blame{T}{l} =_c \blame{T}{l}$.
+            By rule E-PushBlame1, $\blame{T' \rightarrow T}{l}\ e_4 \gios^* \blame{T}{l}$ and $\blame{T}{l} \equalityCasts \blame{T}{l}$.
             \item $e_3 \gios^* e : (\blamecast{T''}{(T' \rightarrow T)}{l}{cl})$.
             By repeated application of rule E-Evaluate and by Lemma \ref{progress}, $e : \blamecast{T''}{(T' \rightarrow T)}{l}{cl}) \gios^* v : \blamecast{T''}{(T' \rightarrow T)}{l}{cl})$.
             By rule E-PropagateBlame, $v : \blamecast{T''}{(T' \rightarrow T)}{l}{cl}) \gios^* \blame{T' \rightarrow T}{l}$.
             By rule E-App1, $e_3\ e_4 \gios^* \blame{T' \rightarrow T}{l}\ e_4$.
-            By rule E-PushBlame1, $\blame{T' \rightarrow T}{l}\ e_4 \gios^* \blame{T}{l}$ and $\blame{T}{l} =_c \blame{T}{l}$.
+            By rule E-PushBlame1, $\blame{T' \rightarrow T}{l}\ e_4 \gios^* \blame{T}{l}$ and $\blame{T}{l} \equalityCasts \blame{T}{l}$.
         \end{itemize}
         \item Rule E-PushBlame2.
-        If $e_1\ \blame{T'}{l} = e_3\ e_4$ and $e_1\ \blame{T'}{l} \longrightarrow_{CC} \blame{T}{l}$ then by the definition of $=_c$, $\blame{T'}{l} =_c e_4$.
+        If $e_1\ \blame{T'}{l} = e_3\ e_4$ and $e_1\ \blame{T'}{l} \longrightarrow_{CC} \blame{T}{l}$ then by the definition of $\equalityCasts$, $\blame{T'}{l} \equalityCasts e_4$.
         There are two possibilities.
-        By the definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, either
+        By the definition of $\equalityCasts$ and by applying rule E-RemoveEmpty zero or more times, either
         \begin{itemize}
             \item $e_4 \gios^* \blame{T'}{l}$.
             By rule E-App2, $e_3\ e_4 \gios^* e_3\ \blame{T'}{l}$.
-            By rule E-PushBlame2, $e_3\ \blame{T'}{l} \gios^* \blame{T}{l}$ and $\blame{T}{l} =_c \blame{T}{l}$.
+            By rule E-PushBlame2, $e_3\ \blame{T'}{l} \gios^* \blame{T}{l}$ and $\blame{T}{l} \equalityCasts \blame{T}{l}$.
             \item $e_4 \gios^* e : \blamecast{T''}{T'}{l}{cl}$.
             By repeated application of rule E-Evaluate and by Lemma \ref{progress}, $e : \blamecast{T''}{T'}{l}{cl} \gios^* v : \blamecast{T''}{T'}{l}{cl}$.
             By rule E-PropagateBlame, $v : \blamecast{T''}{T'}{l}{cl} \gios^* \blame{T'}{l}$.
             By rule E-App2, $e_3\ e_4 \gios^* e_3\ \blame{T'}{l}$.
-            By rule E-PushBlame2, $e_3\ \blame{T'}{l} \gios^* \blame{T}{l}$ and $\blame{T}{l} =_c \blame{T}{l}$.
+            By rule E-PushBlame2, $e_3\ \blame{T'}{l} \gios^* \blame{T}{l}$ and $\blame{T}{l} \equalityCasts \blame{T}{l}$.
         \end{itemize}
         \item Rule E-App1.
-        If $e_1\ e_2 =_c e_3\ e_4$ and $e_1\ e_2 \longrightarrow_{CC} e_1'\ e_2$ then by the definition of $=_c$, $e_1 =_c e_3$ and $e_2 =_c e_4$, and by rule E-App1, $e_1 \longrightarrow_{CC} e_1'$.
-        By the induction hypothesis, $e_3 \gios e_3'$ and $e_1' =_c e_3'$.
+        If $e_1\ e_2 \equalityCasts e_3\ e_4$ and $e_1\ e_2 \longrightarrow_{CC} e_1'\ e_2$ then by the definition of $\equalityCasts$, $e_1 \equalityCasts e_3$ and $e_2 \equalityCasts e_4$, and by rule E-App1, $e_1 \longrightarrow_{CC} e_1'$.
+        By the induction hypothesis, $e_3 \gios e_3'$ and $e_1' \equalityCasts e_3'$.
         Then, by rule E-App1, $e_3\ e_4 \gios e_3'\ e_4$.
-        By definition of $=_c$, $e_1'\ e_2 =_c e_3'\ e_4$.
+        By definition of $\equalityCasts$, $e_1'\ e_2 \equalityCasts e_3'\ e_4$.
         \item Rule E-App2.
-        If $v_1\ e_2 =_c e_3\ e_4$ and $v_1\ e_2 \longrightarrow_{CC} v_1\ e_2'$ then by the definition of $=_c$, $v_1 =_c e_3$ and $e_2 =_c e_4$, and by rule E-App2, $e_2 \longrightarrow_{CC} e_2'$.
-        By the induction hypothesis, $e_4 \gios e_4'$ and $e_2' =_c e_4'$.
-        By definition of $=_c$, and by applying rule E-RemoveEmpty zero or more times, $e_3 \gios^* v_1$.
-        If $e_3 \gios^* v_1'$ such that $v_1 =_c v_1'$, by rule E-App1, $e_3\ e_4 \gios v_1'\ e_4$, and by rule E-App2, $v_1'\ e_4 \gios v_1'\ e_4'$.
-        By definition of $=_c$, $v_1\ e_2' =_c v_1'\ e_4'$.
+        If $v_1\ e_2 \equalityCasts e_3\ e_4$ and $v_1\ e_2 \longrightarrow_{CC} v_1\ e_2'$ then by the definition of $\equalityCasts$, $v_1 \equalityCasts e_3$ and $e_2 \equalityCasts e_4$, and by rule E-App2, $e_2 \longrightarrow_{CC} e_2'$.
+        By the induction hypothesis, $e_4 \gios e_4'$ and $e_2' \equalityCasts e_4'$.
+        By definition of $\equalityCasts$, and by applying rule E-RemoveEmpty zero or more times, $e_3 \gios^* v_1$.
+        If $e_3 \gios^* v_1'$ such that $v_1 \equalityCasts v_1'$, by rule E-App1, $e_3\ e_4 \gios v_1'\ e_4$, and by rule E-App2, $v_1'\ e_4 \gios v_1'\ e_4'$.
+        By definition of $\equalityCasts$, $v_1\ e_2' \equalityCasts v_1'\ e_4'$.
         \item Rule E-AppAbs.
-        If $(\lambda x : T'\ .\ e)\ v =_c e_3\ e_4$ and $(\lambda x : T'\ .\ e)\ v \longrightarrow_{CC} [x \mapsto v]e$ then by the definition of $=_c$, $(\lambda x : T'\ .\ e) =_c e_3$ and $v =_c e_4$.
-        By the definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, $e_3 \gios^* \lambda x : T'\ .\ e'$ and $e_4 \gios^* v'$, such that, by definition of $=_c$, $(\lambda x : T'\ .\ e) = _c (\lambda x : T'\ .\ e')$ and $v =_c v'$ and $e =_c e'$.
-        By rule E-AppAbs, $(\lambda x : T'\ .\ e')\ v' \gios [x \mapsto v']e'$ and by definition of $=_c$, $[x \mapsto v]e =_c [x \mapsto v']e'$.
+        If $(\lambda x : T'\ .\ e)\ v \equalityCasts e_3\ e_4$ and $(\lambda x : T'\ .\ e)\ v \longrightarrow_{CC} [x \mapsto v]e$ then by the definition of $\equalityCasts$, $(\lambda x : T'\ .\ e) \equalityCasts e_3$ and $v \equalityCasts e_4$.
+        By the definition of $\equalityCasts$ and by applying rule E-RemoveEmpty zero or more times, $e_3 \gios^* \lambda x : T'\ .\ e'$ and $e_4 \gios^* v'$, such that, by definition of $\equalityCasts$, $(\lambda x : T'\ .\ e) = _c (\lambda x : T'\ .\ e')$ and $v \equalityCasts v'$ and $e \equalityCasts e'$.
+        By rule E-AppAbs, $(\lambda x : T'\ .\ e')\ v' \gios [x \mapsto v']e'$ and by definition of $\equalityCasts$, $[x \mapsto v]e \equalityCasts [x \mapsto v']e'$.
         \item Rule C-BETA.
-        If $(v_1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4)\ v_2 =_c e_3\ e_4$ and $(v_1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4)\ v_2 \longrightarrow_{CC} (v_1\ (v_2 : T_3 \Rightarrow^l T_1)) : T_2 \Rightarrow^l T_4$ then by the definition of $=_c$, $v_1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4 =_c e_3$ and $v_2 =_c e_4$.
-        By definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, $e_3 \gios^* v_1' : (\emptycast{T_1 \rightarrow T_2}{cl} : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4)$ such that $v_1 =_c v_1'$, and $e_4 \gios^* v_2'$ such that $v_2 =_c v_2'$.
+        If $(v_1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4)\ v_2 \equalityCasts e_3\ e_4$ and $(v_1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4)\ v_2 \longrightarrow_{CC} (v_1\ (v_2 : T_3 \Rightarrow^l T_1)) : T_2 \Rightarrow^l T_4$ then by the definition of $\equalityCasts$, $v_1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4 \equalityCasts e_3$ and $v_2 \equalityCasts e_4$.
+        By definition of $\equalityCasts$ and by applying rule E-RemoveEmpty zero or more times, $e_3 \gios^* v_1' : (\emptycast{T_1 \rightarrow T_2}{cl} : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4)$ such that $v_1 \equalityCasts v_1'$, and $e_4 \gios^* v_2'$ such that $v_2 \equalityCasts v_2'$.
         By rule E-SimulateArrow, $(v_1' : (\emptycast{T_1 \rightarrow T_2}{cl} : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4))\ v_2' \gios ((v_1' : \emptycast{T_1 \rightarrow T_2}{cl})\ (v_2' : (\emptycast{T_3}{0} : T_3 \Rightarrow^l T_1\ ^0))) : (\emptycast{T_2}{0} : T_2 \Rightarrow^l T_4\ ^0)$.
-        By the definition of $=_c$, $(v_1\ (v_2 : T_3 \Rightarrow^l T_1)) : T_2 \Rightarrow^l T_4 =_c ((v_1' : \emptycast{T_1 \rightarrow T_2}{cl})\ (v_2' : (\emptycast{T_3}{0} : T_3 \Rightarrow^l T_1\ ^0))) : (\emptycast{T_2}{0} : T_2 \Rightarrow^l T_4\ ^0)$.
+        By the definition of $\equalityCasts$, $(v_1\ (v_2 : T_3 \Rightarrow^l T_1)) : T_2 \Rightarrow^l T_4 \equalityCasts ((v_1' : \emptycast{T_1 \rightarrow T_2}{cl})\ (v_2' : (\emptycast{T_3}{0} : T_3 \Rightarrow^l T_1\ ^0))) : (\emptycast{T_2}{0} : T_2 \Rightarrow^l T_4\ ^0)$.
     \end{itemize}
-    \item $e_1 =_c e_2 : (\emptycast{T}{cl})$.
-    If $e_1 =_c e_2 : \emptycast{T}{cl}$ and $e_1 \longrightarrow_{CC} e_1'$ then by the definition of $=_c$, $e_1 =_c e_2$.
-    By the induction hypothesis, $e_2 \gios e_2'$ and $e_1' =_c e_2'$.
+    \item $e_1 \equalityCasts e_2 : (\emptycast{T}{cl})$.
+    If $e_1 \equalityCasts e_2 : \emptycast{T}{cl}$ and $e_1 \longrightarrow_{CC} e_1'$ then by the definition of $\equalityCasts$, $e_1 \equalityCasts e_2$.
+    By the induction hypothesis, $e_2 \gios e_2'$ and $e_1' \equalityCasts e_2'$.
     By rule E-Evaluate, $e_2 : \emptycast{T}{cl} \gios e_2' : \emptycast{T}{cl}$.
-    As $e_1' =_c e_2'$ then by definition of $=_c$, $e_1' =_c e_2' : \emptycast{T}{cl}$.
-    \item $e : T_1 \Rightarrow^l T_2 =_c e' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$.
+    As $e_1' \equalityCasts e_2'$ then by definition of $\equalityCasts$, $e_1' \equalityCasts e_2' : \emptycast{T}{cl}$.
+    \item $e : T_1 \Rightarrow^l T_2 \equalityCasts e' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$.
     There are seven possibilities:
     \begin{itemize}
         \item Rule E-Evaluate.
-        If $e_1 : T_1 \Rightarrow^l T_2 =_c e$ and $e_1 : T_1 \Rightarrow^l T_2 \longrightarrow_{CC} e_1' : T_1 \Rightarrow^l T_2$, then by the definition of $=_c$ and by applying rule E-Evaluate zero or more times, $e \gios^* e_2 : (c : T_1 \Rightarrow^l T_2\ ^{cl})$ such that $e_1 =_c e_2 : c$, and by rule E-Evaluate, $e_1 \longrightarrow_{CC} e_1'$.
-        By the induction hypothesis, $e_2 : c \gios^* e_2' : c$ and $e_1' =_c e_2' : c$.
+        If $e_1 : T_1 \Rightarrow^l T_2 \equalityCasts e$ and $e_1 : T_1 \Rightarrow^l T_2 \longrightarrow_{CC} e_1' : T_1 \Rightarrow^l T_2$, then by the definition of $\equalityCasts$ and by applying rule E-Evaluate zero or more times, $e \gios^* e_2 : (c : T_1 \Rightarrow^l T_2\ ^{cl})$ such that $e_1 \equalityCasts e_2 : c$, and by rule E-Evaluate, $e_1 \longrightarrow_{CC} e_1'$.
+        By the induction hypothesis, $e_2 : c \gios^* e_2' : c$ and $e_1' \equalityCasts e_2' : c$.
         If $e_2 : c \gios^* e_2' : c$ then by rule E-Evaluate, $e_2 \gios^* e_2'$.
         By rule E-Evaluate, $e_2 : (c : T_1 \Rightarrow^l T_2\ ^{cl}) \gios e_2' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$.
-        As $e_1' =_c e_2' : c$ then by the definition of $=_c$, $e_1' : T_1 \Rightarrow^l T_2 =_c e_2' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$.
+        As $e_1' \equalityCasts e_2' : c$ then by the definition of $\equalityCasts$, $e_1' : T_1 \Rightarrow^l T_2 \equalityCasts e_2' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$.
         \item Rule CTX-BLAME.
-        If $\blame{T_1}{l} : T_1 \Rightarrow^l T_2 =_c e$ and $\blame{T_1}{l} : T_1 \Rightarrow^l T_2 \longrightarrow_{CC} \blame{T_2}{l}$ then there are three possibilities.
-        By the definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, either
+        If $\blame{T_1}{l} : T_1 \Rightarrow^l T_2 \equalityCasts e$ and $\blame{T_1}{l} : T_1 \Rightarrow^l T_2 \longrightarrow_{CC} \blame{T_2}{l}$ then there are three possibilities.
+        By the definition of $\equalityCasts$ and by applying rule E-RemoveEmpty zero or more times, either
         \begin{itemize}
             \item $e \gios^* \blame{T_1}{l} : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
-            By rule E-PushBlameCast, $\blame{T_1}{l} : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios \blame{T_2}{l}$ and $\blame{T_2}{l} =_c \blame{T_2}{l}$.
+            By rule E-PushBlameCast, $\blame{T_1}{l} : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios \blame{T_2}{l}$ and $\blame{T_2}{l} \equalityCasts \blame{T_2}{l}$.
             \item $e \gios^* e' : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
             By repeated application of rule E-Evaluate and by Lemma \ref{progress}, $e' : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios^* v : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
             By rule E-EvaluateCasts and by rule E-PushBlameCI, $v : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios^* v : (\blamecast{T'}{T_2}{l}{cl})$.
-            By rule E-PropagateBlame, $v : (\blamecast{T'}{T_2}{l}{cl}) \gios^* \blame{T_2}{l})$ and $\blame{T_2}{l} =_c \blame{T_2}{l}$.
+            By rule E-PropagateBlame, $v : (\blamecast{T'}{T_2}{l}{cl}) \gios^* \blame{T_2}{l})$ and $\blame{T_2}{l} \equalityCasts \blame{T_2}{l}$.
             \item $e \gios^* e' : (\blamecast{T'}{T_1}{l}{cl}) : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
             By repeated application of rule E-Evaluate and by Lemma \ref{progress}, $e' : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios^* v : (\blamecast{T'}{T_1}{l}{cl}) : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
             By rule E-MergeCasts, $v : (\blamecast{T'}{T_1}{l}{cl}) : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios v : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$.
             By rule E-EvaluateCasts and by rule E-PushBlameCI, $v : (\blamecast{T'}{T_1}{l}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios^* v : (\blamecast{T'}{T_2}{l}{cl})$.
-            By rule E-PropagateBlame, $v : (\blamecast{T'}{T_2}{l}{cl}) \gios^* \blame{T_2}{l})$ and $\blame{T_2}{l} =_c \blame{T_2}{l}$.
+            By rule E-PropagateBlame, $v : (\blamecast{T'}{T_2}{l}{cl}) \gios^* \blame{T_2}{l})$ and $\blame{T_2}{l} \equalityCasts \blame{T_2}{l}$.
         \end{itemize}
         \item Rule ID-BASE and Rule ID-STAR.
-        If $v : T \Rightarrow^l T =_c e$ and $v : T \Rightarrow^l T \longrightarrow_{CC} v$, then by the definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, $e \gios^* v' : (cv : T \Rightarrow^l T\ ^{cl})$, such that $v =_c v' : cv$.
-        By rule E-EvaluateCasts and by rule E-IdentityCI, $v' : (cv : T \Rightarrow^l T\ ^{cl}) \gios v' : cv$ and $v =_c v' : cv$.
+        If $v : T \Rightarrow^l T \equalityCasts e$ and $v : T \Rightarrow^l T \longrightarrow_{CC} v$, then by the definition of $\equalityCasts$ and by applying rule E-RemoveEmpty zero or more times, $e \gios^* v' : (cv : T \Rightarrow^l T\ ^{cl})$, such that $v \equalityCasts v' : cv$.
+        By rule E-EvaluateCasts and by rule E-IdentityCI, $v' : (cv : T \Rightarrow^l T\ ^{cl}) \gios v' : cv$ and $v \equalityCasts v' : cv$.
         \item Rule SUCCEED.
-        If $v : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G =_c e$ and $v : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G \longrightarrow_{CC} v$ then there are two possibilities.
-        By definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, either
+        If $v : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G \equalityCasts e$ and $v : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G \longrightarrow_{CC} v$ then there are two possibilities.
+        By definition of $\equalityCasts$ and by applying rule E-RemoveEmpty zero or more times, either
         \begin{itemize}
             \item $e \gios^* v' : (cv : G \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G\ ^{cl})$ or
             \item $e \gios^* v' : (cv : G \Rightarrow^{l_1} \Dyn\ ^{cl}) : (\emptycast{\Dyn}{cl} : \Dyn \Rightarrow^{l_2} G\ ^{cl})$
         \end{itemize}
-        such that $v =_c v' : cv$.
+        such that $v \equalityCasts v' : cv$.
         As, by rule E-MergeCasts, $v' : (cv : G \Rightarrow^{l_1} \Dyn\ ^{cl}) : (\emptycast{\Dyn}{cl} : \Dyn \Rightarrow^{l_2} G\ ^{cl}) \gios v' : (cv : G \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G\ ^{cl})$, we only need to address the first case.
-        By rule E-EvaluateCasts and by rule E-SucceedCI, $v' : (cv : G \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G\ ^{cl}) \gios v' : cv$ and $v =_c v' : cv$.
+        By rule E-EvaluateCasts and by rule E-SucceedCI, $v' : (cv : G \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G\ ^{cl}) \gios v' : cv$ and $v \equalityCasts v' : cv$.
         \item Rule FAIL.
-        If $v : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 =_c e$ and $v : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 \longrightarrow_{CC} \blame{G_2}{l_2}$ then there are two possibilities.
-        By definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, either
+        If $v : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 \equalityCasts e$ and $v : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 \longrightarrow_{CC} \blame{G_2}{l_2}$ then there are two possibilities.
+        By definition of $\equalityCasts$ and by applying rule E-RemoveEmpty zero or more times, either
         \begin{itemize}
             \item $e \gios^* v' : (cv : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl})$ or
             \item $e \gios^* v' : (cv : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl}) : (\emptycast{\Dyn}{cl} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl})$
         \end{itemize}
-        such that $v =_c v' : cv$.
+        such that $v \equalityCasts v' : cv$.
         As, by rule E-MergeCasts, $v' : (cv : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl}) : (\emptycast{\Dyn}{cl} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl}) \gios v' : (cv : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl})$, we only need to address the first case.
         By rule E-EvaluateCasts and by rule E-FailCI, $v' : (cv : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl}) \gios v' : \blamecast{T_I}{G_2}{l_2}{cl}$.
-        By rule E-PropagateBlame, $v' : \blamecast{T_I}{G_2}{l_2}{cl} \gios \blame{G_2}{l_2}$ and $\blame{G_2}{l_2} =_c \blame{G_2}{l_2}$.
+        By rule E-PropagateBlame, $v' : \blamecast{T_I}{G_2}{l_2}{cl} \gios \blame{G_2}{l_2}$ and $\blame{G_2}{l_2} \equalityCasts \blame{G_2}{l_2}$.
         \item Rule GROUND.
-        If $v : T \Rightarrow^l \Dyn =_c e$ and $v : T \Rightarrow^l \Dyn \longrightarrow_{CC} v : T \Rightarrow^l G : G \Rightarrow^l \Dyn$ then by definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, $e \gios^* v' : (cv : T \Rightarrow^l \Dyn\ ^{cl})$ such that $v =_c v' : cv$.
+        If $v : T \Rightarrow^l \Dyn \equalityCasts e$ and $v : T \Rightarrow^l \Dyn \longrightarrow_{CC} v : T \Rightarrow^l G : G \Rightarrow^l \Dyn$ then by definition of $\equalityCasts$ and by applying rule E-RemoveEmpty zero or more times, $e \gios^* v' : (cv : T \Rightarrow^l \Dyn\ ^{cl})$ such that $v \equalityCasts v' : cv$.
         By rule E-EvaluateCasts and by rule E-GroundCI, $v' : (cv : T \Rightarrow^l \Dyn\ ^{cl}) \gios v' : (cv : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
-        As $v =_c v' : cv$, then by definition of $=_c$, $v : T \Rightarrow^l G : G \Rightarrow^l \Dyn =_c v' : (cv : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
+        As $v \equalityCasts v' : cv$, then by definition of $\equalityCasts$, $v : T \Rightarrow^l G : G \Rightarrow^l \Dyn \equalityCasts v' : (cv : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
         \item Rule EXPAND.
-        If $v : \Dyn \Rightarrow^l T =_c e$ and $v : \Dyn \Rightarrow^l T \longrightarrow_{CC} v : \Dyn \Rightarrow^l G : G \Rightarrow^l T$ then by definition of $=_c$ and by applying rule E-RemoveEmpty zero or more times, $e \gios^* v' : (cv : \Dyn \Rightarrow^l T\ ^{cl})$ such that $v =_c v' : cv$.
+        If $v : \Dyn \Rightarrow^l T \equalityCasts e$ and $v : \Dyn \Rightarrow^l T \longrightarrow_{CC} v : \Dyn \Rightarrow^l G : G \Rightarrow^l T$ then by definition of $\equalityCasts$ and by applying rule E-RemoveEmpty zero or more times, $e \gios^* v' : (cv : \Dyn \Rightarrow^l T\ ^{cl})$ such that $v \equalityCasts v' : cv$.
         By rule E-EvaluateCasts and by rule E-ExpandCI, $v' : (cv : \Dyn \Rightarrow^l T\ ^{cl}) \gios v' : (cv : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$.
-        As $v =_c v' : cv$, then by definition of $=_c$, $v : \Dyn \Rightarrow^l G : G \Rightarrow^l T =_c v' : (cv : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$.
+        As $v \equalityCasts v' : cv$, then by definition of $\equalityCasts$, $v : \Dyn \Rightarrow^l G : G \Rightarrow^l T \equalityCasts v' : (cv : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$.
     \end{itemize}
 \end{itemize}
 We will now prove the left direction of the implication, that if $e_2 \gios e_2'$ then $e_1 \longrightarrow_{CC} e_1'$ and $e_1 =_{c} e_2$.
-We proceed by induction on the length of the derivation tree of $e_1 =_c e_2$.
+We proceed by induction on the length of the derivation tree of $e_1 \equalityCasts e_2$.
 Base cases:
 \begin{itemize}
-    \item $x =_c x$.
+    \item $x \equalityCasts x$.
     As $x$ doesn't reduce by $\gios$, this case is not considered.
-    \item $n =_c n$.
+    \item $n \equalityCasts n$.
     As $n$ doesn't reduce by $\gios$, this case is not considered.
-    \item $\true =_c \true$.
+    \item $\true \equalityCasts \true$.
     As $\true$ doesn't reduce by $\gios$, this case is not considered.
-    \item $\false =_c \false$.
+    \item $\false \equalityCasts \false$.
     As $\false$ doesn't reduce by $\gios$, this case is not considered.
-    \item $\blame{T}{l} =_c \blame{T}{l}$.
+    \item $\blame{T}{l} \equalityCasts \blame{T}{l}$.
     As $\blame{T}{l}$ doesn't reduce by $\gios$, this case is not considered.
-    \item $\blame{T}{l} =_c e : (\blamecast{T'}{T}{l}{cl})$.
+    \item $\blame{T}{l} \equalityCasts e : (\blamecast{T'}{T}{l}{cl})$.
     There are two possibilities:
     \begin{itemize}
         \item Rule E-Evaluate.
-        If $e : (\blamecast{T'}{T}{l}{cl}) \gios e' : (\blamecast{T'}{T}{l}{cl})$ and as $\blame{T}{l}$ is already a value, then $\blame{T}{l} =_c 'e : (\blamecast{T'}{T}{l}{cl})$.
+        If $e : (\blamecast{T'}{T}{l}{cl}) \gios e' : (\blamecast{T'}{T}{l}{cl})$ and as $\blame{T}{l}$ is already a value, then $\blame{T}{l} \equalityCasts 'e : (\blamecast{T'}{T}{l}{cl})$.
         \item Rule E-PropagateBlame.
-        If $v : (\blamecast{T'}{T}{l}{cl}) \gios \blame{T}{l}$ and as $\blame{T}{l}$ is already a value, then $\blame{T}{l} =_c \blame{T}{l}$.
+        If $v : (\blamecast{T'}{T}{l}{cl}) \gios \blame{T}{l}$ and as $\blame{T}{l}$ is already a value, then $\blame{T}{l} \equalityCasts \blame{T}{l}$.
     \end{itemize}
 \end{itemize}
 Induction step:
 \begin{itemize}
-    \item $\lambda x : T\ .\ e =_c \lambda x : T\ .\ e'$.
+    \item $\lambda x : T\ .\ e \equalityCasts \lambda x : T\ .\ e'$.
     As $\lambda x : T\ .\ e'$ doesn't reduce by $\gios$, this case is not considered.
-    \item $e_1\ e_2 =_c e_3\ e_4$.
+    \item $e_1\ e_2 \equalityCasts e_3\ e_4$.
     There are 6 possibilities:
     \begin{itemize}
         \item Rule E-PushBlame1.
-        If $\blame{T' \rightarrow T}{l}\ e_2 = \blame{T' \rightarrow T}{l}\ e_4$ and $\blame{T' \rightarrow T}{l}\ e_4 \gios \blame{T}{l}$ then by rule E-PushBlame1, $\blame{T' \rightarrow T}{l}\ e_2 \longrightarrow_{CC} \blame{T}{l}$ and $\blame{T}{l} =_c \blame{T}{l}$.
+        If $\blame{T' \rightarrow T}{l}\ e_2 = \blame{T' \rightarrow T}{l}\ e_4$ and $\blame{T' \rightarrow T}{l}\ e_4 \gios \blame{T}{l}$ then by rule E-PushBlame1, $\blame{T' \rightarrow T}{l}\ e_2 \longrightarrow_{CC} \blame{T}{l}$ and $\blame{T}{l} \equalityCasts \blame{T}{l}$.
         \item Rule E-PushBlame2.
-        If $e_1\ \blame{T'}{l} = e_3\ \blame{T'}{l}$ and $e_3\ \blame{T'}{l} \gios \blame{T}{l}$ then by rule E-PushBlame2, $e_1\ \blame{T'}{l} \longrightarrow_{CC} \blame{T}{l}$ and $\blame{T}{l} =_c \blame{T}{l}$.
+        If $e_1\ \blame{T'}{l} = e_3\ \blame{T'}{l}$ and $e_3\ \blame{T'}{l} \gios \blame{T}{l}$ then by rule E-PushBlame2, $e_1\ \blame{T'}{l} \longrightarrow_{CC} \blame{T}{l}$ and $\blame{T}{l} \equalityCasts \blame{T}{l}$.
         \item Rule E-App1.
-        If $e_1\ e_2 =_c e_3\ e_4$ and $e_3\ e_4 \gios e_3'\ e_4$ then by the definition of $=_c$, $e_1 =_c e_3$ and $e_2 =_c e_4$, and by rule E-App1, $e_3 \gios e_3'$.
-        By the induction hypothesis, $e_1 \longrightarrow_{CC} e_1'$ and $e_1' =_c e_3'$.
+        If $e_1\ e_2 \equalityCasts e_3\ e_4$ and $e_3\ e_4 \gios e_3'\ e_4$ then by the definition of $\equalityCasts$, $e_1 \equalityCasts e_3$ and $e_2 \equalityCasts e_4$, and by rule E-App1, $e_3 \gios e_3'$.
+        By the induction hypothesis, $e_1 \longrightarrow_{CC} e_1'$ and $e_1' \equalityCasts e_3'$.
         Then, by rule E-App1, $e_1\ e_2 \longrightarrow_{CC} e_1'\ e_2$.
-        By definition of $=_c$, $e_1'\ e_2 =_c e_3'\ e_4$.
+        By definition of $\equalityCasts$, $e_1'\ e_2 \equalityCasts e_3'\ e_4$.
         \item Rule E-App2.
-        If $v_1\ e_2 =_c v_3\ e_4$ and $v_3\ e_4 \gios v_3\ e_4'$ then by the definition of $=_c$, $v_1 =_c v_3$ and $e_2 =_c e_4$, and by rule E-App2, $e_4 \gios e_4'$.
-        By the induction hypothesis, $e_2 \longrightarrow_{CC} e_2'$ and $e_2' =_c e_4'$.
+        If $v_1\ e_2 \equalityCasts v_3\ e_4$ and $v_3\ e_4 \gios v_3\ e_4'$ then by the definition of $\equalityCasts$, $v_1 \equalityCasts v_3$ and $e_2 \equalityCasts e_4$, and by rule E-App2, $e_4 \gios e_4'$.
+        By the induction hypothesis, $e_2 \longrightarrow_{CC} e_2'$ and $e_2' \equalityCasts e_4'$.
         Then, by rule E-App2, $v_1\ e_2 \longrightarrow_{CC} v_1\ e_2'$.
-        By definition of $=_c$, $v_1\ e_2' =_c v_3\ e_4'$.
+        By definition of $\equalityCasts$, $v_1\ e_2' \equalityCasts v_3\ e_4'$.
         \item Rule E-AppAbs.
-        If $(\lambda x : T'\ .\ e)\ v_2 =_c (\lambda x : T'\ .\ e')\ v_4$ and $(\lambda x : T'\ .\ e')\ v_4 \gios [x \mapsto v_4]e'$ then by the definition of $=_c$, $(\lambda x : T'\ .\ e) =_c (\lambda x : T'\ .\ e')$ and $v_2 =_c v_4$ and $e =_c e'$.
+        If $(\lambda x : T'\ .\ e)\ v_2 \equalityCasts (\lambda x : T'\ .\ e')\ v_4$ and $(\lambda x : T'\ .\ e')\ v_4 \gios [x \mapsto v_4]e'$ then by the definition of $\equalityCasts$, $(\lambda x : T'\ .\ e) \equalityCasts (\lambda x : T'\ .\ e')$ and $v_2 \equalityCasts v_4$ and $e \equalityCasts e'$.
         By rule E-AppAbs, $(\lambda x : T'\ .\ e)\ v_2 \longrightarrow_{CC} [x \mapsto v_2]e$.
-        As $v_2 =_c v_4$ and $e =_c e'$, then by definition of $=_c$, $[x \mapsto v_2]e =_c [x \mapsto v_4]e'$.
+        As $v_2 \equalityCasts v_4$ and $e \equalityCasts e'$, then by definition of $\equalityCasts$, $[x \mapsto v_2]e \equalityCasts [x \mapsto v_4]e'$.
         \item Rule E-SimulateArrow.
         There are two possibilities:
         \begin{itemize}
-            \item If $v_1\ v_2 =_c (v_3 : \emptycast{T' \rightarrow T}{cl})\ v_4$ and $(v_3 : \emptycast{T' \rightarrow T}{cl})\ v_4 \gios ((v_3 : \emptycast{T' \rightarrow T}{cl})\ (v_4 : \emptycast{T'}{cl})) : \emptycast{T}{cl}$ then by definition of $=_c$, $v_1 =_c (v_3 : \emptycast{T' \rightarrow T}{cl})$ and $v_2 =_c v_4$ and $v_1 =_c v_3$.
-            By the definition of $=_c$, $v_2 =_c v_4 : \emptycast{T'}{cl}$.
-            By the definition of $=_c$, $v_1\ v_2 =_c ((v_3 : \emptycast{T' \rightarrow T}{cl})\ (v_4 : \emptycast{T'}{cl}))$.
-            By the definition of $=_c$, $v_1\ v_2 =_c ((v_3 : \emptycast{T' \rightarrow T}{cl})\ (v_4 : \emptycast{T'}{cl})) : \emptycast{T}{cl}$.
-            \item If $(v_1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4)\ v_2 =_c (v_3 : (cv : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}))\ v_4$ and $(v_3 : (cv : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}))\ v_4 \gios ((v_3 : cv)\ (v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl}))) : (\emptycast{T}{cl} : T_2 \Rightarrow^l T_4\ ^{cl})$ then by definition of $=_c$, $v_1 =_c v_3 : cv$ and $v_2 =_c v_4$.
+            \item If $v_1\ v_2 \equalityCasts (v_3 : \emptycast{T' \rightarrow T}{cl})\ v_4$ and $(v_3 : \emptycast{T' \rightarrow T}{cl})\ v_4 \gios ((v_3 : \emptycast{T' \rightarrow T}{cl})\ (v_4 : \emptycast{T'}{cl})) : \emptycast{T}{cl}$ then by definition of $\equalityCasts$, $v_1 \equalityCasts (v_3 : \emptycast{T' \rightarrow T}{cl})$ and $v_2 \equalityCasts v_4$ and $v_1 \equalityCasts v_3$.
+            By the definition of $\equalityCasts$, $v_2 \equalityCasts v_4 : \emptycast{T'}{cl}$.
+            By the definition of $\equalityCasts$, $v_1\ v_2 \equalityCasts ((v_3 : \emptycast{T' \rightarrow T}{cl})\ (v_4 : \emptycast{T'}{cl}))$.
+            By the definition of $\equalityCasts$, $v_1\ v_2 \equalityCasts ((v_3 : \emptycast{T' \rightarrow T}{cl})\ (v_4 : \emptycast{T'}{cl})) : \emptycast{T}{cl}$.
+            \item If $(v_1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4)\ v_2 \equalityCasts (v_3 : (cv : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}))\ v_4$ and $(v_3 : (cv : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4\ ^{cl}))\ v_4 \gios ((v_3 : cv)\ (v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl}))) : (\emptycast{T}{cl} : T_2 \Rightarrow^l T_4\ ^{cl})$ then by definition of $\equalityCasts$, $v_1 \equalityCasts v_3 : cv$ and $v_2 \equalityCasts v_4$.
             By rule C-BETA, $(v_1 : T_1 \rightarrow T_2 \Rightarrow^l T_3 \rightarrow T_4)\ v_2 \longrightarrow_{CC} (v_1\ (v_2 : T_3 \Rightarrow^l T_1)) : T_2 \Rightarrow^l T_4$.
-            As $v_2 =_c v_4$, then by definition of $=_c$, $v_2 : T_3 \Rightarrow^l T_1 =_c v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl})$.
-            As $v_1 =_c v_3 : cv$ and $v_2 : T_3 \Rightarrow^l T_1 =_c v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl})$, then by the definition of $=_c$, $(v_1\ (v_2 : T_3 \Rightarrow^l T_1)) =_c ((v_3 : cv)\ (v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl})))$.
-            As $(v_1\ (v_2 : T_3 \Rightarrow^l T_1)) =_c ((v_3 : cv)\ (v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl})))$, then by the definition of $=_c$, $(v_1\ (v_2 : T_3 \Rightarrow^l T_1)) : T_2 \Rightarrow^l T_4 =_c ((v_3 : cv)\ (v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl}))) : (\emptycast{T}{cl} : T_2 \Rightarrow^l T_4\ ^{cl})$.
+            As $v_2 \equalityCasts v_4$, then by definition of $\equalityCasts$, $v_2 : T_3 \Rightarrow^l T_1 \equalityCasts v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl})$.
+            As $v_1 \equalityCasts v_3 : cv$ and $v_2 : T_3 \Rightarrow^l T_1 \equalityCasts v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl})$, then by the definition of $\equalityCasts$, $(v_1\ (v_2 : T_3 \Rightarrow^l T_1)) \equalityCasts ((v_3 : cv)\ (v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl})))$.
+            As $(v_1\ (v_2 : T_3 \Rightarrow^l T_1)) \equalityCasts ((v_3 : cv)\ (v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl})))$, then by the definition of $\equalityCasts$, $(v_1\ (v_2 : T_3 \Rightarrow^l T_1)) : T_2 \Rightarrow^l T_4 \equalityCasts ((v_3 : cv)\ (v_4 : (\emptycast{T_3}{cl} : T_3 \Rightarrow^l T_1\ ^{cl}))) : (\emptycast{T}{cl} : T_2 \Rightarrow^l T_4\ ^{cl})$.
         \end{itemize}
     \end{itemize}
-    \item $e_1 =_c e_2 : (\emptycast{T}{cl})$.
+    \item $e_1 \equalityCasts e_2 : (\emptycast{T}{cl})$.
     There are two possibilities:
     \begin{itemize}
         \item Rule E-Evaluate.
-        If $e_1 =_c e_2 : (\emptycast{T}{cl})$ and $e_2 : (\emptycast{T}{cl}) \gios e_2' : (\emptycast{T}{cl})$ then by the definition of $=_c$, $e_1 =_c e_2$, and by rule E-Evaluate, $e_2 \gios e_2'$.
-        By the induction hypothesis, $e_1 \longrightarrow_{CC} e_1'$ and $e_1' =_c e_2'$.
-        As $e_1' =_c e_2'$ then by definition of $=_c$, $e_1' =_c e_2' : (\emptycast{T}{cl})$.
+        If $e_1 \equalityCasts e_2 : (\emptycast{T}{cl})$ and $e_2 : (\emptycast{T}{cl}) \gios e_2' : (\emptycast{T}{cl})$ then by the definition of $\equalityCasts$, $e_1 \equalityCasts e_2$, and by rule E-Evaluate, $e_2 \gios e_2'$.
+        By the induction hypothesis, $e_1 \longrightarrow_{CC} e_1'$ and $e_1' \equalityCasts e_2'$.
+        As $e_1' \equalityCasts e_2'$ then by definition of $\equalityCasts$, $e_1' \equalityCasts e_2' : (\emptycast{T}{cl})$.
         \item Rule E-RemoveEmpty.
-        If $v_1 =_c v_2 : (\emptycast{T}{cl})$ and $v_2 : (\emptycast{T}{cl}) \gios v_2$ then by the definition of $=_c$, $v_1 =_c v_2$.
+        If $v_1 \equalityCasts v_2 : (\emptycast{T}{cl})$ and $v_2 : (\emptycast{T}{cl}) \gios v_2$ then by the definition of $\equalityCasts$, $v_1 \equalityCasts v_2$.
     \end{itemize}
-    \item $e : T_1 \Rightarrow^l T_2 =_c e' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$.
+    \item $e : T_1 \Rightarrow^l T_2 \equalityCasts e' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$.
     There are four possibilities:
     \begin{itemize}
         \item Rule E-PushBlameCast.
-        If $\blame{T_1}{l} : T_1 \Rightarrow^l T_2 =_c \blame{T_1}{l} : (c : T_1 \Rightarrow^l T_2\ ^{cl})$ and $\blame{T_1}{l} : (c : T_1 \Rightarrow^l T_2\ ^{cl}) \gios \blame{T_2}{l}$ then by rule CTX-BLAME, $\blame{T_1}{l} : T_1 \Rightarrow^l T_2 \longrightarrow_{CC} \blame{T_2}{l}$ and $\blame{T_2}{l} =_c \blame{T_2}{l}$.
+        If $\blame{T_1}{l} : T_1 \Rightarrow^l T_2 \equalityCasts \blame{T_1}{l} : (c : T_1 \Rightarrow^l T_2\ ^{cl})$ and $\blame{T_1}{l} : (c : T_1 \Rightarrow^l T_2\ ^{cl}) \gios \blame{T_2}{l}$ then by rule CTX-BLAME, $\blame{T_1}{l} : T_1 \Rightarrow^l T_2 \longrightarrow_{CC} \blame{T_2}{l}$ and $\blame{T_2}{l} \equalityCasts \blame{T_2}{l}$.
         \item Rule E-Evaluate.
-        If $e_1 : T_1 \Rightarrow^l T_2 =_c e_2 : (c : T_1 \Rightarrow^l T_2\ ^{cl})$ and $e_2 : (c : T_1 \Rightarrow^l T_2\ ^{cl}) \gios e_2' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$ then by definition of $=_c$, $e_1 =_c e_2 : c$, and by rule E-Evaluate, $e_2 \gios e_2'$.
+        If $e_1 : T_1 \Rightarrow^l T_2 \equalityCasts e_2 : (c : T_1 \Rightarrow^l T_2\ ^{cl})$ and $e_2 : (c : T_1 \Rightarrow^l T_2\ ^{cl}) \gios e_2' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$ then by definition of $\equalityCasts$, $e_1 \equalityCasts e_2 : c$, and by rule E-Evaluate, $e_2 \gios e_2'$.
         By rule E-Evaluate, $e_2 : c \gios e_2' : c$.
-        By the induction hypothesis, $e_1 \longrightarrow_{CC} e_1'$ and $e_1' =_c e_2' : c$.
+        By the induction hypothesis, $e_1 \longrightarrow_{CC} e_1'$ and $e_1' \equalityCasts e_2' : c$.
         By rule E-Evaluate, $e_1 : T_1 \Rightarrow^l T_2 \longrightarrow_{CC} e_1' : T_1 \Rightarrow^l T_2$.
-        As $e_1' =_c e_2' : c$, then by the definition of $=_c$, $e_1' : T_1 \Rightarrow^l T_2 =_c e_2' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$.
+        As $e_1' \equalityCasts e_2' : c$, then by the definition of $\equalityCasts$, $e_1' : T_1 \Rightarrow^l T_2 \equalityCasts e_2' : (c : T_1 \Rightarrow^l T_2\ ^{cl})$.
         \item Rule E-MergeCasts.
-        If $v : T_1 \Rightarrow^l T_2 =_c (v' : cv ) : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$ and $(v' : cv ) : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios v' : (cv : T_1 \Rightarrow^l T_2\ ^{cl})$ then by the definition of $=_c$, $v =_c v' : cv$.
-        As $v =_c v' : cv$, then by the definition of $=_c$, $v : T_1 \Rightarrow^l T_2 =_c v' : (cv : T_1 \Rightarrow^l T_2\ ^{cl})$.
+        If $v : T_1 \Rightarrow^l T_2 \equalityCasts (v' : cv ) : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl})$ and $(v' : cv ) : (\emptycast{T_1}{cl} : T_1 \Rightarrow^l T_2\ ^{cl}) \gios v' : (cv : T_1 \Rightarrow^l T_2\ ^{cl})$ then by the definition of $\equalityCasts$, $v \equalityCasts v' : cv$.
+        As $v \equalityCasts v' : cv$, then by the definition of $\equalityCasts$, $v : T_1 \Rightarrow^l T_2 \equalityCasts v' : (cv : T_1 \Rightarrow^l T_2\ ^{cl})$.
         \item Rule E-EvaluateCasts.
         There are seven possibilities:
         \begin{itemize}
             \item Rule E-PushBlameCI.
-            If $\blame{T_1}{l_1} : T_1 \Rightarrow^{l_2} T_2 =_c v : (\blamecast{T'}{T_1}{l_1}{cl} : T_1 \Rightarrow^{l_2} T_2\ ^{cl})$ and $v : (\blamecast{T'}{T_1}{l_1}{cl} : T_1 \Rightarrow^{l_2} T_2\ ^{cl}) \gios v : \blamecast{T'}{T_2}{l_1}{cl}$ then by rule CTX-BLAME $\blame{T_1}{l_1} : T_1 \Rightarrow^{l_2} T_2 \longrightarrow_{CC} \blame{T_2}{l_1}$ and $\blame{T_2}{l_1} =_c v : \blamecast{T'}{T_2}{l_1}{cl}$.
+            If $\blame{T_1}{l_1} : T_1 \Rightarrow^{l_2} T_2 \equalityCasts v : (\blamecast{T'}{T_1}{l_1}{cl} : T_1 \Rightarrow^{l_2} T_2\ ^{cl})$ and $v : (\blamecast{T'}{T_1}{l_1}{cl} : T_1 \Rightarrow^{l_2} T_2\ ^{cl}) \gios v : \blamecast{T'}{T_2}{l_1}{cl}$ then by rule CTX-BLAME $\blame{T_1}{l_1} : T_1 \Rightarrow^{l_2} T_2 \longrightarrow_{CC} \blame{T_2}{l_1}$ and $\blame{T_2}{l_1} \equalityCasts v : \blamecast{T'}{T_2}{l_1}{cl}$.
             \item Rule E-EvaluateCI.
-            If $v_1 : T_1 \Rightarrow^l T_2 =_c v_2 : (c : T_1 \Rightarrow^l T_2)$ and $v_2 : (c : T_1 \Rightarrow^l T_2) \gios v_2 : (c' : T_1 \Rightarrow^l T_2)$ then $v_1 =_c v_2 : c$ and by rule E-EvaluateCasts, $v_2 : c \gios v_2 : c'$.
-            By the induction hypothesis, $v_1 \longrightarrow_{CC} v_1'$ and $v_1' =_c v_2 : c'$.
+            If $v_1 : T_1 \Rightarrow^l T_2 \equalityCasts v_2 : (c : T_1 \Rightarrow^l T_2)$ and $v_2 : (c : T_1 \Rightarrow^l T_2) \gios v_2 : (c' : T_1 \Rightarrow^l T_2)$ then $v_1 \equalityCasts v_2 : c$ and by rule E-EvaluateCasts, $v_2 : c \gios v_2 : c'$.
+            By the induction hypothesis, $v_1 \longrightarrow_{CC} v_1'$ and $v_1' \equalityCasts v_2 : c'$.
             By rule E-Evaluate, $v_1 : T_1 \Rightarrow^l T_2 \longrightarrow_{CC} v_1' : T_1 \Rightarrow^l T_2$.
-            As $v_1' =_c v_2 : c'$, then by definition of $=_c$, $v_1' : T_1 \Rightarrow^l T_2 =_c v_2 : (c' : T_1 \Rightarrow^l T_2)$.
+            As $v_1' \equalityCasts v_2 : c'$, then by definition of $\equalityCasts$, $v_1' : T_1 \Rightarrow^l T_2 \equalityCasts v_2 : (c' : T_1 \Rightarrow^l T_2)$.
             \item E-IdentityCI.
-            If $v_1 : T \Rightarrow^l T =_c v_2 : (cv1 : T \Rightarrow^l T)$ and $v_2 : (cv1 : T \Rightarrow^l T) \gios v_2 : cv1$ then by the definition of $=_c$, $v_1 =_c v_2 : cv1$.
-            By rule ID-BASE or ID-STAR, $v_1 : T \rightarrow^l T \longrightarrow_{CC} v_1$ and $v_1 =_c v_2 : cv1$.
+            If $v_1 : T \Rightarrow^l T \equalityCasts v_2 : (cv1 : T \Rightarrow^l T)$ and $v_2 : (cv1 : T \Rightarrow^l T) \gios v_2 : cv1$ then by the definition of $\equalityCasts$, $v_1 \equalityCasts v_2 : cv1$.
+            By rule ID-BASE or ID-STAR, $v_1 : T \rightarrow^l T \longrightarrow_{CC} v_1$ and $v_1 \equalityCasts v_2 : cv1$.
             \item E-SucceedCI.
-            If $v_1 : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G =_c v_2 : (cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2})$ and $v_2 : (cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}) \gios v_2 : cv1$ then by the definition of $=_c$, $v_1 =_c v_2 : cv1$.
-            By rule SUCCEED, $v_1 : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G \longrightarrow_{CC} v_1$ and $v_1 =_c v_2 : cv1$.
+            If $v_1 : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G \equalityCasts v_2 : (cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2})$ and $v_2 : (cv1 : G \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G\ ^{cl_2}) \gios v_2 : cv1$ then by the definition of $\equalityCasts$, $v_1 \equalityCasts v_2 : cv1$.
+            By rule SUCCEED, $v_1 : G \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G \longrightarrow_{CC} v_1$ and $v_1 \equalityCasts v_2 : cv1$.
             \item E-FailCI.
-            If $v_1 : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 =_c v_2 : (cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2})$ and $v_2 : (cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}) \gios v_2 : \blamecast{T'}{G_2}{l_2}{cl_1}$ then by the definition of $=_c$, $v_1 =_c v_2 : cv1$.
-            By rule FAIL, $v_1 : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 \longrightarrow_{CC} \blame{G_2}{l_2}$ and by the definition of $=_c$, $\blame{G_2}{l_2} =_c v_2 : \blamecast{T'}{G_2}{l_2}{cl_1}$.
+            If $v_1 : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 \equalityCasts v_2 : (cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2})$ and $v_2 : (cv1 : G_1 \Rightarrow^{l_1} \Dyn\ ^{cl_1} : \Dyn \Rightarrow^{l_2} G_2\ ^{cl_2}) \gios v_2 : \blamecast{T'}{G_2}{l_2}{cl_1}$ then by the definition of $\equalityCasts$, $v_1 \equalityCasts v_2 : cv1$.
+            By rule FAIL, $v_1 : G_1 \Rightarrow^{l_1} \Dyn : \Dyn \Rightarrow^{l_2} G_2 \longrightarrow_{CC} \blame{G_2}{l_2}$ and by the definition of $\equalityCasts$, $\blame{G_2}{l_2} \equalityCasts v_2 : \blamecast{T'}{G_2}{l_2}{cl_1}$.
             \item E-GroundCI.
-            If $v_1 : T \Rightarrow^l \Dyn =_c v_2 : (cv1 : T \Rightarrow^l \Dyn\ ^{cl})$ and $v_2 : (cv1 : T \Rightarrow^l \Dyn\ ^{cl}) \gios v_2 : (cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$ then by the definition of $=_c$, $v_1 =_c v_2 : cv1$.
+            If $v_1 : T \Rightarrow^l \Dyn \equalityCasts v_2 : (cv1 : T \Rightarrow^l \Dyn\ ^{cl})$ and $v_2 : (cv1 : T \Rightarrow^l \Dyn\ ^{cl}) \gios v_2 : (cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$ then by the definition of $\equalityCasts$, $v_1 \equalityCasts v_2 : cv1$.
             By rule GROUND, $v_1 : T \Rightarrow^l \Dyn \longrightarrow_{CC} v_1 : T \Rightarrow^l G : G \Rightarrow^l \Dyn$.
-            As $v_1 =_c v_2 : cv1$, then by the definition of $=_c$, $v_1 : T \Rightarrow^l G =_c v_2 : (cv1 : T \Rightarrow^l G\ ^{cl})$.
-            As $v_1 : T \Rightarrow^l G =_c v_2 : (cv1 : T \Rightarrow^l G\ ^{cl})$, then by the definition of $=_c$, $v_1 : T \Rightarrow^l G : G \Rightarrow^l \Dyn =_c v_2 : (cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
+            As $v_1 \equalityCasts v_2 : cv1$, then by the definition of $\equalityCasts$, $v_1 : T \Rightarrow^l G \equalityCasts v_2 : (cv1 : T \Rightarrow^l G\ ^{cl})$.
+            As $v_1 : T \Rightarrow^l G \equalityCasts v_2 : (cv1 : T \Rightarrow^l G\ ^{cl})$, then by the definition of $\equalityCasts$, $v_1 : T \Rightarrow^l G : G \Rightarrow^l \Dyn \equalityCasts v_2 : (cv1 : T \Rightarrow^l G\ ^{cl} : G \Rightarrow^l \Dyn\ ^{cl})$.
             \item E-ExpandCI.
-            If $v_1 : \Dyn \Rightarrow^l T =_c v_2 : (cv1 : \Dyn \Rightarrow^l T\ ^{cl})$ and $v_2 : (cv1 : \Dyn \Rightarrow^l T\ ^{cl}) \gios v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$ then by the definition of $=_c$, $v_1 =_c v_2 : cv1$.
+            If $v_1 : \Dyn \Rightarrow^l T \equalityCasts v_2 : (cv1 : \Dyn \Rightarrow^l T\ ^{cl})$ and $v_2 : (cv1 : \Dyn \Rightarrow^l T\ ^{cl}) \gios v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$ then by the definition of $\equalityCasts$, $v_1 \equalityCasts v_2 : cv1$.
             By rule EXPAND, $v_1 : \Dyn \Rightarrow^l T \longrightarrow_{CC} v_1 : \Dyn \Rightarrow^l G : G \Rightarrow^l T$.
-            As $v_1 =_c v_2 : cv1$, then by the definition of $=_c$, $v_1 : \Dyn \Rightarrow^l G =_c v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl})$.
-            As $v_1 : \Dyn \Rightarrow^l G =_c v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl})$, then by the definition of $=_c$, $v_1 : \Dyn \Rightarrow^l G : G \Rightarrow^l T =_c v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$.
+            As $v_1 \equalityCasts v_2 : cv1$, then by the definition of $\equalityCasts$, $v_1 : \Dyn \Rightarrow^l G \equalityCasts v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl})$.
+            As $v_1 : \Dyn \Rightarrow^l G \equalityCasts v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl})$, then by the definition of $\equalityCasts$, $v_1 : \Dyn \Rightarrow^l G : G \Rightarrow^l T \equalityCasts v_2 : (cv1 : \Dyn \Rightarrow^l G\ ^{cl} : G \Rightarrow^l T\ ^{cl})$.
         \end{itemize}
     \end{itemize}
 \end{itemize}
