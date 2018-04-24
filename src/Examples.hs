@@ -31,7 +31,7 @@ example4 = TypeInformation (IntType ) $ Application (TypeInformation (ArrowType 
 
 -- (\x : Int /\ Dyn . x) 1 : Int
 -- -->/\ 1 : ((/) Int 0 /\ ((/) Int 0 : Int => Dyn 0))
-example6 = TypeInformation (IntType ) $ Application (TypeInformation (ArrowType (IntersectionType [IntType, DynType]) IntType) $ Abstraction "x" (IntersectionType [IntType, DynType]) $ (TypeInformation IntType $ Variable "x")) (TypeInformation IntType $ Int 1)
+example6 = TypeInformation (DynType ) $ Application (TypeInformation (ArrowType (IntersectionType [IntType, DynType]) DynType) $ Abstraction "x" (IntersectionType [IntType, DynType]) $ (TypeInformation DynType $ Variable "x")) (TypeInformation IntType $ Int 1)
 
 t' = ArrowType (IntersectionType [ArrowType (IntersectionType [IntType, DynType]) IntType, DynType]) IntType
 
@@ -57,7 +57,7 @@ selfApplication = TypeInformation (ArrowType IntType IntType) $ Application (Typ
 selfApplicationApp = TypeInformation (IntType) $ Application (TypeInformation (ArrowType IntType IntType) $ Application (TypeInformation (ArrowType (t1) (ArrowType IntType IntType)) $ Abstraction "x" t1 $ TypeInformation (ArrowType IntType IntType) $ Application (TypeInformation (ArrowType (ArrowType IntType IntType ) (ArrowType IntType IntType )) $ Variable "x") (TypeInformation (ArrowType IntType IntType ) $ Variable "x")) (TypeInformation (t1) $ Abstraction "y" t2 $ TypeInformation (t2) $ Variable "y")) (TypeInformation (IntType) $ Int 1)
 
 -- (\x : Dyn . x x) (\y : Int -> Int /\ Int . y) : Dyn
--- -->/\ (\y : Int -> Int /\ Int . y) : ... /\ ... /\ ... /\ ...
+-- -->/\ (\y : Int -> Int /\ Int . y) : ... /\ ... /\ ... /\ ... : Dyn
 selfApplication1Dyn = TypeInformation DynType $ Application (TypeInformation (ArrowType (DynType) DynType) $ Abstraction "x" DynType $ TypeInformation (DynType) $ Application (TypeInformation DynType $ Variable "x") (TypeInformation DynType $ Variable "x")) (TypeInformation (t1) $ Abstraction "y" t2 $ TypeInformation (t2) $ Variable "y")
 
 -- (\x : Dyn . x x) (\y : Int -> Int /\ Int . y) 1 : Dyn

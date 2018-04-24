@@ -11,8 +11,8 @@ import Types
 import Data.Maybe
 import Control.Monad.State
 
-evaluationStyle = evaluate
-evaluateCastStyle = evaluateCasts
+evaluationStyle = id
+evaluateCastStyle = id
 
 -- evaluate using call-by-value strategy
 evaluate :: Expression -> Expression
