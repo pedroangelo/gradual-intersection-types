@@ -15,7 +15,7 @@ import Text.PrettyPrint.Leijen
 prettyExpression :: Expression -> Doc
 
 -- Typed λ-calculus terms
-prettyExpression (Variable var) = text var
+prettyExpression (Variable var typ) = text var
 prettyExpression (Abstraction var typ expr) = hcat
     [backslash, text var, space, colon, space, prettyType typ, space, dot,
         space, prettyExpression expr]
@@ -36,16 +36,16 @@ prettyExpression (Addition expr1 expr2) = hsep
 prettyExpression (TypeInformation typ expr) = hsep
     [printParensExpression expr, colon, prettyType typ]
 
--- Intersection of Casts
-prettyExpression (IntersectionCasts cs expr) = hsep
+-- Cast Intersection
+prettyExpression (CastIntersection cs expr) = hsep
     [printParensExpression expr, colon, parens $ hcat $ punctuate (space <> text "/\\" <> space) $ map printParensCasts cs]
 
 -- Blames
 prettyExpression (Blame typ msg) = hsep
     [text "Blame:", text msg]
 
--- pretty print intersection casts
-prettyCasts :: CastI -> Doc
+-- pretty print cast intersection
+prettyCasts :: Cast -> Doc
 
 -- Single cast
 prettyCasts (SingleCast cl t1 t2 c) = hsep
@@ -92,15 +92,15 @@ needsParensExpression expr =
     isApplication expr ||
     isAddition expr ||
     isTypeInformation expr ||
-    isIntersectionCasts expr ||
+    isCastIntersection expr ||
     isBlame expr
 
-printParensCasts :: CastI -> Doc
+printParensCasts :: Cast -> Doc
 printParensCasts c = if needsParensCasts c
     then parens (prettyCasts c)
     else prettyCasts c
 
-needsParensCasts :: CastI -> Bool
+needsParensCasts :: Cast -> Bool
 needsParensCasts c =
     isSingleCast c
 

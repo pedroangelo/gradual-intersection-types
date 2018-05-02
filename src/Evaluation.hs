@@ -37,13 +37,13 @@ evaluate e@(Application expr1 expr2)
         let v2 = evaluate expr2
         in evaluationStyle $ Application expr1 v2
     -- simulate casts on data types
-    | isValue expr1 && isValue expr2 && isIntersectionCasts expr1 && any isArrowCompatible cs =
+    | isValue expr1 && isValue expr2 && isCastIntersection expr1 && any isArrowCompatible cs =
         evaluationStyle $ simulateArrow expr1 expr2
     -- beta reduction
     | isAbstraction expr1 && isValue expr2 =
         let (Abstraction var typ expr) = expr1
         in evaluationStyle $ substitute (var, expr2) expr
-    where IntersectionCasts cs expr1'' = expr1
+    where CastIntersection cs expr1'' = expr1
 
 -- booleans are values
 evaluate e@Bool{} = e
@@ -71,26 +71,26 @@ evaluate e@(Addition expr1 expr2)
             Int i2 = expr2
         in Int $ i1 + i2
     -- remove remaining casts such as empty casts and blames
-    | otherwise = evaluationStyle $ Addition (getExpectedInt expr1) (getExpectedInt expr2)
+    -- | otherwise = evaluationStyle $ Addition (getExpectedInt expr1) (getExpectedInt expr2)
 
 -- if expression is a type information
 evaluate e@(TypeInformation typ expr) = expr
 
--- if expression is an intersection of casts
-evaluate e@(IntersectionCasts cs expr)
+-- if expression is an cast intersection
+evaluate e@(CastIntersection cs expr)
     -- push blame to top level
     | isBlame expr = evaluationStyle expr
-    -- merge intersection of casts with intersection of casts
-    | isValue expr && isIntersectionCasts expr = evaluationStyle $ mergeCasts e
+    -- merge cast intersection with cast intersection
+    | isValue expr && isCastIntersection expr = evaluationStyle $ mergeCasts e
     -- values don't reduce
     | isValue e = e
     -- evaluate inside a cast
     | not (isValue expr) =
         let expr2 = evaluate expr
-        in evaluationStyle $ IntersectionCasts cs expr2
+        in evaluationStyle $ CastIntersection cs expr2
     -- evaluate casts in intersections
     | isValue expr && not (all isCastValue cs) =
-        evaluationStyle $ IntersectionCasts (map evaluateCasts cs) expr
+        evaluationStyle $ CastIntersection (map evaluateCasts cs) expr
     -- propagate blame
     | isValue expr && all isBlameCast cs =
         let (BlameCast _ i f msg) = head cs
@@ -102,7 +102,7 @@ evaluate e@(IntersectionCasts cs expr)
 evaluate e@Blame{} = e
 
 -- evaluate casts in intersections
-evaluateCasts :: CastI -> CastI
+evaluateCasts :: Cast -> Cast
 
 -- evaluate single casts
 evaluateCasts c@(SingleCast cl t1 t2 c1)

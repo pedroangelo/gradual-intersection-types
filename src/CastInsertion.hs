@@ -13,7 +13,7 @@ import Data.Maybe
 insertCasts :: Expression -> Expression
 
 -- if expression is a value
-insertCasts e@(TypeInformation _ (Variable _)) = e
+insertCasts e@(TypeInformation _ (Variable _ _)) = e
 
 -- if expression is an abstraction
 insertCasts e@(TypeInformation typ (Abstraction var t expr)) =
@@ -51,10 +51,8 @@ insertCasts e@(TypeInformation typ (Addition expr1 expr2)) =
         TypeInformation t1 _ = expr1'
         TypeInformation t2 _ = expr2'
         -- build casts
-        --cast1 = Cast t1 IntType expr1'
-        cast1 = IntersectionCasts [SingleCast 0 t1 IntType $ EmptyCast 0 t1] expr1'
-        --cast2 = Cast t2 IntType expr2'
-        cast2 = IntersectionCasts [SingleCast 0 t2 IntType $ EmptyCast 0 t2] expr2'
+        cast1 = CastIntersection [SingleCast 0 t1 IntType $ EmptyCast 0 t1] expr1'
+        cast2 = CastIntersection [SingleCast 0 t2 IntType $ EmptyCast 0 t2] expr2'
     in TypeInformation typ $ Addition cast1 cast2
 
 -- obtain pattern match type for arrow
