@@ -9,10 +9,11 @@ import Control.Monad.State
 
 -- Expressions in λ-calculus and extensions
 data Expression
-    -- Typed λ-calculus terms
+    -- λ-calculus terms
     = Variable Var Type
-    | Abstraction Var Type Expression
+    | AnnotatedAbstraction Var Type Expression
     | Application Expression Expression
+    | Abstraction Var Expression
     -- Integers
     | Int Int
     -- Booleans
@@ -41,10 +42,12 @@ type CastLabel = Int
 -- Expression Mapping
 mapExpression :: (Expression -> Expression) -> Expression -> Expression
 
--- Typed λ-calculus terms
+-- λ-calculus terms
 mapExpression f e@(Variable var typ) = f e
-mapExpression f e@(Abstraction var typ expr) =
-    f (Abstraction var typ $ mapExpression f expr)
+mapExpression f e@(AnnotatedAbstraction var typ expr) =
+    f (AnnotatedAbstraction var typ $ mapExpression f expr)
+mapExpression f e@(Abstraction var expr) =
+    f (Abstraction var $ mapExpression f expr)
 mapExpression f e@(Application expr1 expr2) =
     f (Application (mapExpression f expr1) (mapExpression f expr2))
 
@@ -83,15 +86,24 @@ isVariable :: Expression -> Bool
 isVariable Variable{} = True
 isVariable _ = False
 
--- check if it's an abstraction
-isAbstraction :: Expression -> Bool
-isAbstraction Abstraction{} = True
-isAbstraction _ = False
+-- check if it's an annotated abstraction
+isAnnotatedAbstraction :: Expression -> Bool
+isAnnotatedAbstraction AnnotatedAbstraction{} = True
+isAnnotatedAbstraction _ = False
 
 -- check if it's an application
 isApplication :: Expression -> Bool
 isApplication Application{} = True
 isApplication _ = False
+
+-- check if it's an abstraction
+isAbstraction :: Expression -> Bool
+isAbstraction Abstraction{} = True
+isAbstraction _ = False
+
+-- check if it's a lambda abstraction
+isLambdaAbstraction :: Expression -> Bool
+isLambdaAbstraction e = isAnnotatedAbstraction e || isAbstraction e 
 
 -- check if it's a boolean
 isBool :: Expression -> Bool
@@ -142,6 +154,7 @@ isEmptyCast _ = False
 isValue :: Expression -> Bool
 isValue e =
     isVariable e ||
+    isAnnotatedAbstraction e ||
     isAbstraction e ||
     isBool e ||
     isInt e ||
@@ -172,17 +185,14 @@ isCastValue1 _ = False
 
 -- check if casts in intersection of casts is a value in the cast semantics
 isCastValue2 :: Cast -> Bool
-isCastValue2 c =
-    isBlameCast c ||
-    isEmptyCast c
-
--- check if single cast is compatible with arrow type
-isArrowCompatible :: Cast -> Bool
-isArrowCompatible (SingleCast _ t1 t2 c) = isArrowType t1 && isArrowType t2 && isArrowCompatible c
-isArrowCompatible (EmptyCast cl t) = isArrowType t
-isArrowCompatible _ = False
+isCastValue2 c = isBlameCast c || isEmptyCast c
 
 -- PROJECTIONS
+
+-- get variable and subexpression from abstractions
+fromAbstraction :: Expression -> (String, Expression)
+fromAbstraction (AnnotatedAbstraction var _ expr) = (var, expr)
+fromAbstraction (Abstraction var expr) = (var, expr)
 
 -- get type from type information
 fromTypeInformation :: Expression -> Type
@@ -194,25 +204,52 @@ getCastLabel (SingleCast cl _ _ _) = cl
 getCastLabel (BlameCast cl _ _ _) = cl
 getCastLabel (EmptyCast cl _) = cl
 
+-- get initial type
+initialType :: Cast -> Type
+initialType (SingleCast cl t1 t2 c) = initialType c
+initialType (BlameCast cl i f msg) = i
+initialType (EmptyCast cl t) = t
+
+-- get final type
+finalType :: Cast -> Type
+finalType (SingleCast cl t1 t2 c) = t2
+finalType (BlameCast cl i f msg) = f
+finalType (EmptyCast cl t) = t
+
+-- project from 3 tuple
+fst3 :: (a, b, c) -> a
+fst3 (a, _, _) = a
+
+snd3 :: (a, b, c) -> b
+snd3 (_, b, _) = b
+
+trd3 :: (a, b, c) -> c
+trd3 (_, _, c) = c
+
 -- SUBSTITUTIONS
 type ExpressionSubstitution = (String, Expression)
 
 -- Substitute expressions according to substitution
 substitute :: ExpressionSubstitution -> Expression -> Expression
 
--- Typed λ-calculus terms
+-- λ-calculus terms
 substitute s@(old, new) e@(Variable var typ)
     -- if var equals old, replace variable with new expression
     | var == old = instantiateCastIntersection typ new
     -- otherwise, do nothing
     | otherwise = e
-substitute s@(old, new) e@(Abstraction var typ expr)
+substitute s@(old, new) e@(AnnotatedAbstraction var typ expr)
     -- if some abstraction has already binded the variable, don't propagate substitutions
     | var == old = e
     -- otherwise, propagate substitutions
-    | otherwise = Abstraction var typ $ substitute s expr
+    | otherwise = AnnotatedAbstraction var typ $ substitute s expr
 substitute s@(old, new) e@(Application expr1 expr2) =
     Application (substitute s expr1) (substitute s expr2)
+substitute s@(old, new) e@(Abstraction var expr)
+    -- if some abstraction has already binded the variable, don't propagate substitutions
+    | var == old = e
+    -- otherwise, propagate substitutions
+    | otherwise = Abstraction var $ substitute s expr
 
 -- Integers
 substitute s@(old, new) e@(Bool _) = e
@@ -253,8 +290,12 @@ substituteTypedExpression s = mapExpression (substituteTypedExpression' s)
 -- substitute types in annotations and type information
 -- using the substitutions generated during constraint unification
 substituteTypedExpression' :: TypeSubstitutions -> Expression -> Expression
+substituteTypedExpression' s (Variable var typ) =
+    Variable var (foldr substituteType typ $ reverse s)
+substituteTypedExpression' s (AnnotatedAbstraction var typ expr) =
+    AnnotatedAbstraction var (foldr substituteType typ $ reverse s) expr
 substituteTypedExpression' s (TypeInformation typ expr) =
-    TypeInformation (foldr substituteType typ s) expr
+    TypeInformation (foldr substituteType typ $ reverse s) expr
 substituteTypedExpression' s e = e
 
 -- HELPER FUNCTIONS
@@ -267,6 +308,16 @@ removeTypeInformation = mapExpression removeTypeInformation'
 removeTypeInformation' :: Expression -> Expression
 removeTypeInformation' (TypeInformation _ expr) = expr
 removeTypeInformation' e = e
+
+-- remove repeated instances of intersection types from expression
+removeRepeatedInstancesExpr :: Expression -> Expression
+removeRepeatedInstancesExpr = mapExpression removeRepeatedInstancesExpr'
+
+-- remove repeated instances of intersection types from expression
+removeRepeatedInstancesExpr' :: Expression -> Expression
+removeRepeatedInstancesExpr' (TypeInformation typ e) = TypeInformation (removeRepeatedInstances typ) e
+removeRepeatedInstancesExpr' (Variable var typ) = Variable var (removeRepeatedInstances typ)
+removeRepeatedInstancesExpr' e = e
 
 -- remove identity casts from all terms in expression
 removeIdentityCasts :: Expression -> Expression
@@ -294,82 +345,7 @@ removeIdentityCastsI' c@(SingleCast _ t1 t2 c')
     | otherwise = c
 removeIdentityCastsI' c = c
 
--- get initial type
-initialType :: Cast -> Type
-initialType (SingleCast cl t1 t2 c) = initialType c
-initialType (BlameCast cl i f msg) = i
-initialType (EmptyCast cl t) = t
-
--- get final type
-finalType :: Cast -> Type
-finalType (SingleCast cl t1 t2 c) = t2
-finalType (BlameCast cl i f msg) = f
-finalType (EmptyCast cl t) = t
-
--- Merge intersection cast with intersection cast
-mergeCasts :: Expression -> Expression
-mergeCasts (CastIntersection cs (CastIntersection cs' expr)) =
-    -- merge casts according to cast labels, only merging casts whose labels are comparable
-    -- (this enables casts generated by the simulate step to only merge with their corresponding casts from the original cast),
-    -- and according to types, only merging casts that ensure type safety
-    -- (this enables merged casts to always be able to be reduced)
-    CastIntersection [joinCastI y x | x <- cs', y <- cs, isSameCastLabel y x && initialType y == finalType x] expr
-
--- compare cast labels between casts
-isSameCastLabel :: Cast -> Cast -> Bool
-isSameCastLabel c1 c2
-    -- suceed only if there is no cast label in any of the casts
-    | getCastLabel c1 == 0 || getCastLabel c2 == 0 = True
-    -- or if the cast label is the same
-    | otherwise = getCastLabel c1 == getCastLabel c2
-
--- join casts in intersections
-joinCastI :: Cast -> Cast -> Cast
-joinCastI (SingleCast cl t1 t2 c) cast = SingleCast cl t1 t2 $ joinCastI c cast
-joinCastI (BlameCast cl i f msg) cast = BlameCast cl i f msg
-joinCastI (EmptyCast cl t) cast = assignCastLabel cl cast
-
--- Apply simulate step
-simulateArrow :: Expression -> Expression -> Expression
-simulateArrow (CastIntersection cs expr1') expr2 =
-    let
-        -- filter arrow compatible casts
-        compatibleCasts = filter isArrowCompatible cs
-        -- clean cast labels
-        cleanCasts = map (mapCast cleanCastLabel) compatibleCasts
-        -- obtain first cast intersection that will be used in simulate step
-        (firstCasts, secondCasts) = unzip $ map separateCastIntersection cleanCasts
-        -- assign cast label based in position
-        firstCasts' = map (\x -> mapCast (assignCastLabel $ fst x) (snd x)) $ zip [1..] firstCasts
-        -- breakdown arrow types in casts to form two casts
-        (cs1, cs2) = unzip $ map breakdownArrowType firstCasts'
-    -- simulate casts on arrow types
-    in CastIntersection cs2 $ Application (CastIntersection secondCasts expr1') (CastIntersection cs1 expr2)
-
--- remove first cast from cast intersection
-separateCastIntersection :: Cast -> (Cast, Cast)
-separateCastIntersection (SingleCast cl t1 t2 c) = (SingleCast cl t1 t2 $ EmptyCast cl t1, c)
-separateCastIntersection (EmptyCast cl t) = (EmptyCast cl t, EmptyCast cl t)
-
--- group the components of arrow types in the cast
-breakdownArrowType :: Cast -> (Cast, Cast)
--- Separate the cast T11 -> T12 => T21 -> T22,
-breakdownArrowType (SingleCast cl (ArrowType t11 t12) (ArrowType t21 t22) (EmptyCast _ _)) =
-    -- in two casts: T21 => T11 and T12 => T22
-    (SingleCast cl t21 t11 $ EmptyCast cl t21, SingleCast cl t12 t22 $ EmptyCast cl t12)
--- If cast is an empty cast, just return two empty casts
-breakdownArrowType (EmptyCast cl (ArrowType t1 t2)) = (EmptyCast cl t1, EmptyCast cl t2)
-
--- clean cast labels
-cleanCastLabel :: Cast -> Cast
-cleanCastLabel = assignCastLabel 0
-
--- assign cast label to cast
-assignCastLabel :: CastLabel -> Cast -> Cast
-assignCastLabel cl (SingleCast _ t1 t2 cs) = SingleCast cl t1 t2 $ assignCastLabel cl cs
-assignCastLabel cl (BlameCast _ i f msg) = BlameCast cl i f msg
-assignCastLabel cl (EmptyCast _ t) = EmptyCast cl t
-
+{-
 -- get int from expression
 getExpectedInt :: Expression -> Expression
 -- if expression is an integer, return it
@@ -382,10 +358,4 @@ getExpectedInt (CastIntersection cs e)
     | any isBlameCast cs =
         let (BlameCast _ _ f msg) = head $ filter isBlameCast cs
         in Blame f msg
-
--- generate casts according to the number of instances of types
-addCasts :: [Type] -> [Type] -> Expression -> Expression
-addCasts t1 t2 e
-    | length t1 == 1 && length t2 == 1 = CastIntersection [SingleCast 0 (head t1) (head t2) $ EmptyCast 0 (head t1)] e
-    | length t1 == length t2 = CastIntersection (map (\x -> SingleCast 0 (fst x) (snd x) $ EmptyCast 0 (fst x)) $ zip t1 t2) e
-    | length t1 == 1 || length t2 == 1 = CastIntersection [SingleCast 0 x y $ EmptyCast 0 x | x <- t1, y <- t2] e
+-}

@@ -10,19 +10,28 @@ type Bindings = (Var, Type)
 
 -- Types in λ-calculus and extensions
 data Type
-    -- Type variable: Var
-    = VarType Var
-    -- Arrow type: Type -> Type
-    | ArrowType Type Type
-    -- Integer type: Int
-    | IntType
-    -- Boolean type: Bool
-    | BoolType
-    -- Dynamic type: Dyn
-    | DynType
-    -- Intersection type: Type /\ Type
-    | IntersectionType [Type]
-    deriving (Show, Eq)
+  -- Type variable: Var
+  = VarType Var
+  -- Arrow type: Type -> Type
+  | ArrowType Type Type
+  -- Integer type: Int
+  | IntType
+  -- Boolean type: Bool
+  | BoolType
+  -- Dynamic type: Dyn
+  | DynType
+  -- Intersection type: Type /\ Type
+  | IntersectionType [Type]
+  deriving (Show, Eq)
+
+-- Constraints
+type Constraints = [Constraint]
+data Constraint
+  = Equality Type Type
+  -- | Consistency Type Type
+  | Inequality Type Type
+  | Choice Type Type
+  deriving (Show, Eq)
 
 type Var = String
 type Message = String
@@ -37,7 +46,7 @@ mapType f t@(VarType var) = f t
 
 -- Arrow type
 mapType f t@(ArrowType t1 t2) =
-    f (ArrowType (mapType f t1) (mapType f t2))
+  f (ArrowType (mapType f t1) (mapType f t2))
 
 -- Integer type
 mapType f t@IntType = f t
@@ -95,6 +104,14 @@ isGroundType _ = False
 sameGround :: Type -> Type -> Bool
 sameGround t1 t2 = getGroundType t1 == getGroundType t2
 
+-- check is both types are the equal modulo associativity, commutativity and idempotence
+sameType :: Type -> Type -> Bool
+sameType t1 t2
+  | t1 == t2 = True
+  | isIntersectionType t1 || isIntersectionType t2 = null (instances1 \\ instances2) && null (instances2 \\ instances1)
+  where instances1 = getInstancesType $ removeRepeatedInstances t1
+        instances2 = getInstancesType $ removeRepeatedInstances t2
+
 -- PROJECTIONS
 
 -- get ground type
@@ -102,6 +119,18 @@ getGroundType :: Type -> Type
 getGroundType ArrowType{} = ArrowType DynType DynType
 getGroundType IntType = IntType
 getGroundType BoolType = BoolType
+
+-- get first constraint
+getFirstConstraint :: Constraint -> Type
+getFirstConstraint (Equality t _) = t
+getFirstConstraint (Inequality t _) = t
+getFirstConstraint (Choice t _) = t
+
+-- get second constraint
+getSecondConstraint :: Constraint -> Type
+getSecondConstraint (Equality _ t) = t
+getSecondConstraint (Inequality _ t) = t
+getSecondConstraint (Choice _ t) = t
 
 -- SUBSTITUTIONS
 type TypeSubstitutions = [TypeSubstitution]
@@ -112,12 +141,12 @@ substituteType :: TypeSubstitution -> Type -> Type
 
 -- Type variable
 substituteType s@(old, new) t@(VarType var)
-    | old == t = new
-    | otherwise = t
+  | old == t = new
+  | otherwise = t
 
 -- Arrow type
 substituteType s@(old, new) t@(ArrowType t1 t2) =
-    ArrowType (substituteType s t1) (substituteType s t2)
+  ArrowType (substituteType s t1) (substituteType s t2)
 
 -- Integer type
 substituteType s@(old, new) t@IntType = t
@@ -130,7 +159,18 @@ substituteType s@(old, new) t@DynType = t
 
 -- Intersection type
 substituteType s@(old, new) t@(IntersectionType ts) =
-    IntersectionType $ map (substituteType s) ts
+  IntersectionType $ map (substituteType s) ts
+
+-- apply substitution to constraints
+substituteConstraint :: TypeSubstitution -> Constraint -> Constraint
+substituteConstraint s (Equality t1 t2) =
+  Equality (substituteType s t1) (substituteType s t2)
+-- substituteConstraint s (Consistency t1 t2) =
+   --  Consistency (substituteType s t1) (substituteType s t2)
+substituteConstraint s (Inequality t1 t2) =
+  Inequality (substituteType s t1) (substituteType s t2)
+substituteConstraint s (Choice t1 t2) =
+  Choice (substituteType s t1) (substituteType s t2)
 
 -- HELPER FUNCTIONS
 
@@ -138,34 +178,39 @@ substituteType s@(old, new) t@(IntersectionType ts) =
 newTypeVar :: Int -> Type
 newTypeVar index = VarType ("t" ++ show index)
 
+-- collect all type variables
+collectTypeVariables :: Type -> [String]
+collectTypeVariables (VarType var) = [var]
+collectTypeVariables IntType = []
+collectTypeVariables BoolType = []
+collectTypeVariables DynType = []
+collectTypeVariables (ArrowType t1 t2) =
+  collectTypeVariables t1 ++ collectTypeVariables t2
+collectTypeVariables (IntersectionType ts) =
+  concatMap collectTypeVariables ts
+
+
 -- get instances of intersection type
 getInstancesType :: Type -> [Type]
+getInstancesType (VarType var) = [VarType var]
 getInstancesType IntType = [IntType]
 getInstancesType BoolType = [BoolType]
 getInstancesType DynType = [DynType]
 getInstancesType (ArrowType t1 t2) =
-    let t1' = getInstancesType t1
-        t2' = getInstancesType t2
-    in [ArrowType x y | x <- t1', y <- t2']
+  let t1' = getInstancesType t1
+      t2' = getInstancesType t2
+  in [ArrowType x y | x <- t1', y <- t2']
 getInstancesType (IntersectionType ts) =
-    concatMap getInstancesType ts
+  concatMap getInstancesType ts
 
--- join instances of intersection types
-joinInstances :: [Type] -> Type
-joinInstances ts
-    -- only base types, therefore join them
-    | not $ any isArrowType ts =
-        let types = nub ts
-            result
-                | length types == 1 = head types
-                | otherwise = IntersectionType types
-        in result
-    -- only arrow types, therefore join under arrow
-    | all isArrowType ts =
-        let (ts1, ts2) = unzip [(t1, t2) | (ArrowType t1 t2) <- ts]
-        in ArrowType (joinInstances ts1) (joinInstances ts2)
-    | any isArrowType ts =
-        let ftypes = filter isArrowType ts
-            btypes = filter (not . isArrowType) ts
-            (ts1, ts2) = unzip [(t1, t2) | (ArrowType t1 t2) <- ftypes]
-        in IntersectionType $ btypes ++ [ArrowType (joinInstances ts1) (joinInstances ts2)]
+-- remove repeated instances from intersection type
+removeRepeatedInstances :: Type -> Type
+removeRepeatedInstances = mapType removeRepeatedInstances'
+
+-- remove repeated instances from intersection type
+removeRepeatedInstances' :: Type -> Type
+removeRepeatedInstances' (IntersectionType instances)
+  | length new_instances == 1 = head new_instances
+  | otherwise = IntersectionType new_instances
+  where new_instances = nub instances
+removeRepeatedInstances' e = e

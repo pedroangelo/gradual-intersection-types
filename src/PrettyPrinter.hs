@@ -14,13 +14,16 @@ import Text.PrettyPrint.Leijen
 -- pretty print expression
 prettyExpression :: Expression -> Doc
 
--- Typed λ-calculus terms
+-- λ-calculus terms
 prettyExpression (Variable var typ) = text var
-prettyExpression (Abstraction var typ expr) = hcat
+prettyExpression (AnnotatedAbstraction var typ expr) = hcat
     [backslash, text var, space, colon, space, prettyType typ, space, dot,
         space, prettyExpression expr]
 prettyExpression (Application expr1 expr2) = hsep
     [printParensExpression expr1, printParensExpression expr2]
+prettyExpression (Abstraction var expr) = hcat
+    [backslash, text var, space, dot,
+        space, prettyExpression expr]
 
 -- Integers
 prettyExpression (Int i) = int i
@@ -88,7 +91,7 @@ printParensExpression expr = if needsParensExpression expr
 
 needsParensExpression :: Expression -> Bool
 needsParensExpression expr =
-    isAbstraction expr ||
+    isLambdaAbstraction expr ||
     isApplication expr ||
     isAddition expr ||
     isTypeInformation expr ||
