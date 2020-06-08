@@ -1,5 +1,5 @@
 # gradual-intersection-types
-A gradually typed language with intersection types. The content from the following papers: Gradual Intersection Types, presented at ITRS 2018 (https://github.com/pedroangelo/papers/blob/master/Gradual%20Intersection%20Types.pdf), and Type Inference for Rank 2 Gradual Intersection Types, presented at TFP 2019 (https://github.com/pedroangelo/papers/blob/master/type-inference-for-rank-2-gradual-intersection-types.pdf), recently published in Springer (https://link.springer.com/chapter/10.1007%2F978-3-030-47147-7_5).
+A gradually typed language with intersection types. The content stems from the following papers: Gradual Intersection Types, presented at ITRS 2018 (https://github.com/pedroangelo/papers/blob/master/Gradual%20Intersection%20Types.pdf), and Type Inference for Rank 2 Gradual Intersection Types, presented at TFP 2019 (https://github.com/pedroangelo/papers/blob/master/type-inference-for-rank-2-gradual-intersection-types.pdf), recently published in Springer (https://link.springer.com/chapter/10.1007%2F978-3-030-47147-7_5).
 
 ### Instalation
 Install stack ([Haskell Tool Stack](https://www.haskellstack.org/))
